@@ -1,0 +1,254 @@
+spring:
+  application:
+    name: service-order
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3307/cloudtry_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: OrderHikariCP
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      lettuce:
+        pool:
+          max-active: 200
+          min-idle: 10
+          max-idle: 50
+          max-wait: 5000
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        shared-configs:
+          - data-id: common-sentinel-rules.yml
+            group: SENTINEL_GROUP
+            refresh: true
+    sentinel:
+      eager: true
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8081}
+      datasource:
+        # 流量控制规则
+        flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:}
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-flow-rules.json
+            rule-type: flow
+            refresh: true
+        # 熔断降级规则
+        degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:}
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-degrade-rules.json
+            rule-type: degrade
+            refresh: true
+    loadbalancer:
+      retry:
+        enabled: true
+        max-retries-on-same-service-instance: 1
+        max-retries-on-next-service-instance: 2
+        retry-on-all-operations: false
+
+server:
+  port: 8000
+
+# Spring Boot Actuator 性能监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+    loggers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+
+# 日志配置 - 包含慢查询日志
+logging:
+  level:
+    root: INFO
+    com.atguigu: DEBUG
+    # MyBatis SQL日志
+    com.atguigu.order.mapper: DEBUG
+    # HikariCP连接池日志
+    com.zaxxer.hikari: INFO
+    # Feign调用日志
+    com.atguigu.order.feign: DEBUG
+    # Seata分布式事务日志
+    org.apache.seata: INFO
+    # RocketMQ日志
+    org.apache.rocketmq: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/${spring.application.name}.log
+    max-size: 100MB
+    max-history: 30
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.atguigu.order.bean
+  configuration:
+    map-underscore-to-camel-case: true
+    # 生产环境应关闭SQL日志输出，通过环境变量控制
+    # 开发环境: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 生产环境: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.nologging.NoLoggingImpl}
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+seata:
+  enabled: true
+  application-id: service-order
+  tx-service-group: default_tx_group
+  enable-auto-data-source-proxy: true
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR}
+      namespace: ${NACOS_NAMESPACE:}
+      group: SEATA_GROUP
+      # 安全配置：强制要求配置凭据，不允许空值
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+      data-id: seata-config.properties
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR}
+      namespace: ${NACOS_NAMESPACE:}
+      group: SEATA_GROUP
+      application: seata-server
+      # 安全配置：强制要求配置凭据，不允许空值
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+  client:
+    rm:
+      async-commit-buffer-limit: 1000
+    tm:
+      default-global-transaction-timeout: 60000
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:localhost:9876}
+  producer:
+    group: order-producer-group
+    # 发送消息超时时间（毫秒）
+    send-message-timeout: 30000
+    # 消息最大大小（4MB）
+    max-message-size: 4194304
+    # 同步发送失败重试次数
+    retry-times-when-send-failed: 3
+    # 异步发送失败重试次数
+    retry-times-when-send-async-failed: 3
+  consumer:
+    group: cloudtry-consumer-group
+    # 消费者最小线程数
+    ConsumeThreadMin: 10
+    # 消费者最大线程数
+    ConsumeThreadMax: 64
+    # 最大重试消费次数
+    max-reconsume-times: 3
+    # 延迟消费级别（1-18级，对应不同延迟时间）
+    delay-level-when-next-consume: 1
+
+# Feign配置
+feign:
+  client:
+    config:
+      default:
+        # 连接超时时间（毫秒）
+        connectTimeout: 5000
+        # 读取超时时间（毫秒）
+        readTimeout: 10000
+        # 日志级别
+        loggerLevel: BASIC
+      # 针对核心服务的特殊配置
+      service-product:
+        connectTimeout: 3000
+        readTimeout: 8000
+      service-user:
+        connectTimeout: 3000
+        readTimeout: 5000
+  # 开启Sentinel熔断降级支持
+  sentinel:
+    enabled: true
+  # 开启压缩支持
+  compression:
+    request:
+      enabled: true
+      mime-types: application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+
+# Spring Retry配置
+retry:
+  enabled: true
+  # 最大重试次数
+  max-attempts: 3
+  # 初始退避时间（毫秒）
+  initial-interval: 1000
+  # 退避乘数
+  multiplier: 2.0
+  # 最大退避时间（毫秒）
+  max-interval: 5000
+
+# 安全配置
+security:
+  internal:
+    secret: ${INTERNAL_SECRET}

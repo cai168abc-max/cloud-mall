@@ -1,0 +1,14 @@
+# 生产环境配置
+spring:
+  profiles: prod
+
+# 生产环境特定配置
+logging:
+  level:
+    com.atguigu: WARN
+    org.springframework.web: WARN
+    root: WARN
+
+# 生产环境开启生产模式
+app:
+  production-mode: true

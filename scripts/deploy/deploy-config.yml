@@ -1,0 +1,440 @@
+# =====================================================
+# 灰度发布配置文件 (Canary Deployment Configuration)
+# =====================================================
+# 功能说明：
+#   - 定义灰度发布策略和阶段
+#   - 配置监控阈值和健康检查
+#   - 管理服务列表和部署参数
+#   - 配置回滚策略和通知方式
+#
+# 使用场景：
+#   - 配合 canary-deploy.sh 脚本使用
+#   - 支持Docker Compose和Kubernetes部署
+#   - 支持自动化灰度发布流程
+#
+# 作者：Backend Architect
+# 版本：v2.0
+# 更新时间：2026-05-13
+# =====================================================
+
+# =====================================================
+# 服务配置 (Services Configuration)
+# =====================================================
+# 定义所有需要灰度发布的服务
+# 每个服务包含：名称、端口、健康检查端点、实例数等
+
+services:
+  # API网关服务
+  gateway:
+    name: cloudtry-gateway              # 服务名称
+    port: 80                            # 服务端口
+    health_check: /actuator/health      # 健康检查端点
+    instances: 2                        # 实例数量
+    description: API网关服务，负责路由和鉴权
+    
+  # 订单服务
+  service-order:
+    name: cloudtry-service-order
+    port: 8000
+    health_check: /actuator/health
+    instances: 2
+    description: 订单服务，处理订单创建、查询、支付等
+    
+  # 商品服务
+  service-product:
+    name: cloudtry-service-product
+    port: 9000
+    health_check: /actuator/health
+    instances: 2
+    description: 商品服务，管理商品信息和库存
+    
+  # 用户服务
+  service-user:
+    name: cloudtry-service-user
+    port: 7000
+    health_check: /actuator/health
+    instances: 2
+    description: 用户服务，处理用户认证和信息管理
+
+# =====================================================
+# 灰度发布策略 (Canary Deployment Strategy)
+# =====================================================
+# 定义灰度发布的阶段和推进策略
+# 支持手动确认和自动推进
+
+canary:
+  # 流量分配阶段（逐步增加新版本流量）
+  stages:
+    # 第一阶段：10%流量到新版本
+    - weight: 10                        # 流量权重百分比
+      duration: 300                     # 持续时间（秒）
+      auto_promote: false               # 是否自动进入下一阶段（false=需要手动确认）
+      description: 初始灰度，小流量验证
+      
+    # 第二阶段：30%流量到新版本
+    - weight: 30
+      duration: 300
+      auto_promote: false
+      description: 扩大灰度范围，观察性能指标
+      
+    # 第三阶段：50%流量到新版本
+    - weight: 50
+      duration: 300
+      auto_promote: false
+      description: 半数流量，全面验证
+      
+    # 第四阶段：100%流量到新版本（全量发布）
+    - weight: 100
+      duration: 0                       # 0表示不等待，立即完成
+      auto_promote: true                # 最后阶段自动推进
+      description: 全量发布，完成部署
+  
+  # 灰度发布全局配置
+  settings:
+    # 是否启用自动推进（覆盖各阶段的auto_promote设置）
+    auto_promote_enabled: false
+    
+    # 阶段间等待时间（秒），用于观察监控指标
+    stage_wait_time: 60
+    
+    # 是否在失败时自动回滚
+    auto_rollback_on_failure: true
+    
+    # 最大重试次数
+    max_retries: 3
+
+# =====================================================
+# 监控阈值配置 (Monitoring Thresholds)
+# =====================================================
+# 定义触发自动回滚的监控阈值
+# 当指标超过阈值时，自动回滚到旧版本
+
+thresholds:
+  # 错误率阈值
+  error_rate: 0.01                      # 1%错误率，超过此值触发回滚
+  
+  # 响应时间阈值（P99）
+  response_time_p99: 2000               # P99响应时间2秒，超过此值触发回滚
+  
+  # 响应时间阈值（P95）
+  response_time_p95: 1000               # P95响应时间1秒
+  
+  # 响应时间阈值（平均值）
+  response_time_avg: 500                # 平均响应时间500ms
+  
+  # CPU使用率阈值
+  cpu_usage: 80                         # CPU使用率80%，超过此值触发告警
+  
+  # 内存使用率阈值
+  memory_usage: 85                      # 内存使用率85%，超过此值触发告警
+  
+  # 请求成功率阈值
+  success_rate: 0.99                    # 成功率99%，低于此值触发回滚
+  
+  # 检查间隔（秒）
+  check_interval: 30                    # 每30秒检查一次监控指标
+  
+  # 指标采集时间窗口（秒）
+  metrics_window: 300                   # 采集最近5分钟的指标数据
+
+# =====================================================
+# 健康检查配置 (Health Check Configuration)
+# =====================================================
+# 定义健康检查的详细参数
+
+health_check:
+  # 健康检查端点路径
+  endpoint: /actuator/health            # Spring Boot Actuator健康检查端点
+  
+  # 健康检查超时时间（秒）
+  timeout: 10                           # 单次健康检查超时时间
+  
+  # 最大重试次数
+  max_retries: 30                       # 健康检查失败后的最大重试次数
+  
+  # 重试间隔（秒）
+  retry_interval: 5                     # 每次重试之间的等待时间
+  
+  # 启动等待时间（秒）
+  startup_wait: 60                      # 服务启动后等待时间，再开始健康检查
+  
+  # 健康检查成功阈值
+  success_threshold: 1                  # 连续成功多少次才认为健康
+  
+  # 健康检查失败阈值
+  failure_threshold: 3                  # 连续失败多少次才认为不健康
+  
+  # 详细健康检查端点（可选）
+  detailed_endpoint: /actuator/health/liveness  # Liveness探针端点
+  
+  # 就绪检查端点（可选）
+  readiness_endpoint: /actuator/health/readiness # Readiness探针端点
+
+# =====================================================
+# 回滚配置 (Rollback Configuration)
+# =====================================================
+# 定义回滚策略和参数
+
+rollback:
+  # 自动回滚开关
+  auto_rollback: true                   # 是否在检测到异常时自动回滚
+  
+  # 保留的历史版本数
+  keep_versions: 3                      # 保留最近3个版本，用于快速回滚
+  
+  # 回滚超时时间（秒）
+  timeout: 300                          # 回滚操作的超时时间
+  
+  # 回滚前等待时间（秒）
+  wait_before_rollback: 10              # 回滚前等待时间，用于清理连接
+  
+  # 回滚后健康检查超时（秒）
+  health_check_timeout: 120             # 回滚后健康检查的超时时间
+  
+  # 是否在回滚失败时发送告警
+  alert_on_failure: true
+
+# =====================================================
+# 通知配置 (Notification Configuration)
+# =====================================================
+# 定义部署状态通知方式
+
+notification:
+  # 邮件通知配置
+  email:
+    enabled: false                      # 是否启用邮件通知
+    recipients:                         # 收件人列表
+      - admin@example.com
+      - dev-team@example.com
+    smtp_host: smtp.example.com         # SMTP服务器地址
+    smtp_port: 587                      # SMTP端口
+    smtp_user: noreply@example.com      # SMTP用户名
+    # smtp_password通过环境变量SMTP_PASSWORD传入
+    
+  # 钉钉通知配置
+  dingtalk:
+    enabled: false                      # 是否启用钉钉通知
+    webhook: ""                         # 钉钉机器人Webhook地址
+    # 示例：https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN
+    secret: ""                          # 钉钉机器人签名密钥（可选）
+    
+  # 企业微信通知配置
+  wechat:
+    enabled: false                      # 是否启用企业微信通知
+    webhook: ""                         # 企业微信机器人Webhook地址
+    # 示例：https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY
+    
+  # Slack通知配置（可选）
+  slack:
+    enabled: false                      # 是否启用Slack通知
+    webhook: ""                         # Slack Webhook地址
+    channel: "#deployments"             # Slack频道
+    
+  # 通知事件配置
+  events:
+    on_deploy_start: true               # 部署开始时通知
+    on_deploy_success: true             # 部署成功时通知
+    on_deploy_failure: true             # 部署失败时通知
+    on_rollback: true                   # 回滚时通知
+    on_health_check_failure: true       # 健康检查失败时通知
+
+# =====================================================
+# Docker配置 (Docker Configuration)
+# =====================================================
+# Docker镜像仓库和认证配置
+
+docker:
+  # Docker镜像仓库地址
+  registry: ""                          # 留空使用Docker Hub
+  # 示例：registry.example.com/cloudtry
+  
+  # Docker用户名
+  username: ""                          # Docker仓库用户名
+  
+  # Docker密码（通过环境变量DOCKER_PASSWORD传入）
+  # export DOCKER_PASSWORD=your_password
+  
+  # 镜像标签策略
+  image_tag_strategy: "git_commit"      # 镜像标签策略
+  # 可选值：git_commit（使用Git提交哈希）、timestamp（使用时间戳）、version（使用版本号）
+  
+  # 镜像拉取策略
+  pull_policy: "IfNotPresent"           # 镜像拉取策略：Always, IfNotPresent, Never
+  
+  # 构建参数
+  build_args:                           # Docker构建参数
+    - "JAVA_VERSION=17"
+    - "SPRING_PROFILE=prod"
+
+# =====================================================
+# Kubernetes配置 (Kubernetes Configuration)
+# =====================================================
+# Kubernetes集群部署配置（如使用K8s）
+
+kubernetes:
+  # 是否启用Kubernetes部署
+  enabled: false                        # 是否使用Kubernetes部署
+  
+  # Kubernetes命名空间
+  namespace: default                    # 部署的命名空间
+  # 建议：dev（开发）、staging（预发布）、prod（生产）
+  
+  # Kubernetes上下文
+  context: ""                           # Kubectl上下文名称
+  # 示例：gke_project_zone_cluster
+  
+  # 部署策略
+  deployment_strategy: "RollingUpdate"  # 部署策略：RollingUpdate, Recreate
+  
+  # 滚动更新参数
+  rolling_update:
+    max_surge: 1                        # 滚动更新时最多可以超出期望副本数的数量
+    max_unavailable: 0                  # 滚动更新时最多不可用的副本数
+  
+  # 资源限制
+  resources:
+    requests:
+      cpu: "500m"                       # CPU请求量
+      memory: "512Mi"                   # 内存请求量
+    limits:
+      cpu: "2000m"                      # CPU限制
+      memory: "2Gi"                     # 内存限制
+  
+  # 自动扩缩容配置
+  autoscaling:
+    enabled: false                      # 是否启用自动扩缩容
+    min_replicas: 2                     # 最小副本数
+    max_replicas: 10                    # 最大副本数
+    target_cpu_utilization: 70          # 目标CPU使用率
+  
+  # Istio配置（如使用Istio服务网格）
+  istio:
+    enabled: false                      # 是否启用Istio
+    gateway: "cloudtry-gateway"         # Istio Gateway名称
+    virtual_service: "cloudtry-vs"      # VirtualService名称
+
+# =====================================================
+# 日志配置 (Logging Configuration)
+# =====================================================
+# 日志输出和存储配置
+
+logging:
+  # 日志级别
+  level: INFO                           # 日志级别：DEBUG, INFO, WARN, ERROR
+  
+  # 日志文件路径
+  file: ./logs/canary-deploy.log        # 日志文件路径
+  
+  # 日志文件最大大小（MB）
+  max_size: 100                         # 单个日志文件最大100MB
+  
+  # 日志文件最大数量
+  max_files: 10                         # 最多保留10个日志文件
+  
+  # 日志格式
+  format: "text"                        # 日志格式：text, json
+  
+  # 是否输出到控制台
+  console_output: true                  # 是否同时输出到控制台
+
+# =====================================================
+# 安全配置 (Security Configuration)
+# =====================================================
+# 安全相关配置
+
+security:
+  # 是否启用TLS
+  tls_enabled: false                    # 是否启用TLS加密
+  
+  # 证书路径
+  cert_path: ""                         # TLS证书路径
+  
+  # 私钥路径
+  key_path: ""                          # TLS私钥路径
+  
+  # 是否验证服务间调用签名
+  verify_signature: false               # 是否验证服务间调用签名
+  
+  # 签名密钥（通过环境变量SIGNATURE_KEY传入）
+  # export SIGNATURE_KEY=your_signature_key
+
+# =====================================================
+# 性能优化配置 (Performance Optimization)
+# =====================================================
+# 性能相关配置
+
+performance:
+  # 并发部署数
+  concurrent_deploys: 1                 # 同时部署的服务数量
+  
+  # 连接池配置
+  connection_pool:
+    max_connections: 100                # 最大连接数
+    connection_timeout: 30              # 连接超时（秒）
+  
+  # 缓存配置
+  cache:
+    enabled: false                      # 是否启用缓存
+    ttl: 300                            # 缓存过期时间（秒）
+
+# =====================================================
+# 环境配置 (Environment Configuration)
+# =====================================================
+# 不同环境的配置覆盖
+
+environments:
+  # 开发环境
+  dev:
+    canary:
+      stages:
+        - weight: 50
+          duration: 60
+          auto_promote: true
+        - weight: 100
+          duration: 0
+          auto_promote: true
+    thresholds:
+      error_rate: 0.05                  # 开发环境放宽阈值
+      response_time_p99: 5000
+    
+  # 预发布环境
+  staging:
+    canary:
+      stages:
+        - weight: 10
+          duration: 120
+          auto_promote: false
+        - weight: 50
+          duration: 120
+          auto_promote: false
+        - weight: 100
+          duration: 0
+          auto_promote: true
+    thresholds:
+      error_rate: 0.02
+      response_time_p99: 3000
+    
+  # 生产环境
+  prod:
+    canary:
+      stages:
+        - weight: 10
+          duration: 300
+          auto_promote: false
+        - weight: 30
+          duration: 300
+          auto_promote: false
+        - weight: 50
+          duration: 300
+          auto_promote: false
+        - weight: 100
+          duration: 0
+          auto_promote: true
+    thresholds:
+      error_rate: 0.01                  # 生产环境严格阈值
+      response_time_p99: 2000
+    notification:
+      email:
+        enabled: true
+      dingtalk:
+        enabled: true

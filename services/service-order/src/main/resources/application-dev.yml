@@ -1,0 +1,22 @@
+# 开发环境配置
+spring:
+  profiles: dev
+
+# 开发环境特定配置
+logging:
+  level:
+    com.atguigu: DEBUG
+    org.springframework.web: DEBUG
+
+# 开发环境关闭生产模式
+app:
+  production-mode: false
+
+# 开发环境数据库配置（使用本地数据库）
+# 数据库配置已在主配置文件中通过环境变量配置
+
+# 开发环境Redis配置
+# Redis配置已在主配置文件中通过环境变量配置
+
+# 开发环境Sentinel配置
+# Sentinel Dashboard用于开发调试

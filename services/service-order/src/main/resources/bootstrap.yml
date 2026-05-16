@@ -1,0 +1,29 @@
+# bootstrap.yml - 在application.yml之前加载
+# 用于配置Nacos配置中心连接信息
+
+spring:
+  application:
+    name: service-order
+  cloud:
+    nacos:
+      # Nacos配置中心
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        # 启用配置刷新
+        refresh-enabled: true
+        # 共享配置
+        shared-configs:
+          - data-id: common-config.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: common-sentinel-rules.yml
+            group: SENTINEL_GROUP
+            refresh: true
+      # Nacos服务发现
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP

@@ -1,0 +1,24 @@
+# 生产环境配置
+spring:
+  profiles: prod
+
+# 生产环境特定配置
+logging:
+  level:
+    com.atguigu: WARN
+    org.springframework.web: WARN
+    root: WARN
+
+# 生产环境开启生产模式
+app:
+  production-mode: true
+
+# 生产环境数据库配置
+# 数据库配置已在主配置文件中通过环境变量配置
+# 生产环境必须通过环境变量提供敏感配置
+
+# 生产环境Redis配置
+# Redis配置已在主配置文件中通过环境变量配置
+
+# 生产环境Sentinel配置
+# 生产环境应配置独立的Sentinel Dashboard

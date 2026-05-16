@@ -1,0 +1,13 @@
+# 测试环境配置
+spring:
+  profiles: test
+
+# 测试环境特定配置
+logging:
+  level:
+    com.atguigu: INFO
+    org.springframework.web: INFO
+
+# 测试环境关闭生产模式
+app:
+  production-mode: false

@@ -1,0 +1,286 @@
+# CloudTry Docker Compose Configuration
+# 用于本地开发和测试环境部署
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # 基础设施服务
+  # ==========================================
+  
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: cloudtry-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root123}
+      MYSQL_DATABASE: cloudtry
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: cloudtry-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # Nacos 服务注册与配置中心
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: cloudtry-nacos
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: ${DB_PASSWORD:-root123}
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # RocketMQ NameServer
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.0
+    container_name: cloudtry-rocketmq-namesrv
+    ports:
+      - "9876:9876"
+    environment:
+      JAVA_OPT_EXT: "-server -Xms128m -Xmx256m"
+    command: sh mqnamesrv
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9876"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # RocketMQ Broker
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.0
+    container_name: cloudtry-rocketmq-broker
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    environment:
+      JAVA_OPT_EXT: "-server -Xms256m -Xmx512m"
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    volumes:
+      - rocketmq_data:/home/rocketmq/store
+    networks:
+      - cloudtry-network
+
+  # Seata Server
+  seata:
+    image: seataio/seata-server:2.0.0
+    container_name: cloudtry-seata
+    ports:
+      - "8091:8091"
+      - "7091:7091"
+    environment:
+      SEATA_IP: seata
+      SEATA_PORT: 8091
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8091"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # Sentinel Dashboard
+  sentinel:
+    image: bladex/sentinel-dashboard:1.8.6
+    container_name: cloudtry-sentinel
+    ports:
+      - "8081:8858"
+    environment:
+      JAVA_OPTS: "-Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858"
+    networks:
+      - cloudtry-network
+
+  # ==========================================
+  # 应用服务
+  # ==========================================
+  
+  # Gateway 网关服务
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: cloudtry-gateway
+    ports:
+      - "80:80"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # User 用户服务
+  service-user:
+    build:
+      context: .
+      dockerfile: services/service-user/Dockerfile
+    container_name: cloudtry-service-user
+    ports:
+      - "7000:7000"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      DB_URL: jdbc:mysql://mysql:3306/cloudtry_user?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # Product 商品服务
+  service-product:
+    build:
+      context: .
+      dockerfile: services/service-product/Dockerfile
+    container_name: cloudtry-service-product
+    ports:
+      - "9000:9000"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      DB_URL: jdbc:mysql://mysql:3306/cloudtry_product?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+  # Order 订单服务
+  service-order:
+    build:
+      context: .
+      dockerfile: services/service-order/Dockerfile
+    container_name: cloudtry-service-order
+    ports:
+      - "8000:8000"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      DB_URL: jdbc:mysql://mysql:3306/cloudtry_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      seata:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cloudtry-network
+
+# ==========================================
+# 网络配置
+# ==========================================
+networks:
+  cloudtry-network:
+    driver: bridge
+
+# ==========================================
+# 数据卷配置
+# ==========================================
+volumes:
+  mysql_data:
+  redis_data:
+  rocketmq_data:

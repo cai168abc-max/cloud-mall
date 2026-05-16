@@ -1,0 +1,67 @@
+# ==================== Compiled ====================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# ==================== Maven ====================
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# ==================== IDE - IntelliJ IDEA ====================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ==================== IDE - VS Code ====================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==================== IDE - Eclipse ====================
+.project
+.classpath
+.settings/
+bin/
+
+# ==================== OS Files ====================
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# ==================== Sensitive / Environment ====================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.jks
+
+# ==================== Logs ====================
+*.log
+logs/
+log/
+
+# ==================== Build ====================
+build/
+dist/
+*.pid
+
+# ==================== Trae AI Specs ====================
+.trae/
+
+# ==================== Misc ====================
+*.bak
+*.tmp
+*.temp
+.project_analysis_notes.md

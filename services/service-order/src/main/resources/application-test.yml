@@ -1,0 +1,19 @@
+# 测试环境配置
+spring:
+  profiles: test
+
+# 测试环境特定配置
+logging:
+  level:
+    com.atguigu: INFO
+    org.springframework.web: INFO
+
+# 测试环境关闭生产模式
+app:
+  production-mode: false
+
+# 测试环境数据库配置
+# 数据库配置已在主配置文件中通过环境变量配置
+
+# 测试环境Redis配置
+# Redis配置已在主配置文件中通过环境变量配置

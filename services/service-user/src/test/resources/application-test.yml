@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: service-user-test
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cloudtry_user_test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    sentinel:
+      enabled: false
+
+# JWT配置
+app:
+  jwt:
+    secret: dGVzdFNlY3JldEtleUZvckpXVFRlc3RpbmdQdXJwb3Nlcw==
+    expire-seconds: 3600
+    issuer: cloudtry-auth-test
+    audience: cloudtry-api-test
+
+# RocketMQ配置（测试环境禁用）
+rocketmq:
+  name-server: localhost:9876
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.atguigu: DEBUG
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.atguigu.common.bean
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0

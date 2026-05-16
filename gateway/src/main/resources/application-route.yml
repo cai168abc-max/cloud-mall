@@ -1,0 +1,197 @@
+spring:
+  cloud:
+    gateway:
+      # 全局CORS配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            # 安全配置：限制允许的域名，避免CORS攻击
+            # 生产环境应配置具体的域名，如：
+            # - "https://www.example.com"
+            # - "https://admin.example.com"
+            # 开发环境可使用localhost
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:8080"
+              - "http://localhost:5173"
+              - "http://127.0.0.1:3000"
+              - "http://127.0.0.1:8080"
+              - "http://127.0.0.1:5173"
+            allowedMethods: [GET, POST, PUT, DELETE, OPTIONS]
+            allowedHeaders: [Authorization, Content-Type, X-Token]
+            allowCredentials: true
+            maxAge: 3600
+      
+      # 路由规则
+      routes:
+        # 用户服务路由
+        - id: v1-user-route
+          uri: lb://service-user
+          predicates:
+            - Path=/v1/api/user/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 订单服务路由
+        - id: v1-order-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/order/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 购物车服务路由
+        - id: v1-cart-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/cart/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 优惠券服务路由
+        - id: v1-coupon-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/coupon/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 秒杀服务路由
+        - id: v1-seckill-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/seckill/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 商品服务路由
+        - id: v1-product-route
+          uri: lb://service-product
+          predicates:
+            - Path=/v1/api/product/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 分类服务路由
+        - id: v1-category-route
+          uri: lb://service-product
+          predicates:
+            - Path=/v1/api/category/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 售后服务路由
+        - id: v1-aftersale-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/aftersale/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 物流服务路由
+        - id: v1-logistics-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/logistics/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 虚拟账户路由（排除内部接口）
+        - id: v1-account-route
+          uri: lb://service-order
+          predicates:
+            - Path=/v1/api/account/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # 文件上传路由
+        - id: v1-file-route
+          uri: lb://service-user
+          predicates:
+            - Path=/v1/api/file/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - RemoveRequestHeader=Cookie
+        
+        # ==========================================
+        # 兼容旧版路由（临时保留，计划废弃时间：2025-06-30）
+        # 请所有客户端尽快迁移到新版路由（/v1/api/*）
+        # 新版路由提供更好的版本管理和API治理能力
+        # ==========================================
+        
+        # 兼容旧版用户路由 - @deprecated 使用 v1-user-route 替代
+        - id: user-route
+          uri: lb://service-user
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版订单路由 - @deprecated 使用 v1-order-route 替代
+        - id: order-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版商品路由 - @deprecated 使用 v1-product-route 替代
+        - id: product-route
+          uri: lb://service-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版售后路由 - @deprecated 使用 v1-aftersale-route 替代
+        - id: aftersale-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/aftersale/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版物流路由 - @deprecated 使用 v1-logistics-route 替代
+        - id: logistics-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/logistics/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版虚拟账户路由 - @deprecated 使用 v1-account-route 替代
+        - id: account-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/account/**
+          filters:
+            - RemoveRequestHeader=Cookie
+        
+        # 兼容旧版文件上传路由 - @deprecated 使用 v1-file-route 替代
+        - id: file-route
+          uri: lb://service-user
+          predicates:
+            - Path=/api/file/**
+          filters:
+            - RemoveRequestHeader=Cookie

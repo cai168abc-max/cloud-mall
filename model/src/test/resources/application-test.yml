@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: model-test
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    sentinel:
+      enabled: false
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.atguigu: DEBUG
+
+# 缓存配置
+cache:
+  double-delete:
+    delay-ms: 100
+  lock:
+    wait-timeout-ms: 3000
+    expire-seconds: 30
