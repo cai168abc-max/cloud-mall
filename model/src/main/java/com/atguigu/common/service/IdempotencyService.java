@@ -1,9 +1,8 @@
 package com.atguigu.common.service;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -71,7 +70,7 @@ public class IdempotencyService {
      * 当前线程持有的锁对象缓存
      * Key: 锁的完整key, Value: RLock对象
      */
-    private final ConcurrentHashMap<String, RLock> lockCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> lockCache = new ConcurrentHashMap<>();
 
     /**
      * 锁竞争统计
@@ -81,16 +80,10 @@ public class IdempotencyService {
     private final AtomicLong lockReleaseCount = new AtomicLong(0);
     private final AtomicLong lockExceptionCount = new AtomicLong(0);
 
-    private final RedissonClient redissonClient;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    /**
-     * 构造器注入RedissonClient
-     *
-     * @param redissonClient Redisson客户端，不能为null
-     * @throws IllegalArgumentException 如果redissonClient为null
-     */
-    public IdempotencyService(RedissonClient redissonClient) {
-        this.redissonClient = Objects.requireNonNull(redissonClient, "RedissonClient不能为null");
+    public IdempotencyService(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = Objects.requireNonNull(stringRedisTemplate, "StringRedisTemplate不能为null");
         log.info("IdempotencyService初始化完成");
     }
 
@@ -115,42 +108,39 @@ public class IdempotencyService {
      * @return 锁获取结果，包含成功/失败状态和失败原因
      */
     public IdempotencyResult tryLock(String key, long expireSeconds) {
-        // 参数校验
         validateKey(key);
         validateExpireSeconds(expireSeconds);
 
+        if (lockCache.size() > 1000) {
+            log.warn("幂等性锁缓存条目过多: size={}, 建议检查是否有锁未正确释放", lockCache.size());
+        }
+
         String fullKey = LOCK_PREFIX + key;
+        long effectiveExpireSeconds = (expireSeconds == WATCHDOG_MODE) ? DEFAULT_EXPIRE_SECONDS : expireSeconds;
 
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-
-            boolean acquired;
-            if (expireSeconds == WATCHDOG_MODE) {
-                // 看门狗模式：不设置leaseTime，Redisson会自动续期（默认30秒，每10秒续期一次）
-                acquired = lock.tryLock(0, TimeUnit.SECONDS);
-            } else {
-                // 固定过期时间模式
-                acquired = lock.tryLock(0, expireSeconds, TimeUnit.SECONDS);
-            }
-
-            if (acquired) {
-                // 缓存锁对象，确保同一线程可以正确释放
-                lockCache.put(fullKey, lock);
+            String threadId = String.valueOf(Thread.currentThread().getId());
+            Boolean acquired = stringRedisTemplate.opsForValue()
+                .setIfAbsent(fullKey, threadId, effectiveExpireSeconds, TimeUnit.SECONDS);
+            if (Boolean.TRUE.equals(acquired)) {
+                lockCache.put(fullKey, threadId);
                 lockSuccessCount.incrementAndGet();
                 log.debug("幂等性锁获取成功: key={}, expireSeconds={}, thread={}",
-                    fullKey, expireSeconds, Thread.currentThread().getName());
+                    fullKey, effectiveExpireSeconds, Thread.currentThread().getName());
                 return IdempotencyResult.success();
             } else {
+                String cachedThreadId = lockCache.get(fullKey);
+                if (cachedThreadId != null) {
+                    String redisValue = stringRedisTemplate.opsForValue().get(fullKey);
+                    if (!cachedThreadId.equals(redisValue)) {
+                        lockCache.remove(fullKey, cachedThreadId);
+                    }
+                }
                 lockFailureCount.incrementAndGet();
                 log.warn("幂等性锁获取失败，可能为重复请求: key={}, thread={}",
                     fullKey, Thread.currentThread().getName());
                 return IdempotencyResult.failure(IdempotencyResult.FailureReason.DUPLICATE_REQUEST);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            lockExceptionCount.incrementAndGet();
-            log.error("幂等性锁获取被中断: key={}, thread={}", fullKey, Thread.currentThread().getName(), e);
-            return IdempotencyResult.failure(IdempotencyResult.FailureReason.INTERRUPTED);
         } catch (Exception e) {
             lockExceptionCount.incrementAndGet();
             log.error("幂等性锁获取异常: key={}, thread={}, error={}",
@@ -175,27 +165,29 @@ public class IdempotencyService {
         }
 
         String fullKey = LOCK_PREFIX + key;
+        long effectiveExpireSeconds = (expireSeconds == WATCHDOG_MODE) ? DEFAULT_EXPIRE_SECONDS : expireSeconds;
+        long startTime = System.currentTimeMillis();
+        long waitMs = waitSeconds * 1000;
+        long pollInterval = 100;
 
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-
-            boolean acquired;
-            if (expireSeconds == WATCHDOG_MODE) {
-                acquired = lock.tryLock(waitSeconds, TimeUnit.SECONDS);
-            } else {
-                acquired = lock.tryLock(waitSeconds, expireSeconds, TimeUnit.SECONDS);
-            }
-
-            if (acquired) {
-                lockCache.put(fullKey, lock);
-                lockSuccessCount.incrementAndGet();
-                log.debug("幂等性锁获取成功(带等待): key={}, waitSeconds={}, expireSeconds={}",
-                    fullKey, waitSeconds, expireSeconds);
-                return IdempotencyResult.success();
-            } else {
-                lockFailureCount.incrementAndGet();
-                log.warn("幂等性锁获取超时: key={}, waitSeconds={}", fullKey, waitSeconds);
-                return IdempotencyResult.failure(IdempotencyResult.FailureReason.TIMEOUT);
+            while (true) {
+                String threadId = String.valueOf(Thread.currentThread().getId());
+                Boolean acquired = stringRedisTemplate.opsForValue()
+                    .setIfAbsent(fullKey, threadId, effectiveExpireSeconds, TimeUnit.SECONDS);
+                if (Boolean.TRUE.equals(acquired)) {
+                    lockCache.put(fullKey, threadId);
+                    lockSuccessCount.incrementAndGet();
+                    log.debug("幂等性锁获取成功(带等待): key={}, waitSeconds={}, expireSeconds={}",
+                        fullKey, waitSeconds, effectiveExpireSeconds);
+                    return IdempotencyResult.success();
+                }
+                if (System.currentTimeMillis() - startTime >= waitMs) {
+                    lockFailureCount.incrementAndGet();
+                    log.warn("幂等性锁获取超时: key={}, waitSeconds={}", fullKey, waitSeconds);
+                    return IdempotencyResult.failure(IdempotencyResult.FailureReason.TIMEOUT);
+                }
+                Thread.sleep(pollInterval);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -220,32 +212,31 @@ public class IdempotencyService {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
 
-        // 从缓存中获取当前线程持有的锁对象
-        RLock lock = lockCache.remove(fullKey);
+        String cachedThreadId = lockCache.remove(fullKey);
 
-        if (lock == null) {
-            // 缓存中没有，可能是其他线程或锁已过期
+        if (cachedThreadId == null) {
             log.warn("幂等性锁释放失败，未在缓存中找到锁对象: key={}, thread={}",
                 fullKey, Thread.currentThread().getName());
             return ReleaseResult.notHeld();
         }
 
         try {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-                lockReleaseCount.incrementAndGet();
-                log.debug("幂等性锁释放成功: key={}, thread={}",
-                    fullKey, Thread.currentThread().getName());
-                return ReleaseResult.success();
+            String currentThreadId = String.valueOf(Thread.currentThread().getId());
+            if (cachedThreadId.equals(currentThreadId)) {
+                Boolean deleted = stringRedisTemplate.delete(fullKey);
+                if (Boolean.TRUE.equals(deleted)) {
+                    lockReleaseCount.incrementAndGet();
+                    log.debug("幂等性锁释放成功: key={}, thread={}",
+                        fullKey, Thread.currentThread().getName());
+                    return ReleaseResult.success();
+                } else {
+                    return ReleaseResult.expired();
+                }
             } else {
                 log.warn("幂等性锁释放失败，当前线程非持有者: key={}, thread={}",
                     fullKey, Thread.currentThread().getName());
                 return ReleaseResult.notHeld();
             }
-        } catch (IllegalMonitorStateException e) {
-            log.warn("幂等性锁释放失败，锁已过期或非持有者: key={}, thread={}, error={}",
-                fullKey, Thread.currentThread().getName(), e.getMessage());
-            return ReleaseResult.expired();
         } catch (Exception e) {
             lockExceptionCount.incrementAndGet();
             log.error("幂等性锁释放异常: key={}, thread={}", fullKey, Thread.currentThread().getName(), e);
@@ -264,9 +255,8 @@ public class IdempotencyService {
         String fullKey = LOCK_PREFIX + key;
 
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-            if (lock.isLocked()) {
-                lock.forceUnlock();
+            Boolean deleted = stringRedisTemplate.delete(fullKey);
+            if (Boolean.TRUE.equals(deleted)) {
                 lockCache.remove(fullKey);
                 lockReleaseCount.incrementAndGet();
                 log.warn("幂等性锁强制释放: key={}, thread={}", fullKey, Thread.currentThread().getName());
@@ -275,6 +265,7 @@ public class IdempotencyService {
                 return ReleaseResult.notHeld();
             }
         } catch (Exception e) {
+            lockExceptionCount.incrementAndGet();
             log.error("幂等性锁强制释放异常: key={}", fullKey, e);
             return ReleaseResult.error(e.getMessage());
         }
@@ -290,8 +281,7 @@ public class IdempotencyService {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-            return lock.isLocked();
+            return Boolean.TRUE.equals(stringRedisTemplate.hasKey(fullKey));
         } catch (Exception e) {
             log.error("检查锁状态异常: key={}", fullKey, e);
             return false;
@@ -308,16 +298,20 @@ public class IdempotencyService {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
 
-        // 优先检查缓存
-        RLock cachedLock = lockCache.get(fullKey);
-        if (cachedLock != null) {
-            return cachedLock.isHeldByCurrentThread();
+        String cachedThreadId = lockCache.get(fullKey);
+        if (cachedThreadId != null) {
+            if (cachedThreadId.equals(String.valueOf(Thread.currentThread().getId()))) {
+                return true;
+            }
+            return false;
         }
 
-        // 缓存中没有，检查Redis状态
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-            return lock.isHeldByCurrentThread();
+            String value = stringRedisTemplate.opsForValue().get(fullKey);
+            if (value != null) {
+                return value.equals(String.valueOf(Thread.currentThread().getId()));
+            }
+            return false;
         } catch (Exception e) {
             log.error("检查锁持有状态异常: key={}", fullKey, e);
             return false;
@@ -334,8 +328,8 @@ public class IdempotencyService {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
         try {
-            RLock lock = redissonClient.getLock(fullKey);
-            return lock.remainTimeToLive();
+            Long ttl = stringRedisTemplate.getExpire(fullKey, TimeUnit.MILLISECONDS);
+            return ttl != null ? ttl : -1;
         } catch (Exception e) {
             log.error("获取锁剩余时间异常: key={}", fullKey, e);
             return -1;
@@ -371,11 +365,8 @@ public class IdempotencyService {
      * 清理当前线程的锁缓存（用于线程池环境）
      */
     public void clearCurrentThreadCache() {
-        // 清理当前线程持有的所有锁
-        lockCache.entrySet().removeIf(entry -> {
-            RLock lock = entry.getValue();
-            return lock != null && lock.isHeldByCurrentThread();
-        });
+        String currentThreadId = String.valueOf(Thread.currentThread().getId());
+        lockCache.entrySet().removeIf(entry -> currentThreadId.equals(entry.getValue()));
     }
 
     // ==================== 私有方法 ====================

@@ -5,20 +5,25 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class VerificationCodeService {
-    
+
     private static final String CODE_KEY_PREFIX = "verification:code:";
+    private static final String LIMIT_KEY_PREFIX = "verification:limit:";
+    private static final String ATTEMPTS_KEY_PREFIX = "verification:attempts:";
     private static final Duration CODE_EXPIRY = Duration.ofMinutes(5);
-    
+    private static final Duration LIMIT_EXPIRY = Duration.ofSeconds(60);
+    private static final int MAX_ATTEMPTS = 5;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final RedisTemplate<String, Object> redisTemplate;
-    
+
     private static final String VERIFY_SCRIPT = """
         local stored = redis.call('GET', KEYS[1])
         if stored and stored == ARGV[1] then
@@ -27,17 +32,22 @@ public class VerificationCodeService {
         end
         return 0
         """;
-    
+
     public String generateAndStore(String account) {
         if (account == null || account.trim().isEmpty()) {
             throw new IllegalArgumentException("账号不能为空");
         }
+        String limitKey = LIMIT_KEY_PREFIX + account;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(limitKey))) {
+            throw new IllegalStateException("操作过于频繁，请稍后再试");
+        }
         String code = generateCode();
         String key = CODE_KEY_PREFIX + account;
         redisTemplate.opsForValue().set(key, code, CODE_EXPIRY);
+        redisTemplate.opsForValue().set(limitKey, "1", LIMIT_EXPIRY);
         return code;
     }
-    
+
     public boolean verify(String account, String code) {
         if (account == null || account.trim().isEmpty()) {
             return false;
@@ -45,26 +55,44 @@ public class VerificationCodeService {
         if (code == null || code.trim().isEmpty()) {
             return false;
         }
-        String key = CODE_KEY_PREFIX + account;
+        String attemptsKey = ATTEMPTS_KEY_PREFIX + account;
+        String codeKey = CODE_KEY_PREFIX + account;
+        Object attemptsObj = redisTemplate.opsForValue().get(attemptsKey);
+        int attempts = 0;
+        if (attemptsObj != null) {
+            attempts = Integer.parseInt(attemptsObj.toString());
+        }
+        if (attempts >= MAX_ATTEMPTS) {
+            redisTemplate.delete(codeKey);
+            redisTemplate.delete(attemptsKey);
+            return false;
+        }
         DefaultRedisScript<Long> script = new DefaultRedisScript<>(VERIFY_SCRIPT, Long.class);
-        Long result = redisTemplate.execute(script, Collections.singletonList(key), code);
-        return result != null && result == 1L;
+        Long result = redisTemplate.execute(script, Collections.singletonList(codeKey), code);
+        if (result != null && result == 1L) {
+            redisTemplate.delete(attemptsKey);
+            return true;
+        }
+        Long newAttempts = redisTemplate.opsForValue().increment(attemptsKey);
+        if (newAttempts != null && newAttempts == 1L) {
+            redisTemplate.expire(attemptsKey, CODE_EXPIRY);
+        }
+        return false;
     }
-    
+
     public void delete(String account) {
         String key = CODE_KEY_PREFIX + account;
         redisTemplate.delete(key);
     }
-    
+
     public long getExpireTime(String account) {
         String key = CODE_KEY_PREFIX + account;
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
         return ttl != null ? ttl : 0;
     }
-    
+
     private String generateCode() {
-        Random random = new Random();
-        int code = 100000 + random.nextInt(900000);
+        int code = 100000 + SECURE_RANDOM.nextInt(900000);
         return String.valueOf(code);
     }
 }

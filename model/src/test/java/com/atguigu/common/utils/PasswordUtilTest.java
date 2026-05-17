@@ -84,6 +84,14 @@ class PasswordUtilTest {
             // Then
             assertNotNull(hashedPassword, "长密码应能正确加密");
         }
+
+        @Test
+        @DisplayName("应该拒绝null密码")
+        void should_throwException_whenNullPasswordProvided() {
+            assertThrows(IllegalArgumentException.class, () -> {
+                PasswordUtil.hashPassword(null);
+            }, "null密码应该抛出异常");
+        }
     }
 
     @Nested

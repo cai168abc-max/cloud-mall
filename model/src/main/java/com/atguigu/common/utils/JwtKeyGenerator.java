@@ -92,27 +92,20 @@ public class JwtKeyGenerator {
      * @return 验证结果，null表示验证通过，否则返回错误信息
      */
     public static String validateSecret(String secret) {
-        if (secret == null || secret.trim().isEmpty()) {
+        if (secret == null || secret.isEmpty()) {
             return "JWT密钥未配置，请设置环境变量JWT_SECRET";
         }
-        
-        // 对于Base64编码的密钥，解码后检查实际字节长度
+        int bitLength;
         try {
             byte[] decoded = Base64.getDecoder().decode(secret);
-            int bitLength = decoded.length * 8;
-            if (bitLength < MIN_KEY_LENGTH) {
-                return "JWT密钥长度不足，至少需要" + MIN_KEY_LENGTH + 
-                       "位，当前实际长度: " + bitLength + "位";
-            }
+            bitLength = decoded.length * 8;
         } catch (IllegalArgumentException e) {
-            int bitLength = secret.length() * 8;
-            if (bitLength < MIN_KEY_LENGTH) {
-                return "JWT密钥长度不足，至少需要" + MIN_KEY_LENGTH + 
-                       "位，当前实际长度: " + bitLength + "位";
-            }
+            bitLength = secret.length() * 8;
         }
-        
-        return null; // 验证通过
+        if (bitLength < MIN_KEY_LENGTH) {
+            return "JWT密钥长度不足，至少需要" + MIN_KEY_LENGTH + "位，当前实际长度: " + bitLength + "位";
+        }
+        return null;
     }
 
     /**

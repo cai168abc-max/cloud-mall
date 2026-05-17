@@ -2,6 +2,8 @@ package com.atguigu.common.cache;
 
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +38,7 @@ public class CacheService {
     /**
      * 空值占位符，用于防止缓存穿透
      */
-    private static final String NULL_VALUE = "NULL";
+    private static final String NULL_VALUE = "\0__NULL_CACHE__\0";
     
     /**
      * 空值缓存TTL（秒）
@@ -85,6 +87,8 @@ public class CacheService {
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(5, new NamedThreadFactory("cache-delete"));
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final RedissonClient redissonClient;
 
     @PreDestroy
     public void destroy() {
@@ -191,35 +195,34 @@ public class CacheService {
      * 获取锁并加载数据
      */
     private <T> T acquireLockAndLoad(String key, String lockKey, Supplier<T> loader) {
+        RLock lock = redissonClient.getLock(lockKey);
         long startTime = System.currentTimeMillis();
 
         while (System.currentTimeMillis() - startTime < lockWaitTimeout) {
-            // 尝试获取锁
-            Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(lockKey, "1", lockExpireTime, TimeUnit.SECONDS);
-
-            if (Boolean.TRUE.equals(acquired)) {
-                // 获取锁成功，加载数据
-                try {
-                    log.info("获取缓存互斥锁成功，开始加载数据, key={}", key);
-                    T data = loader.get();
-
-                    // 设置缓存
-                    if (data != null) {
-                        setCache(key, data);
-                    } else {
-                        // 防止缓存穿透，设置空值
-                        setNullCache(key);
+            try {
+                if (lock.tryLock(0, lockExpireTime, TimeUnit.SECONDS)) {
+                    try {
+                        log.info("获取缓存互斥锁成功，开始加载数据, key={}", key);
+                        T data = loader.get();
+                        if (data != null) {
+                            setCache(key, data);
+                        } else {
+                            setNullCache(key);
+                        }
+                        return data;
+                    } finally {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                        log.info("释放缓存互斥锁, key={}", key);
                     }
-                    return data;
-                } finally {
-                    // 释放锁
-                    redisTemplate.delete(lockKey);
-                    log.info("释放缓存互斥锁, key={}", key);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("等待缓存锁被中断, key={}", key);
+                break;
             }
 
-            // 未获取到锁，等待重试
             try {
                 Thread.sleep(LOCK_RETRY_INTERVAL);
             } catch (InterruptedException e) {
@@ -228,7 +231,6 @@ public class CacheService {
                 break;
             }
 
-            // 双重检查：其他线程可能已经加载完数据
             Object value = getCache(key);
             if (value != null) {
                 if (NULL_VALUE.equals(value)) {
@@ -240,7 +242,6 @@ public class CacheService {
             }
         }
 
-        // 等待超时，降级直接查询数据库
         log.warn("获取缓存互斥锁超时，降级直接查询数据源, key={}", key);
         return loader.get();
     }

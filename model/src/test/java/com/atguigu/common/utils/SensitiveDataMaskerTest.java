@@ -51,27 +51,19 @@ class SensitiveDataMaskerTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        @ValueSource(strings = {"123456"})
+        @ValueSource(strings = {"123456", "1234567", "1234567890"})
         @DisplayName("应该返回原值对于null、空字符串或长度不足的手机号")
         void should_returnOriginalValue_forInvalidPhone(String phone) {
-            // When
             String masked = SensitiveDataMasker.maskPhone(phone);
-
-            // Then
             assertEquals(phone, masked, "无效手机号应返回原值");
         }
 
         @Test
-        @DisplayName("应该正确处理边界长度手机号")
+        @DisplayName("应该正确处理11位手机号边界")
         void should_handleBoundaryLengthPhone() {
-            // Given
-            String phone7 = "1234567";  // 刚好7位
-
-            // When
-            String masked = SensitiveDataMasker.maskPhone(phone7);
-
-            // Then
-            assertEquals("123****567", masked, "7位手机号应正确脱敏");
+            String phone11 = "12345678901";
+            String masked = SensitiveDataMasker.maskPhone(phone11);
+            assertEquals("123****8901", masked, "11位手机号应正确脱敏");
         }
     }
 
@@ -288,11 +280,25 @@ class SensitiveDataMaskerTest {
         @ValueSource(strings = {"1234567"})
         @DisplayName("应该返回原值对于无效身份证号")
         void should_returnOriginalValue_forInvalidIdCard(String idCard) {
-            // When
             String masked = SensitiveDataMasker.maskIdCard(idCard);
-
-            // Then
             assertEquals(idCard, masked, "无效身份证号应返回原值");
+        }
+
+        @Test
+        @DisplayName("应该正确脱敏15位身份证号")
+        void should_mask15DigitIdCardCorrectly() {
+            String idCard = "110101900101123";
+            String masked = SensitiveDataMasker.maskIdCard(idCard);
+            assertEquals("1101*********23", masked, "15位身份证号脱敏结果不正确");
+        }
+
+        @Test
+        @DisplayName("15位身份证号应保留前4位和后2位")
+        void should_keepFirst4AndLast2Digits_for15DigitIdCard() {
+            String idCard = "123456789012345";
+            String masked = SensitiveDataMasker.maskIdCard(idCard);
+            assertTrue(masked.startsWith("1234"), "应保留前4位");
+            assertTrue(masked.endsWith("45"), "应保留后2位");
         }
     }
 
@@ -329,14 +335,27 @@ class SensitiveDataMaskerTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        @ValueSource(strings = {"1234567"})
+        @ValueSource(strings = {"1234567", "123456789012345", "12345678901234567890"})
         @DisplayName("应该返回原值对于无效银行卡号")
         void should_returnOriginalValue_forInvalidBankCard(String bankCard) {
-            // When
             String masked = SensitiveDataMasker.maskBankCard(bankCard);
-
-            // Then
             assertEquals(bankCard, masked, "无效银行卡号应返回原值");
+        }
+
+        @Test
+        @DisplayName("应该正确脱敏16位银行卡号")
+        void should_mask16DigitBankCardCorrectly() {
+            String bankCard = "1234567890123456";
+            String masked = SensitiveDataMasker.maskBankCard(bankCard);
+            assertEquals("1234****3456", masked, "16位银行卡号脱敏结果不正确");
+        }
+
+        @Test
+        @DisplayName("应该正确脱敏19位银行卡号")
+        void should_mask19DigitBankCardCorrectly() {
+            String bankCard = "6222021234567890123";
+            String masked = SensitiveDataMasker.maskBankCard(bankCard);
+            assertEquals("6222****0123", masked, "19位银行卡号脱敏结果不正确");
         }
     }
 
@@ -416,14 +435,11 @@ class SensitiveDataMaskerTest {
         @Test
         @DisplayName("应该保留前6个字符")
         void should_keepFirst6Chars() {
-            // Given
             String address = "上海市浦东新区某某路123号";
 
-            // When
             String masked = SensitiveDataMasker.maskAddress(address);
 
-            // Then
-            assertTrue(masked.startsWith("上海市浦东新区"), "应保留前6个字符");
+            assertTrue(masked.startsWith("上海市浦东新"), "应保留前6个字符");
         }
 
         @ParameterizedTest
@@ -522,16 +538,28 @@ class SensitiveDataMaskerTest {
         @Test
         @DisplayName("应该同时脱敏多种敏感信息")
         void should_maskMultipleSensitiveInfo() {
-            // Given
             String text = "用户13812345678，邮箱test@example.com，密码password=abc123";
-
-            // When
             String masked = SensitiveDataMasker.maskSensitiveInfo(text);
-
-            // Then
             assertTrue(masked.contains("138****5678"), "应脱敏手机号");
             assertTrue(masked.contains("t***@"), "应脱敏邮箱");
             assertTrue(masked.contains("password=******"), "应脱敏密码");
+        }
+
+        @Test
+        @DisplayName("18位银行卡号应由银行卡正则匹配而非身份证正则")
+        void should_matchBankCardRegex_for18DigitBankCard() {
+            String text = "银行卡622848123456789012已绑定";
+            String masked = SensitiveDataMasker.maskSensitiveInfo(text);
+            assertTrue(masked.contains("6228****9012"), "18位银行卡号应由银行卡正则匹配");
+            assertFalse(masked.contains("6228**********9012"), "18位银行卡号不应由身份证正则匹配");
+        }
+
+        @Test
+        @DisplayName("18位身份证号应由身份证正则匹配")
+        void should_matchIdCardRegex_for18DigitIdCard() {
+            String text = "身份证110101199001011234验证通过";
+            String masked = SensitiveDataMasker.maskSensitiveInfo(text);
+            assertTrue(masked.contains("1101**********1234"), "18位身份证号应由身份证正则匹配");
         }
     }
 }

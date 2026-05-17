@@ -5,15 +5,14 @@ import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.net.InetSocketAddress;
@@ -32,32 +31,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2. Redis发布订阅同步多实例缓存（多实例场景）
  */
 @Service
-@RequiredArgsConstructor
 public class RedisCacheSyncService implements MessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCacheSyncService.class);
 
     private static final String CACHE_INVALIDATE_TOPIC = "cache:invalidate";
 
-    /**
-     * 数据库表名到业务对象名的映射
-     * 用于统一缓存键格式：{业务对象}:{id}
-     */
     private static final Map<String, String> TABLE_NAME_MAPPING = new HashMap<>();
     
     static {
-        // 商品相关表
         TABLE_NAME_MAPPING.put("cloudtry_product", "product");
         TABLE_NAME_MAPPING.put("product", "product");
-        // 用户相关表
         TABLE_NAME_MAPPING.put("cloudtry_user", "user");
         TABLE_NAME_MAPPING.put("user", "user");
-        // 订单相关表
         TABLE_NAME_MAPPING.put("cloudtry_order", "order");
         TABLE_NAME_MAPPING.put("order", "order");
         TABLE_NAME_MAPPING.put("cloudtry_order_item", "order_item");
         TABLE_NAME_MAPPING.put("order_item", "order_item");
-        // 购物车相关表
         TABLE_NAME_MAPPING.put("cloudtry_cart", "cart");
         TABLE_NAME_MAPPING.put("cart", "cart");
     }
@@ -71,29 +61,28 @@ public class RedisCacheSyncService implements MessageListener {
     @Value("${canal.destination:example}")
     private String canalDestination;
 
-    /**
-     * 初始重连延迟（秒）
-     */
     @Value("${canal.reconnect.initial-delay-seconds:1}")
     private int reconnectInitialDelaySeconds;
 
-    /**
-     * 最大重连延迟（秒）
-     */
     @Value("${canal.reconnect.max-delay-seconds:60}")
     private int reconnectMaxDelaySeconds;
 
-    /**
-     * 重连延迟倍数（指数退避）
-     */
     private static final double RECONNECT_DELAY_MULTIPLIER = 2.0;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final RedisMessageListenerContainer redisMessageListenerContainer;
 
-    @Nullable
     private final MultiLevelCacheService multiLevelCacheService;
+
+    public RedisCacheSyncService(
+            RedisTemplate<String, Object> redisTemplate,
+            RedisMessageListenerContainer redisMessageListenerContainer,
+            @Lazy MultiLevelCacheService multiLevelCacheService) {
+        this.redisTemplate = redisTemplate;
+        this.redisMessageListenerContainer = redisMessageListenerContainer;
+        this.multiLevelCacheService = multiLevelCacheService;
+    }
 
     private ExecutorService executor;
     private volatile CanalConnector canalConnector;

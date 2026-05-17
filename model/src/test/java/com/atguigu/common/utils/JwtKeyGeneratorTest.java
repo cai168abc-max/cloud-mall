@@ -199,29 +199,29 @@ class JwtKeyGeneratorTest {
         }
 
         @Test
-        @DisplayName("应该接受长度足够的非Base64密钥")
-        void should_acceptLongEnoughNonBase64Secret() {
-            // Given
-            String nonBase64Secret = "a".repeat(32);
-
-            // When
-            String error = JwtKeyGenerator.validateSecret(nonBase64Secret);
-
-            // Then
-            assertNull(error, "长度足够的非Base64密钥应通过验证");
+        @DisplayName("应该拒绝长度不足的非Base64密钥")
+        void should_rejectShortNonBase64Secret() {
+            String shortNonBase64Secret = "short";
+            String error = JwtKeyGenerator.validateSecret(shortNonBase64Secret);
+            assertNotNull(error, "长度不足的非Base64密钥应返回错误信息");
         }
 
         @Test
-        @DisplayName("应该拒绝长度不足的非Base64密钥")
-        void should_rejectShortNonBase64Secret() {
-            // Given
-            String shortNonBase64Secret = "short";
+        @DisplayName("Base64编码密钥应按解码后字节数计算位长度")
+        void should_calculateBitLengthFromDecodedBytes_forBase64Secret() {
+            byte[] bytes = new byte[24];
+            String base64Secret = Base64.getEncoder().encodeToString(bytes);
+            String error = JwtKeyGenerator.validateSecret(base64Secret);
+            assertNotNull(error);
+            assertTrue(error.contains("192"), "24字节Base64密钥应为192位");
+        }
 
-            // When
-            String error = JwtKeyGenerator.validateSecret(shortNonBase64Secret);
-
-            // Then
-            assertNotNull(error, "长度不足的非Base64密钥应返回错误信息");
+        @Test
+        @DisplayName("非Base64密钥应按字符数计算位长度")
+        void should_calculateBitLengthFromCharCount_forNonBase64Secret() {
+            String nonBase64Secret = "!@#$%^&*()!@#$%^&*()!@#$%^&*()ab";
+            String error = JwtKeyGenerator.validateSecret(nonBase64Secret);
+            assertNull(error, "32字符非Base64密钥应为256位，应通过验证");
         }
     }
 

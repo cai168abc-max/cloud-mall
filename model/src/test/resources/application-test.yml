@@ -13,17 +13,29 @@ spring:
         enabled: false
     sentinel:
       enabled: false
+    openfeign:
+      enabled: false
 
-# 日志配置
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 logging:
   level:
-    root: INFO
+    root: WARN
     com.atguigu: DEBUG
 
-# 缓存配置
 cache:
   double-delete:
     delay-ms: 100
   lock:
     wait-timeout-ms: 3000
     expire-seconds: 30
+
+security:
+  jwt:
+    secret: test_jwt_secret_key_for_unit_testing_at_least_32_chars
+  internal:
+    secret: internal_secret_key_at_least_32_chars_for_test

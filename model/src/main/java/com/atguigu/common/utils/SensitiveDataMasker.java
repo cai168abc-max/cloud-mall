@@ -19,11 +19,8 @@ public class SensitiveDataMasker {
      * @return 脱敏后的手机号
      */
     public static String maskPhone(String phone) {
-        if (phone == null || phone.length() < 7) {
+        if (phone == null || phone.length() < 11) {
             return phone;
-        }
-        if (phone.length() <= 7) {
-            return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 1);
         }
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
     }
@@ -110,18 +107,16 @@ public class SensitiveDataMasker {
      * @return 脱敏后的身份证号
      */
     public static String maskIdCard(String idCard) {
-        if (idCard == null || idCard.length() < 8) {
+        if (idCard == null) {
             return idCard;
         }
-        int maskLen = idCard.length() - 10;
-        if (maskLen <= 0) {
-            return idCard;
+        if (idCard.length() == 18) {
+            return idCard.substring(0, 4) + "**********" + idCard.substring(14);
         }
-        StringBuilder mask = new StringBuilder();
-        for (int i = 0; i < maskLen; i++) {
-            mask.append("*");
+        if (idCard.length() == 15) {
+            return idCard.substring(0, 4) + "*********" + idCard.substring(13);
         }
-        return idCard.substring(0, 6) + mask + idCard.substring(idCard.length() - 4);
+        return idCard;
     }
     
     /**
@@ -133,7 +128,7 @@ public class SensitiveDataMasker {
      * @return 脱敏后的银行卡号
      */
     public static String maskBankCard(String bankCard) {
-        if (bankCard == null || bankCard.length() < 8) {
+        if (bankCard == null || bankCard.length() < 16 || bankCard.length() > 19) {
             return bankCard;
         }
         return bankCard.substring(0, 4) + "****" + bankCard.substring(bankCard.length() - 4);
@@ -186,20 +181,15 @@ public class SensitiveDataMasker {
             return null;
         }
         String result = text;
-        
-        // 手机号脱敏（11位数字）
-        result = result.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
-        
-        // 邮箱脱敏
+
+        result = result.replaceAll("(?<!\\d)(\\d{4})\\d{2}(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])(\\d{3}[\\dXx])(?!\\d)", "$1**********$2");
+
+        result = result.replaceAll("(?<!\\d)(\\d{4})\\d{8,11}(\\d{4})(?!\\d)", "$1****$2");
+
+        result = result.replaceAll("(?<!\\d)(\\d{3})\\d{4}(\\d{4})(?!\\d)", "$1****$2");
+
         result = result.replaceAll("([a-zA-Z0-9])[a-zA-Z0-9._%+-]*@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})", "$1***@$2");
-        
-        // 身份证号脱敏（18位，支持X/x结尾）
-        result = result.replaceAll("(\\d{6})\\d{8}(\\d{3}[\\dXx])", "$1********$2");
-        
-        // 银行卡号脱敏（16-19位）
-        result = result.replaceAll("(\\d{4})\\d{8,11}(\\d{4})", "$1****$2");
-        
-        // 密码相关字段脱敏
+
         result = result.replaceAll("(password|passwd|pwd)[\"']?\\s*[:=]\\s*[\"']?[^,}\\s\"']+", "$1=******");
         result = result.replaceAll("(secret|token|key)[\"']?\\s*[:=]\\s*[\"']?[^,}\\s\"']+", "$1=******");
         
