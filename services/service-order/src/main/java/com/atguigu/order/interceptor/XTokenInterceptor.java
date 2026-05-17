@@ -4,6 +4,7 @@ import com.atguigu.common.bean.UserInfo;
 import com.atguigu.common.context.UserContext;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.apache.seata.core.context.RootContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -56,6 +57,11 @@ public class XTokenInterceptor implements RequestInterceptor {
                 requestTemplate.header("X-User-Role", user.getRole().name());
             }
             log.debug("Feign请求传递用户上下文: userId={}, role={}", user.getId(), user.getRole());
+        }
+        String xid = RootContext.getXID();
+        if (xid != null) {
+            requestTemplate.header("TX_XID", xid);
+            log.debug("Feign请求传播Seata XID: {}", xid);
         }
     }
 }

@@ -131,6 +131,6 @@ public class AdminAuthFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         // 在AuthTokenFilter之后执行，确保已经解析了用户角色
-        return -50;
+        return -90;
     }
 }

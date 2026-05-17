@@ -22,6 +22,9 @@ public class SensitiveDataMasker {
         if (phone == null || phone.length() < 7) {
             return phone;
         }
+        if (phone.length() <= 7) {
+            return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 1);
+        }
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
     }
     
@@ -100,8 +103,8 @@ public class SensitiveDataMasker {
     
     /**
      * 身份证号脱敏
-     * 保留前4位和后4位，中间用**********替代
-     * 例如：110101199001011234 -> 1101**********1234
+     * 保留前6位和后4位，中间用*替代
+     * 例如：110101199001011234 -> 110101********1234
      *
      * @param idCard 身份证号
      * @return 脱敏后的身份证号
@@ -110,7 +113,15 @@ public class SensitiveDataMasker {
         if (idCard == null || idCard.length() < 8) {
             return idCard;
         }
-        return idCard.substring(0, 4) + "**********" + idCard.substring(idCard.length() - 4);
+        int maskLen = idCard.length() - 10;
+        if (maskLen <= 0) {
+            return idCard;
+        }
+        StringBuilder mask = new StringBuilder();
+        for (int i = 0; i < maskLen; i++) {
+            mask.append("*");
+        }
+        return idCard.substring(0, 6) + mask + idCard.substring(idCard.length() - 4);
     }
     
     /**
@@ -156,7 +167,7 @@ public class SensitiveDataMasker {
      * @return 脱敏后的地址
      */
     public static String maskAddress(String address) {
-        if (address == null || address.length() < 6) {
+        if (address == null || address.length() <= 6) {
             return address;
         }
         // 简单实现：保留前6个字符
@@ -182,8 +193,8 @@ public class SensitiveDataMasker {
         // 邮箱脱敏
         result = result.replaceAll("([a-zA-Z0-9])[a-zA-Z0-9._%+-]*@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})", "$1***@$2");
         
-        // 身份证号脱敏（18位）
-        result = result.replaceAll("(\\d{4})\\d{10}(\\d{4})", "$1**********$2");
+        // 身份证号脱敏（18位，支持X/x结尾）
+        result = result.replaceAll("(\\d{6})\\d{8}(\\d{3}[\\dXx])", "$1********$2");
         
         // 银行卡号脱敏（16-19位）
         result = result.replaceAll("(\\d{4})\\d{8,11}(\\d{4})", "$1****$2");

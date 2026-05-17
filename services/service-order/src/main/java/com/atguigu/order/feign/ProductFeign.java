@@ -1,6 +1,6 @@
 package com.atguigu.order.feign;
 
-import com.atguigu.order.fallback.ProductFeignFallback;
+import com.atguigu.order.fallback.ProductFeignFallbackFactory;
 import com.atguigu.product.bean.Product;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,7 @@ import java.util.Map;
  * 2. 监控统计：区分内外部调用
  * 3. 安全隔离：防止外部直接调用内部接口
  */
-@FeignClient(value = "service-product", fallback = ProductFeignFallback.class)
+@FeignClient(value = "service-product", fallbackFactory = ProductFeignFallbackFactory.class)
 public interface ProductFeign {
     /**
      * 获取商品详情（内部接口）

@@ -1,6 +1,6 @@
 package com.atguigu.order.feign;
 
-import com.atguigu.order.fallback.WeatherFeignFallback;
+import com.atguigu.order.fallback.WeatherFeignFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * <p>用于获取天气信息，支持根据城市ID或城市名称查询</p>
  * <p>fallback配置确保服务不可用时有明确的降级处理</p>
  */
-@FeignClient(value = "weather-client", url = "${weather.api.url:http://aliv18.data.moji.com}", fallback = WeatherFeignFallback.class)
+@FeignClient(value = "weather-client", url = "${weather.api.url:http://aliv18.data.moji.com}", fallbackFactory = WeatherFeignFallbackFactory.class)
 public interface WeatherFeign {
 
     /**

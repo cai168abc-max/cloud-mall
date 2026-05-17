@@ -1,6 +1,7 @@
 package com.atguigu.product.controller;
 
 import com.atguigu.common.context.UserContext;
+import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
 import com.atguigu.product.bean.ProductAuditLog;
 import com.atguigu.product.service.ProductAuditService;
@@ -124,6 +125,9 @@ public class ProductAuditController {
         if (auditorId == null) {
             return R.unauthorized("请先登录");
         }
+        if (userInfo.getRole() != UserRole.ADMIN) {
+            return R.error(403, "仅管理员可以审核商品");
+        }
 
         AuditResult result = productAuditService.auditProduct(
                 request.getProductId(),
@@ -152,6 +156,9 @@ public class ProductAuditController {
         Long auditorId = userInfo != null ? userInfo.getId() : null;
         if (auditorId == null) {
             return R.unauthorized("请先登录");
+        }
+        if (userInfo.getRole() != UserRole.ADMIN) {
+            return R.error(403, "仅管理员可以审核商品");
         }
 
         BatchAuditResult result = productAuditService.batchAuditProducts(

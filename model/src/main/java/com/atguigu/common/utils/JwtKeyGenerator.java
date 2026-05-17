@@ -105,9 +105,10 @@ public class JwtKeyGenerator {
                        "位，当前实际长度: " + bitLength + "位";
             }
         } catch (IllegalArgumentException e) {
-            // 如果不是Base64编码，则按原始字符串长度检查
-            if (secret.length() < 32) {
-                return "JWT密钥长度不足，至少需要32个字符，当前长度: " + secret.length();
+            int bitLength = secret.length() * 8;
+            if (bitLength < MIN_KEY_LENGTH) {
+                return "JWT密钥长度不足，至少需要" + MIN_KEY_LENGTH + 
+                       "位，当前实际长度: " + bitLength + "位";
             }
         }
         

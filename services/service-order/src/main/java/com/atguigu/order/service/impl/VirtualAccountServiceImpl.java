@@ -136,12 +136,21 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
 
             try {
-                // 执行充值
-                return doRecharge(userId, amount, transactionNo);
-            } finally {
+                VirtualAccountLog result = doRecharge(userId, amount, transactionNo);
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return result;
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -308,12 +317,21 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
 
             try {
-                // 执行支付
-                return doPay(userId, amount, orderId, transactionNo);
-            } finally {
+                VirtualAccountLog result = doPay(userId, amount, orderId, transactionNo);
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return result;
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -450,12 +468,21 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
 
             try {
-                // 执行退款
-                return doRefund(userId, amount, orderId, transactionNo);
-            } finally {
+                VirtualAccountLog result = doRefund(userId, amount, orderId, transactionNo);
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return result;
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -571,16 +598,25 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
                         account.getId(), amount, account.getVersion());
                 
                 if (updated > 0) {
-                    // 清除缓存
-                    clearBalanceCache(userId);
+                    final Long userIdRef = userId;
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            clearBalanceCache(userIdRef);
+                            if (lock.isHeldByCurrentThread()) {
+                                lock.unlock();
+                            }
+                        }
+                    });
                     return true;
                 }
                 
                 return false;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -615,16 +651,25 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
                         account.getId(), amount, account.getVersion());
                 
                 if (updated > 0) {
-                    // 清除缓存
-                    clearBalanceCache(userId);
+                    final Long userIdRef = userId;
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            clearBalanceCache(userIdRef);
+                            if (lock.isHeldByCurrentThread()) {
+                                lock.unlock();
+                            }
+                        }
+                    });
                     return true;
                 }
                 
                 return false;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

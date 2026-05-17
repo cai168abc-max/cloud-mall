@@ -22,6 +22,9 @@ public class CouponController {
 
     @GetMapping("/{id}")
     public R getCoupon(@PathVariable("id") Long couponId) {
+        if (UserContext.get() == null) {
+            return R.error(403, "请先登录");
+        }
         Coupon coupon = couponService.getCouponById(couponId);
         if (coupon == null) {
             return R.error(404, "优惠券不存在");

@@ -1,18 +1,14 @@
 package com.atguigu.order.feign;
 
 import com.atguigu.common.result.R;
-import com.atguigu.common.bean.UserAddress;
-import com.atguigu.order.fallback.UserFeignFallback;
+import com.atguigu.order.fallback.UserFeignFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.List;
-
-@FeignClient(value = "service-user", fallback = UserFeignFallback.class)
+@FeignClient(value = "service-user", fallbackFactory = UserFeignFallbackFactory.class)
 public interface UserFeign {
-    
-    // 获取用户地址列表
-    @GetMapping("/api/user/me")
-    R getUserInfo(@RequestParam("userId") Long userId);
+
+    @GetMapping("/internal/api/user/{userId}")
+    R getUserInfo(@PathVariable("userId") Long userId);
 }

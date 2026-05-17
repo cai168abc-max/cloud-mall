@@ -150,25 +150,4 @@ public class ProductController {
         return success ? R.ok("价格修改成功") : R.error("价格修改失败");
     }
 
-    /**
-     * 批量库存回滚接口 - 解决N+1调用问题
-     * 用于订单取消/退款时批量恢复库存
-     */
-    @PutMapping("/batchIncreaseStock")
-    @RequirePermission("inventory:write")
-    public int batchIncreaseStock(@RequestBody List<Map<String, Object>> items) {
-        if (items == null || items.isEmpty()) {
-            return 0;
-        }
-        List<ProductMapper.StockItem> stockItems = items.stream()
-                .map(item -> {
-                    ProductMapper.StockItem stockItem = new ProductMapper.StockItem();
-                    stockItem.setProductId(Long.valueOf(item.get("productId").toString()));
-                    stockItem.setQuantity(Integer.valueOf(item.get("quantity").toString()));
-                    return stockItem;
-                })
-                .collect(Collectors.toList());
-        boolean success = productService.batchIncreaseStock(stockItems);
-        return success ? stockItems.size() : 0;
-    }
 }

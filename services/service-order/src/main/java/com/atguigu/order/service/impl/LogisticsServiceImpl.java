@@ -100,29 +100,34 @@ public class LogisticsServiceImpl implements LogisticsService {
         
         boolean locked = false;
         try {
-            // 尝试获取分布式锁
             locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
-            
-            if (locked) {
-                log.info("获取分布式锁成功: {}", lockKey);
-                return doShipOrder(order, trackingNo, carrier, senderName, senderPhone, senderAddress);
-            } else {
-                // 获取锁失败，使用数据库行锁作为兜底方案
-                log.warn("获取分布式锁失败，使用数据库行锁兜底: {}", lockKey);
-                return doShipOrderWithDbLock(order, trackingNo, carrier, senderName, senderPhone, senderAddress);
-            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("获取分布式锁被中断: {}", lockKey, e);
             throw new BusinessException(500, "系统繁忙，请稍后重试");
+        }
+
+        try {
+            if (locked) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return doShipOrder(order, trackingNo, carrier, senderName, senderPhone, senderAddress);
+            } else {
+                return doShipOrderWithDbLock(order, trackingNo, carrier, senderName, senderPhone, senderAddress);
+            }
         } catch (Exception e) {
-            log.error("发货异常: orderId={}", orderId, e);
-            throw new BusinessException(500, "发货失败: " + e.getMessage());
-        } finally {
             if (locked && lock.isHeldByCurrentThread()) {
                 lock.unlock();
-                log.info("释放分布式锁: {}", lockKey);
             }
+            if (e instanceof BusinessException) {
+                throw e;
+            }
+            throw new BusinessException(500, "发货失败: " + e.getMessage());
         }
     }
     
@@ -161,11 +166,9 @@ public class LogisticsServiceImpl implements LogisticsService {
             @Override
             public void afterCommit() {
                 sendShipNotification(orderRef, logisticsRef);
+                cacheLogisticsInfo(logisticsRef);
             }
         });
-        
-        // 缓存物流信息
-        cacheLogisticsInfo(logisticsInfo);
         
         log.info("发货成功: orderId={}, logisticsId={}", order.getId(), logisticsInfo.getId());
         return logisticsInfo;
@@ -206,11 +209,9 @@ public class LogisticsServiceImpl implements LogisticsService {
             @Override
             public void afterCommit() {
                 sendShipNotification(orderRef, logisticsRef);
+                cacheLogisticsInfo(logisticsRef);
             }
         });
-        
-        // 缓存物流信息
-        cacheLogisticsInfo(logisticsInfo);
         
         log.info("发货成功(数据库行锁兜底): orderId={}, logisticsId={}", order.getId(), logisticsInfo.getId());
         return logisticsInfo;
@@ -394,17 +395,25 @@ public class LogisticsServiceImpl implements LogisticsService {
         
         int result = logisticsTraceMapper.insertLogisticsTrace(trace);
         
-        // 更新物流状态
+        String cacheKey = CacheKeyConstants.logisticsInfo(logisticsInfo.getOrderId());
         if ("已签收".equals(status) || "已妥投".equals(status)) {
             logisticsInfoMapper.updateToDelivered(logisticsId);
-            // 清除缓存
-            String cacheKey = CacheKeyConstants.logisticsInfo(logisticsInfo.getOrderId());
-            stringRedisTemplate.delete(cacheKey);
+            final String key = cacheKey;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    stringRedisTemplate.delete(key);
+                }
+            });
         } else if ("运输中".equals(status) || "派送中".equals(status)) {
             logisticsInfoMapper.updateStatus(logisticsId, LogisticsStatus.IN_TRANSIT.name());
-            // 清除缓存
-            String cacheKey = CacheKeyConstants.logisticsInfo(logisticsInfo.getOrderId());
-            stringRedisTemplate.delete(cacheKey);
+            final String key = cacheKey;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    stringRedisTemplate.delete(key);
+                }
+            });
         }
         
         return result > 0;
@@ -441,9 +450,13 @@ public class LogisticsServiceImpl implements LogisticsService {
         // 更新订单状态
         orderMapper.updateStatusToCompleted(orderId, OrderStatus.COMPLETED.name());
         
-        // 清除缓存
-        String cacheKey = CacheKeyConstants.logisticsInfo(orderId);
-        stringRedisTemplate.delete(cacheKey);
+        final String cacheKey = CacheKeyConstants.logisticsInfo(orderId);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                stringRedisTemplate.delete(cacheKey);
+            }
+        });
         
         log.info("确认签收成功: orderId={}, userId={}", orderId, userId);
         return true;

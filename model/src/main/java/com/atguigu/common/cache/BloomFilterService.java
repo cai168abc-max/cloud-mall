@@ -51,6 +51,10 @@ public class BloomFilterService {
         return productBloomFilter.mightContain(productId);
     }
 
+    public void addProduct(Long productId) {
+        productBloomFilter.put(productId);
+    }
+
     public boolean mightContainUser(Long userId) {
         return userBloomFilter.mightContain(userId);
     }

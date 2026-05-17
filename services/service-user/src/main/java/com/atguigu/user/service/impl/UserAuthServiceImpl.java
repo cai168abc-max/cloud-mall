@@ -27,11 +27,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +54,8 @@ public class UserAuthServiceImpl implements UserAuthService {
     private final RateLimitService rateLimitService;
 
     private final VerificationCodeService verificationCodeService;
+
+    private final RedissonClient redissonClient;
 
     @Value("${security.jwt.secret}")
     private String jwtSecret;
@@ -72,6 +80,11 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserAccount register(String phoneOrEmail, String password) {
+        UserAccount existing = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
+        if (existing != null) {
+            throw new IllegalArgumentException("该手机号/邮箱已注册");
+        }
+
         UserAccount account = new UserAccount();
         if (phoneOrEmail.contains("@")) {
             account.setEmail(phoneOrEmail);
@@ -90,6 +103,11 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserAccount registerMerchant(String phoneOrEmail, String password, String merchantName) {
+        UserAccount existing = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
+        if (existing != null) {
+            throw new IllegalArgumentException("该手机号/邮箱已注册");
+        }
+
         UserAccount account = new UserAccount();
         if (phoneOrEmail.contains("@")) {
             account.setEmail(phoneOrEmail);
@@ -189,17 +207,13 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void resetPassword(String phoneOrEmail, String newPassword, String verifyCode) {
-        // 防止时序攻击：添加随机延迟，使响应时间不可预测
         long startTime = System.currentTimeMillis();
         
         boolean codeValid = validateVerificationCode(phoneOrEmail, verifyCode);
         
-        // 查询用户（无论验证码是否正确都执行，防止通过响应时间推断）
         UserAccount account = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
         
-        // 添加随机延迟（100-300ms），使总响应时间趋于一致
         addRandomDelay(100, 300);
         
         if (!codeValid) {
@@ -212,10 +226,15 @@ public class UserAuthServiceImpl implements UserAuthService {
             throw new IllegalArgumentException("用户不存在");
         }
         
-        String hash = PasswordUtil.hashPassword(newPassword);
-        userAccountMapper.updatePassword(account.getId(), hash, null);
+        doResetPassword(account.getId(), newPassword);
         
         log.info("密码重置成功，耗时: {}ms", System.currentTimeMillis() - startTime);
+    }
+    
+    @Transactional(rollbackFor = Exception.class)
+    public void doResetPassword(Long accountId, String newPassword) {
+        String hash = PasswordUtil.hashPassword(newPassword);
+        userAccountMapper.updatePassword(accountId, hash, null);
     }
     
     /**
@@ -254,6 +273,11 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserInfo updateUserInfo(UserInfo userInfo) {
+        com.atguigu.common.bean.UserInfo currentUser = com.atguigu.common.context.UserContext.get();
+        if (currentUser == null || !currentUser.getId().equals(userInfo.getId())) {
+            throw new SecurityException("无权修改其他用户信息");
+        }
+
         userAccountMapper.updateUserInfo(
             userInfo.getId(),
             userInfo.getNickName(),
@@ -266,15 +290,42 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
     public void updatePassword(Long userId, String oldPassword, String newPassword) {
-        UserAccount account = userAccountMapper.selectById(userId);
-        if (account == null) {
-            throw new IllegalArgumentException("用户不存在");
+        String lockKey = "user:password:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new IllegalStateException("系统繁忙，请稍后重试");
+            }
+            try {
+                UserAccount account = userAccountMapper.selectById(userId);
+                if (account == null) {
+                    throw new IllegalArgumentException("用户不存在");
+                }
+                if (!PasswordUtil.matches(oldPassword, account.getPasswordHash())) {
+                    throw new IllegalArgumentException("旧密码错误");
+                }
+                String hash = PasswordUtil.hashPassword(newPassword);
+                userAccountMapper.updatePassword(userId, hash, null);
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("系统异常，请稍后重试");
         }
-        if (!PasswordUtil.matches(oldPassword, account.getPasswordHash())) {
-            throw new IllegalArgumentException("旧密码错误");
-        }
-        String hash = PasswordUtil.hashPassword(newPassword);
-        userAccountMapper.updatePassword(userId, hash, null);
     }
 
     @Override
@@ -285,6 +336,10 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserAddress saveOrUpdateAddress(UserAddress address) {
+        com.atguigu.common.bean.UserInfo currentUser = com.atguigu.common.context.UserContext.get();
+        if (currentUser == null || !currentUser.getId().equals(address.getUserId())) {
+            throw new SecurityException("无权操作其他用户的地址");
+        }
         if (address.getId() == null) {
             userAddressMapper.insertAddress(address);
         } else {
@@ -323,12 +378,20 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUserStatus(Long userId, boolean enabled) {
+        com.atguigu.common.bean.UserInfo currentUser = com.atguigu.common.context.UserContext.get();
+        if (currentUser == null || !com.atguigu.common.enums.UserRole.ADMIN.equals(currentUser.getRole())) {
+            throw new SecurityException("仅管理员可修改用户状态");
+        }
         userAccountMapper.updateStatus(userId, enabled);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUserRole(Long userId, UserRole role) {
+        com.atguigu.common.bean.UserInfo currentUser = com.atguigu.common.context.UserContext.get();
+        if (currentUser == null || !com.atguigu.common.enums.UserRole.ADMIN.equals(currentUser.getRole())) {
+            throw new SecurityException("仅管理员可修改用户角色");
+        }
         userAccountMapper.updateRole(userId, role.name());
     }
 

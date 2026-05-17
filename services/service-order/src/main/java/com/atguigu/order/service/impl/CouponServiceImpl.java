@@ -1,6 +1,5 @@
 package com.atguigu.order.service.impl;
 
-import org.apache.seata.spring.annotation.GlobalTransactional;
 import com.atguigu.common.enums.CouponStatus;
 import com.atguigu.order.bean.Coupon;
 import com.atguigu.order.mapper.CouponMapper;
@@ -66,10 +65,10 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    @GlobalTransactional(name = "acquire-coupon", timeoutMills = 30000, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public boolean acquireCoupon(Long couponId, Long userId) {
         String userKey = USER_COUPON_KEY_PREFIX + userId + ":" + couponId;
-        Boolean isAcquired = redisTemplate.opsForValue().setIfAbsent(userKey, "1");
+        Boolean isAcquired = redisTemplate.opsForValue().setIfAbsent(userKey, "1", 7, java.util.concurrent.TimeUnit.DAYS);
         if (Boolean.FALSE.equals(isAcquired)) {
             return false;
         }
@@ -95,6 +94,7 @@ public class CouponServiceImpl implements CouponService {
             );
 
             if (remain == null || remain < 0) {
+                redisTemplate.delete(userKey);
                 couponMapper.updateStatus(couponId, CouponStatus.USED_OUT.name());
                 return false;
             }
@@ -151,6 +151,14 @@ public class CouponServiceImpl implements CouponService {
     @Transactional(rollbackFor = Exception.class)
     public Coupon updateCoupon(Coupon coupon) {
         couponMapper.updateById(coupon);
+        final Long couponIdRef = coupon.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
+                redisTemplate.delete(stockKey);
+            }
+        });
         return couponMapper.selectById(coupon.getId());
     }
 
@@ -158,8 +166,14 @@ public class CouponServiceImpl implements CouponService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteCoupon(Long couponId) {
         couponMapper.deleteById(couponId);
-        String stockKey = COUPON_STOCK_KEY_PREFIX + couponId;
-        redisTemplate.delete(stockKey);
+        final Long couponIdRef = couponId;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
+                redisTemplate.delete(stockKey);
+            }
+        });
     }
 
     @Override

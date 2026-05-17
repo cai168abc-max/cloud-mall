@@ -237,14 +237,27 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Cart clearCart(Long userId) {
-        // 清空Redis中的购物车
-        redisTemplate.delete(CART_KEY_PREFIX + userId);
-        // 返回空购物车
-        Cart cart = new Cart();
-        cart.setUserId(userId);
-        cart.setItems(new ArrayList<>());
-        cart.calculateTotal();
-        return cart;
+        String lockKey = CART_LOCK_PREFIX + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean acquired = lock.tryLock(3, TimeUnit.SECONDS);
+            if (!acquired) {
+                throw new IllegalStateException("系统繁忙，请稍后重试");
+            }
+            redisTemplate.delete(CART_KEY_PREFIX + userId);
+            Cart cart = new Cart();
+            cart.setUserId(userId);
+            cart.setItems(new ArrayList<>());
+            cart.calculateTotal();
+            return cart;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("系统繁忙，请稍后重试");
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
     @Override

@@ -73,7 +73,7 @@ public class SeckillServiceImpl implements SeckillService {
         }
 
         String userKey = SECKILL_USER_KEY_PREFIX + realUserId + ":" + productId;
-        Boolean isFirst = redisTemplate.opsForValue().setIfAbsent(userKey, "1");
+        Boolean isFirst = redisTemplate.opsForValue().setIfAbsent(userKey, "1", 24, java.util.concurrent.TimeUnit.HOURS);
         if (Boolean.FALSE.equals(isFirst)) {
             log.info("用户重复秒杀, userId={}, productId={}", realUserId, productId);
             throw new RuntimeException("您已参与过此商品秒杀");
@@ -110,6 +110,7 @@ public class SeckillServiceImpl implements SeckillService {
                     public void onException(Throwable e) {
                         log.error("秒杀消息发送失败，回滚库存", e);
                         rollbackStock(stockKey, soldOutKey, 1);
+                        redisTemplate.delete(userKey);
                     }
                 });
 

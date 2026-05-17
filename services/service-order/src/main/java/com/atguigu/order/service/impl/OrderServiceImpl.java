@@ -69,9 +69,18 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("订单创建中，请勿重复提交，原因: " + lockResult.getMessage());
         }
         try {
-            return doCreateOrder(productId, userId, null);
-        } finally {
+            Order order = doCreateOrder(productId, userId, null);
+            final String keyRef = idempotencyKey;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    idempotencyService.releaseLock(keyRef);
+                }
+            });
+            return order;
+        } catch (Exception e) {
             idempotencyService.releaseLock(idempotencyKey);
+            throw e;
         }
     }
 
@@ -89,9 +98,18 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("订单创建中，请勿重复提交，原因: " + lockResult.getMessage());
         }
         try {
-            return doCreateOrder(productId, userId, couponId);
-        } finally {
+            Order order = doCreateOrder(productId, userId, couponId);
+            final String keyRef = idempotencyKey;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    idempotencyService.releaseLock(keyRef);
+                }
+            });
+            return order;
+        } catch (Exception e) {
             idempotencyService.releaseLock(idempotencyKey);
+            throw e;
         }
     }
 
@@ -162,16 +180,20 @@ public class OrderServiceImpl implements OrderService {
      */
     private void applyCoupon(Order order, Long couponId, Long userId) {
         if (couponId == null) {
+            order.setPayAmount(order.getTotalPrice().subtract(order.getDiscountAmount()));
             return;
         }
         
         Coupon coupon = couponService.getValidCouponForUse(couponId, userId);
         if (coupon != null && order.getTotalPrice().compareTo(coupon.getThreshold()) >= 0) {
+            boolean acquired = couponService.acquireCoupon(couponId, userId);
+            if (!acquired) {
+                throw new BusinessException("优惠券已被领完或已使用");
+            }
             order.setCouponId(couponId);
             order.setDiscountAmount(coupon.getAmount());
         }
         
-        // 计算实际支付金额
         BigDecimal payAmount = order.getTotalPrice().subtract(order.getDiscountAmount());
         if (payAmount.compareTo(BigDecimal.ZERO) < 0) {
             payAmount = BigDecimal.ZERO;
@@ -283,11 +305,21 @@ public class OrderServiceImpl implements OrderService {
                 orderMapper.updateStatusToPaid(orderId, OrderStatus.PAID.name());
 
                 log.info("订单支付成功, orderId={}, userId={}, payAmount={}", orderId, userId, order.getPayAmount());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
                 return order;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -298,17 +330,43 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Order shipOrder(Long orderId, Long merchantId) {
-        Order order = orderMapper.selectById(orderId);
-        if (order == null || order.getStatus() != OrderStatus.PAID) {
-            return null;
+        String lockKey = ORDER_LOCK_PREFIX + orderId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
+            }
+            try {
+                Order order = orderMapper.selectById(orderId);
+                if (order == null || order.getStatus() != OrderStatus.PAID) {
+                    return null;
+                }
+                if (!order.getMerchantId().equals(merchantId)) {
+                    throw new SecurityException("无权操作此订单");
+                }
+                order.setStatus(OrderStatus.SHIPPED);
+                orderMapper.updateStatusToShipped(orderId, OrderStatus.SHIPPED.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return order;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        // 所有权校验：只有订单所属商家才能发货
-        if (!order.getMerchantId().equals(merchantId)) {
-            throw new SecurityException("无权操作此订单");
-        }
-        order.setStatus(OrderStatus.SHIPPED);
-        orderMapper.updateStatusToShipped(orderId, OrderStatus.SHIPPED.name());
-        return order;
     }
 
     @Override
@@ -331,11 +389,21 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.setStatus(OrderStatus.COMPLETED);
                 orderMapper.updateStatusToCompleted(orderId, OrderStatus.COMPLETED.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
                 return order;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -346,30 +414,55 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @GlobalTransactional(name = "cancel-order", timeoutMills = 30000, rollbackFor = Exception.class)
     public Order cancelOrder(Long orderId, Long userId) {
-        Order order = orderMapper.selectById(orderId);
-        if (order == null || order.getStatus() != OrderStatus.CREATED) {
-            return null;
-        }
-        // 所有权校验：只有订单所有者才能取消
-        if (!order.getUserId().equals(userId)) {
-            throw new SecurityException("无权操作此订单");
-        }
+        String lockKey = ORDER_LOCK_PREFIX + orderId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
+            }
+            try {
+                Order order = orderMapper.selectById(orderId);
+                if (order == null || order.getStatus() != OrderStatus.CREATED) {
+                    return null;
+                }
+                if (!order.getUserId().equals(userId)) {
+                    throw new SecurityException("无权操作此订单");
+                }
 
-        List<OrderItem> orderItems = orderItemMapper.selectByOrderId(orderId);
-        // 性能优化：使用批量库存回滚接口，解决N+1调用问题
-        List<Map<String, Object>> rollbackItems = orderItems.stream()
-                .map(item -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("productId", item.getProductId());
-                    map.put("quantity", item.getQuantity());
-                    return map;
-                })
-                .collect(Collectors.toList());
-        productFeign.batchIncreaseStock(rollbackItems);
+                List<OrderItem> orderItems = orderItemMapper.selectByOrderId(orderId);
+                List<Map<String, Object>> rollbackItems = orderItems.stream()
+                        .map(item -> {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("productId", item.getProductId());
+                            map.put("quantity", item.getQuantity());
+                            return map;
+                        })
+                        .collect(Collectors.toList());
+                productFeign.batchIncreaseStock(rollbackItems);
 
-        order.setStatus(OrderStatus.CANCELED);
-        orderMapper.updateStatus(orderId, OrderStatus.CANCELED.name());
-        return order;
+                order.setStatus(OrderStatus.CANCELED);
+                orderMapper.updateStatus(orderId, OrderStatus.CANCELED.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return order;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
+        }
     }
 
     @Override
@@ -392,11 +485,21 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.setStatus(OrderStatus.REFUNDING);
                 orderMapper.updateStatus(orderId, OrderStatus.REFUNDING.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
                 return order;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -446,11 +549,21 @@ public class OrderServiceImpl implements OrderService {
                 orderMapper.updateStatus(orderId, OrderStatus.REFUNDED.name());
 
                 log.info("订单退款成功, orderId={}, userId={}, refundAmount={}", orderId, order.getUserId(), order.getPayAmount());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
                 return true;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -478,11 +591,21 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.setStatus(OrderStatus.PAID);
                 orderMapper.updateStatus(orderId, OrderStatus.PAID.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
                 return true;
-            } finally {
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -493,17 +616,43 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
     public Order applyAfterSale(Long orderId, String reason, Long userId) {
-        Order order = orderMapper.selectById(orderId);
-        if (order == null || order.getStatus() != OrderStatus.COMPLETED) {
-            return null;
+        String lockKey = ORDER_LOCK_PREFIX + orderId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
+            }
+            try {
+                Order order = orderMapper.selectById(orderId);
+                if (order == null || order.getStatus() != OrderStatus.COMPLETED) {
+                    return null;
+                }
+                if (!order.getUserId().equals(userId)) {
+                    throw new SecurityException("无权操作此订单");
+                }
+                order.setStatus(OrderStatus.REFUNDING);
+                orderMapper.updateStatus(orderId, OrderStatus.REFUNDING.name());
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return order;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        // 所有权校验：只有订单所有者才能申请售后
-        if (!order.getUserId().equals(userId)) {
-            throw new SecurityException("无权操作此订单");
-        }
-        order.setStatus(OrderStatus.REFUNDING);
-        orderMapper.updateStatus(orderId, OrderStatus.REFUNDING.name());
-        return order;
     }
 
     /**
@@ -523,77 +672,141 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 60,
-                   propagation = org.springframework.transaction.annotation.Propagation.REQUIRED, 
-                   isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Map<Long, Order> batchPayOrders(List<Long> orderIds, Long userId) {
-        Map<Long, Order> result = new HashMap<>();
-        if (orderIds == null || orderIds.isEmpty()) {
-            return result;
-        }
-        
-        List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.CREATED.name());
-        
-        if (orders.isEmpty()) {
-            return result;
-        }
-        
-        List<Long> validOrderIds = orders.stream()
-                .filter(order -> order.getUserId().equals(userId))
-                .map(Order::getId)
-                .collect(Collectors.toList());
-        
-        if (validOrderIds.isEmpty()) {
-            return result;
-        }
-        
-        int updated = orderMapper.batchUpdateStatusToPaid(validOrderIds, OrderStatus.PAID.name());
-        
-        for (Order order : orders) {
-            if (order.getUserId().equals(userId)) {
-                order.setStatus(OrderStatus.PAID);
-                result.put(order.getId(), order);
+        String lockKey = "batch-pay:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
             }
+            try {
+                Map<Long, Order> result = new HashMap<>();
+                if (orderIds == null || orderIds.isEmpty()) {
+                    return result;
+                }
+                
+                List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.CREATED.name());
+                
+                if (orders.isEmpty()) {
+                    return result;
+                }
+                
+                List<Long> validOrderIds = new ArrayList<>();
+                for (Order order : orders) {
+                    if (order.getUserId().equals(userId)) {
+                        String transactionNo = "BATCH_PAY_" + order.getId() + "_" + System.currentTimeMillis();
+                        try {
+                            virtualAccountService.pay(userId, order.getPayAmount(), order.getId(), transactionNo);
+                            validOrderIds.add(order.getId());
+                        } catch (BusinessException e) {
+                            log.warn("批量支付中订单支付失败, orderId={}, error={}", order.getId(), e.getMessage());
+                        }
+                    }
+                }
+                
+                if (validOrderIds.isEmpty()) {
+                    return result;
+                }
+                
+                doBatchUpdateStatusToPaid(validOrderIds);
+                
+                for (Order order : orders) {
+                    if (validOrderIds.contains(order.getId())) {
+                        order.setStatus(OrderStatus.PAID);
+                        result.put(order.getId(), order);
+                    }
+                }
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                
+                return result;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        
-        return result;
+    }
+
+    @Transactional(rollbackFor = Exception.class, timeout = 60,
+                   propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void doBatchUpdateStatusToPaid(List<Long> validOrderIds) {
+        orderMapper.batchUpdateStatusToPaid(validOrderIds, OrderStatus.PAID.name());
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRED,
-                   isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED,
-                   rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class,
+                   isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Map<Long, Order> batchShipOrders(List<Long> orderIds, Long merchantId) {
-        Map<Long, Order> result = new HashMap<>();
-        if (orderIds == null || orderIds.isEmpty()) {
-            return result;
-        }
-        
-        List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.PAID.name());
-        
-        if (orders.isEmpty()) {
-            return result;
-        }
-        
-        List<Long> validOrderIds = orders.stream()
-                .filter(order -> order.getMerchantId().equals(merchantId))
-                .map(Order::getId)
-                .collect(Collectors.toList());
-        
-        if (validOrderIds.isEmpty()) {
-            return result;
-        }
-        
-        int updated = orderMapper.batchUpdateStatusToShipped(validOrderIds, OrderStatus.SHIPPED.name());
-        
-        for (Order order : orders) {
-            if (order.getMerchantId().equals(merchantId)) {
-                order.setStatus(OrderStatus.SHIPPED);
-                result.put(order.getId(), order);
+        String lockKey = "batch-ship:" + merchantId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
             }
+            try {
+                Map<Long, Order> result = new HashMap<>();
+                if (orderIds == null || orderIds.isEmpty()) {
+                    return result;
+                }
+                
+                List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.PAID.name());
+                
+                if (orders.isEmpty()) {
+                    return result;
+                }
+                
+                List<Long> validOrderIds = orders.stream()
+                        .filter(order -> order.getMerchantId().equals(merchantId))
+                        .map(Order::getId)
+                        .collect(Collectors.toList());
+                
+                if (validOrderIds.isEmpty()) {
+                    return result;
+                }
+                
+                int updated = orderMapper.batchUpdateStatusToShipped(validOrderIds, OrderStatus.SHIPPED.name());
+                
+                for (Order order : orders) {
+                    if (order.getMerchantId().equals(merchantId)) {
+                        order.setStatus(OrderStatus.SHIPPED);
+                        result.put(order.getId(), order);
+                    }
+                }
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                
+                return result;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        
-        return result;
     }
 
     @Override
@@ -601,89 +814,141 @@ public class OrderServiceImpl implements OrderService {
                    propagation = org.springframework.transaction.annotation.Propagation.REQUIRED,
                    isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public Map<Long, Order> batchCompleteOrders(List<Long> orderIds, Long userId) {
-        Map<Long, Order> result = new HashMap<>();
-        if (orderIds == null || orderIds.isEmpty()) {
-            return result;
-        }
-        
-        List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.SHIPPED.name());
-        
-        if (orders.isEmpty()) {
-            return result;
-        }
-        
-        List<Long> validOrderIds = orders.stream()
-                .filter(order -> order.getUserId().equals(userId))
-                .map(Order::getId)
-                .collect(Collectors.toList());
-        
-        if (validOrderIds.isEmpty()) {
-            return result;
-        }
-        
-        int updated = orderMapper.batchUpdateStatusToCompleted(validOrderIds, OrderStatus.COMPLETED.name());
-        
-        for (Order order : orders) {
-            if (order.getUserId().equals(userId)) {
-                order.setStatus(OrderStatus.COMPLETED);
-                result.put(order.getId(), order);
+        String lockKey = "batch-complete:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
             }
+            try {
+                Map<Long, Order> result = new HashMap<>();
+                if (orderIds == null || orderIds.isEmpty()) {
+                    return result;
+                }
+                
+                List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.SHIPPED.name());
+                
+                if (orders.isEmpty()) {
+                    return result;
+                }
+                
+                List<Long> validOrderIds = orders.stream()
+                        .filter(order -> order.getUserId().equals(userId))
+                        .map(Order::getId)
+                        .collect(Collectors.toList());
+                
+                if (validOrderIds.isEmpty()) {
+                    return result;
+                }
+                
+                int updated = orderMapper.batchUpdateStatusToCompleted(validOrderIds, OrderStatus.COMPLETED.name());
+                
+                for (Order order : orders) {
+                    if (order.getUserId().equals(userId)) {
+                        order.setStatus(OrderStatus.COMPLETED);
+                        result.put(order.getId(), order);
+                    }
+                }
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                
+                return result;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        
-        return result;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 60,
-                   propagation = org.springframework.transaction.annotation.Propagation.REQUIRED,
-                   isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    @GlobalTransactional(name = "batch-cancel-orders", timeoutMills = 60000, rollbackFor = Exception.class)
     public Map<Long, Order> batchCancelOrders(List<Long> orderIds, Long userId) {
-        Map<Long, Order> result = new HashMap<>();
-        if (orderIds == null || orderIds.isEmpty()) {
-            return result;
-        }
-        
-        List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.CREATED.name());
-        
-        if (orders.isEmpty()) {
-            return result;
-        }
-        
-        List<Order> userOrders = orders.stream()
-                .filter(order -> order.getUserId().equals(userId))
-                .collect(Collectors.toList());
-        
-        if (userOrders.isEmpty()) {
-            return result;
-        }
-        
-        for (Order order : userOrders) {
-            List<OrderItem> orderItems = orderItemMapper.selectByOrderId(order.getId());
-            if (!orderItems.isEmpty()) {
-                List<Map<String, Object>> rollbackItems = orderItems.stream()
-                        .map(item -> {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("productId", item.getProductId());
-                            map.put("quantity", item.getQuantity());
-                            return map;
-                        })
-                        .collect(Collectors.toList());
-                productFeign.batchIncreaseStock(rollbackItems);
+        String lockKey = "batch-cancel:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException("系统繁忙，请稍后重试");
             }
+            try {
+                Map<Long, Order> result = new HashMap<>();
+                if (orderIds == null || orderIds.isEmpty()) {
+                    return result;
+                }
+                
+                List<Order> orders = orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.CREATED.name());
+                
+                if (orders.isEmpty()) {
+                    return result;
+                }
+                
+                List<Order> userOrders = orders.stream()
+                        .filter(order -> order.getUserId().equals(userId))
+                        .collect(Collectors.toList());
+                
+                if (userOrders.isEmpty()) {
+                    return result;
+                }
+                
+                for (Order order : userOrders) {
+                    List<OrderItem> orderItems = orderItemMapper.selectByOrderId(order.getId());
+                    if (!orderItems.isEmpty()) {
+                        List<Map<String, Object>> rollbackItems = orderItems.stream()
+                                .map(item -> {
+                                    Map<String, Object> map = new HashMap<>();
+                                    map.put("productId", item.getProductId());
+                                    map.put("quantity", item.getQuantity());
+                                    return map;
+                                })
+                                .collect(Collectors.toList());
+                        productFeign.batchIncreaseStock(rollbackItems);
+                    }
+                }
+                
+                List<Long> validOrderIds = userOrders.stream()
+                        .map(Order::getId)
+                        .collect(Collectors.toList());
+                
+                int updated = orderMapper.batchUpdateStatus(validOrderIds, OrderStatus.CANCELED.name());
+                
+                for (Order order : userOrders) {
+                    order.setStatus(OrderStatus.CANCELED);
+                    result.put(order.getId(), order);
+                }
+
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                
+                return result;
+            } catch (Exception e) {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+                throw e;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("系统异常，请稍后重试");
         }
-        
-        List<Long> validOrderIds = userOrders.stream()
-                .map(Order::getId)
-                .collect(Collectors.toList());
-        
-        int updated = orderMapper.batchUpdateStatus(validOrderIds, OrderStatus.CANCELED.name());
-        
-        for (Order order : userOrders) {
-            order.setStatus(OrderStatus.CANCELED);
-            result.put(order.getId(), order);
-        }
-        
-        return result;
     }
 
     @Override
@@ -700,6 +965,7 @@ public class OrderServiceImpl implements OrderService {
      * 注意：此方法不使用全局事务，每个订单独立处理，失败不影响其他订单
      */
     @Override
+    @GlobalTransactional(name = "create-orders-from-cart", timeoutMills = 60000, rollbackFor = Exception.class)
     public Map<String, Object> createOrdersFromCart(Long userId) {
         Map<String, Object> result = new HashMap<>();
         List<Order> successOrders = new ArrayList<>();
@@ -826,8 +1092,13 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setQuantity(item.getQuantity());
                 orderItemMapper.insertOrderItem(orderItem);
 
-                // 发送订单通知
-                sendOrderNotification(order);
+                final Order orderRef = order;
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        sendOrderNotification(orderRef);
+                    }
+                });
                 
             } catch (Exception e) {
                 // 订单创建失败，需要回滚库存
@@ -848,9 +1119,15 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // 清空已处理的购物车项
+        // 清空已处理的购物车项（事务提交后执行，防止回滚时购物车数据丢失）
         if (!successOrders.isEmpty()) {
-            cartService.clearCheckedItems(userId);
+            final Long userIdRef = userId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cartService.clearCheckedItems(userIdRef);
+                }
+            });
         }
 
         result.put("successOrders", successOrders);

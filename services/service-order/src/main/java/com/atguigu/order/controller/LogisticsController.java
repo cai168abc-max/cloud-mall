@@ -109,12 +109,25 @@ public class LogisticsController {
     @Operation(summary = "根据物流单号查询", description = "根据物流单号查询物流信息")
     public R getLogisticsByTrackingNo(
             @Parameter(description = "物流单号") @PathVariable @NotBlank String trackingNo) {
-        
+
+        R authCheck = requireLogin();
+        if (authCheck != null) {
+            return authCheck;
+        }
+
         LogisticsInfo logisticsInfo = logisticsService.getLogisticsByTrackingNo(trackingNo);
         if (logisticsInfo == null) {
             return R.notFound("物流信息不存在");
         }
-        
+
+        Long currentUserId = UserContext.get().getId();
+        UserRole currentRole = UserContext.get().getRole();
+        if (!logisticsInfo.getUserId().equals(currentUserId)
+                && !logisticsInfo.getMerchantId().equals(currentUserId)
+                && currentRole != UserRole.ADMIN) {
+            return R.forbidden("无权查看此物流信息");
+        }
+
         return R.ok("查询成功", logisticsInfo);
     }
 
@@ -191,6 +204,16 @@ public class LogisticsController {
             @Parameter(description = "轨迹描述") @RequestParam @NotBlank String description,
             @Parameter(description = "操作人/网点") @RequestParam(required = false) String operator) {
         
+        R authCheck = requireLogin();
+        if (authCheck != null) {
+            return authCheck;
+        }
+
+        R roleCheck = requireRole(UserRole.MERCHANT, UserRole.ADMIN);
+        if (roleCheck != null) {
+            return roleCheck;
+        }
+
         try {
             boolean success = logisticsService.addLogisticsTrace(
                     logisticsId, traceTime, status, location, description, operator);

@@ -108,6 +108,11 @@ public class VirtualAccountController {
     @GetMapping("/logs/order/{orderId}")
     public R getLogByOrderId(
             @Parameter(description = "订单ID") @PathVariable Long orderId) {
+        com.atguigu.common.bean.UserInfo userInfo = UserContext.get();
+        Long userId = userInfo != null ? userInfo.getId() : null;
+        if (userId == null) {
+            return R.error(401, "请先登录");
+        }
         try {
             VirtualAccountLog log = virtualAccountService.getLogByOrderId(orderId);
             if (log == null) {

@@ -129,11 +129,25 @@ public class AfterSaleController {
     @Operation(summary = "查询售后工单详情", description = "根据工单ID查询售后工单详情")
     public R getTicket(
             @Parameter(description = "工单ID") @PathVariable @NotNull Long id) {
-        
+
+        R authCheck = requireLogin();
+        if (authCheck != null) {
+            return authCheck;
+        }
+
         AfterSaleTicket ticket = afterSaleService.getTicketById(id);
         if (ticket == null) {
             return R.error(404, "工单不存在");
         }
+
+        Long currentUserId = UserContext.get().getId();
+        UserRole currentRole = UserContext.get().getRole();
+        if (!ticket.getUserId().equals(currentUserId)
+                && !ticket.getMerchantId().equals(currentUserId)
+                && currentRole != UserRole.ADMIN) {
+            return R.error(403, "无权查看此售后工单");
+        }
+
         return R.ok("查询成功", ticket);
     }
 
@@ -141,11 +155,25 @@ public class AfterSaleController {
     @Operation(summary = "根据订单ID查询售后工单", description = "根据订单ID查询最新的售后工单")
     public R getTicketByOrderId(
             @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
-        
+
+        R authCheck = requireLogin();
+        if (authCheck != null) {
+            return authCheck;
+        }
+
         AfterSaleTicket ticket = afterSaleService.getTicketByOrderId(orderId);
         if (ticket == null) {
             return R.error(404, "该订单暂无售后工单");
         }
+
+        Long currentUserId = UserContext.get().getId();
+        UserRole currentRole = UserContext.get().getRole();
+        if (!ticket.getUserId().equals(currentUserId)
+                && !ticket.getMerchantId().equals(currentUserId)
+                && currentRole != UserRole.ADMIN) {
+            return R.error(403, "无权查看此售后工单");
+        }
+
         return R.ok("查询成功", ticket);
     }
 

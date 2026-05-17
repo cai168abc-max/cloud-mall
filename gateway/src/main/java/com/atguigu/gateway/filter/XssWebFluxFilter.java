@@ -66,7 +66,7 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
 
     // 不需要过滤的HTTP方法
     private static final Set<String> SKIP_HTTP_METHODS = new HashSet<>(Arrays.asList(
-            "OPTIONS", "HEAD", "GET"
+            "OPTIONS", "HEAD"
     ));
 
     // XSS过滤正则表达式
@@ -308,6 +308,6 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         // 在AuthTokenFilter之后执行
-        return -50;
+        return -40;
     }
 }

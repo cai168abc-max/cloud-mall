@@ -3,6 +3,7 @@ package com.atguigu.common.interceptor;
 import com.atguigu.common.utils.HmacSignatureUtil;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.apache.seata.core.context.RootContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -37,5 +38,9 @@ public class FeignInternalRequestInterceptor implements RequestInterceptor {
         }
         String token = HmacSignatureUtil.generateInternalRequestToken(internalSecret, path);
         template.header("X-Internal-Request", token);
+        String xid = RootContext.getXID();
+        if (xid != null) {
+            template.header("TX_XID", xid);
+        }
     }
 }

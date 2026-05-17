@@ -187,8 +187,28 @@ spring:
             - Path=/api/account/**
           filters:
             - RemoveRequestHeader=Cookie
-        
-        # 兼容旧版文件上传路由 - @deprecated 使用 v1-file-route 替代
+
+        - id: cart-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: coupon-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/coupon/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: seckill-route
+          uri: lb://service-order
+          predicates:
+            - Path=/api/seckill/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
         - id: file-route
           uri: lb://service-user
           predicates:

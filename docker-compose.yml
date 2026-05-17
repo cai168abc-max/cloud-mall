@@ -14,7 +14,6 @@ services:
     container_name: cloudtry-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root123}
-      MYSQL_DATABASE: cloudtry
     ports:
       - "3307:3306"
     volumes:
@@ -99,7 +98,7 @@ services:
     environment:
       JAVA_OPT_EXT: "-server -Xms256m -Xmx512m"
       NAMESRV_ADDR: rocketmq-namesrv:9876
-    command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    command: sh mqbroker -n rocketmq-namesrv:9876 --enable-autocreate-topic
     depends_on:
       rocketmq-namesrv:
         condition: service_healthy
@@ -110,7 +109,7 @@ services:
 
   # Seata Server
   seata:
-    image: seataio/seata-server:2.0.0
+    image: seataio/seata-server:2.5.0
     container_name: cloudtry-seata
     ports:
       - "8091:8091"
@@ -118,6 +117,20 @@ services:
     environment:
       SEATA_IP: seata
       SEATA_PORT: 8091
+      SEATA_CONFIG_TYPE: nacos
+      SEATA_CONFIG_NACOS_SERVER_ADDR: nacos:8848
+      SEATA_CONFIG_NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      SEATA_CONFIG_NACOS_GROUP: SEATA_GROUP
+      SEATA_REGISTRY_TYPE: nacos
+      SEATA_REGISTRY_NACOS_SERVER_ADDR: nacos:8848
+      SEATA_REGISTRY_NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      SEATA_REGISTRY_NACOS_GROUP: SEATA_GROUP
+      SEATA_REGISTRY_NACOS_APPLICATION: seata-server
+      SEATA_REGISTRY_NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      SEATA_REGISTRY_NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+    depends_on:
+      nacos:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8091"]
       interval: 10s
@@ -153,8 +166,11 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       NACOS_SERVER_ADDR: nacos:8848
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
-      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key_at_least_32_chars}
+      SENTINEL_DASHBOARD: sentinel:8858
     depends_on:
       nacos:
         condition: service_healthy
@@ -163,6 +179,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - cloudtry-network
 
@@ -183,9 +200,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-root123}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
-      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key_at_least_32_chars}
+      SENTINEL_DASHBOARD: sentinel:8858
     depends_on:
       mysql:
         condition: service_healthy
@@ -193,11 +214,14 @@ services:
         condition: service_healthy
       nacos:
         condition: service_healthy
+      seata:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - cloudtry-network
 
@@ -218,7 +242,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-root123}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key_at_least_32_chars}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
+      SENTINEL_DASHBOARD: sentinel:8858
     depends_on:
       mysql:
         condition: service_healthy
@@ -226,11 +256,14 @@ services:
         condition: service_healthy
       nacos:
         condition: service_healthy
+      seata:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - cloudtry-network
 
@@ -251,8 +284,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-root123}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
-      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key}
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-internal_secret_key_at_least_32_chars}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_at_least_256_bits_long}
+      SENTINEL_DASHBOARD: sentinel:8858
     depends_on:
       mysql:
         condition: service_healthy
@@ -267,6 +305,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - cloudtry-network
 

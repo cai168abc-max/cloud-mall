@@ -111,7 +111,7 @@ public class OrderReviewController {
             return authCheck;
         }
 
-        R roleCheck = requireRole(UserRole.MERCHANT);
+        R roleCheck = requireRole(UserRole.MERCHANT, UserRole.ADMIN);
         if (roleCheck != null) {
             return roleCheck;
         }
@@ -152,6 +152,11 @@ public class OrderReviewController {
     @Operation(summary = "检查订单是否已评价", description = "检查指定订单是否已评价")
     public R checkReviewed(
             @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+
+        R authCheck = requireLogin();
+        if (authCheck != null) {
+            return authCheck;
+        }
 
         boolean reviewed = orderReviewService.hasReviewed(orderId);
         return R.ok("查询成功", reviewed);

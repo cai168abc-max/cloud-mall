@@ -1,5 +1,8 @@
 package com.atguigu.product.controller;
 
+import com.atguigu.common.bean.UserInfo;
+import com.atguigu.common.context.UserContext;
+import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
 import com.atguigu.product.bean.InventoryAlertConfig;
 import com.atguigu.product.bean.InventoryAlertLog;
@@ -28,6 +31,13 @@ public class InventoryAlertController {
     @Operation(summary = "创建或更新预警配置", description = "为商品创建或更新库存预警配置")
     @PostMapping("/config")
     public R saveOrUpdateConfig(@RequestBody InventoryAlertConfig config) {
+        UserInfo userInfo = UserContext.get();
+        if (userInfo == null) {
+            return R.error(401, "请先登录");
+        }
+        if (userInfo.getRole() != UserRole.MERCHANT && userInfo.getRole() != UserRole.ADMIN) {
+            return R.error(403, "仅商家或管理员可以操作");
+        }
         if (config == null) {
             return R.badRequest("预警配置不能为空");
         }
@@ -90,6 +100,13 @@ public class InventoryAlertController {
     public R updateConfigStatus(
             @Parameter(description = "配置ID") @PathVariable Long id,
             @Parameter(description = "状态：1启用 0禁用") @RequestParam Integer status) {
+        UserInfo userInfo = UserContext.get();
+        if (userInfo == null) {
+            return R.error(401, "请先登录");
+        }
+        if (userInfo.getRole() != UserRole.MERCHANT && userInfo.getRole() != UserRole.ADMIN) {
+            return R.error(403, "仅商家或管理员可以操作");
+        }
         if (id == null || id <= 0) {
             return R.badRequest("配置ID无效");
         }
@@ -137,6 +154,13 @@ public class InventoryAlertController {
     @PostMapping("/trigger/{productId}")
     public R triggerAlert(
             @Parameter(description = "商品ID") @PathVariable Long productId) {
+        UserInfo userInfo = UserContext.get();
+        if (userInfo == null) {
+            return R.error(401, "请先登录");
+        }
+        if (userInfo.getRole() != UserRole.ADMIN) {
+            return R.error(403, "仅管理员可以触发预警");
+        }
         if (productId == null || productId <= 0) {
             return R.badRequest("商品ID无效");
         }

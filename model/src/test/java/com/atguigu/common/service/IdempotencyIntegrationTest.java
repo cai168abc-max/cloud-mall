@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * 使用Testcontainers提供Redis容器化测试环境
  */
-@SpringBootTest
+@SpringBootTest(classes = com.atguigu.common.TestConfig.class)
 @Testcontainers
 @ActiveProfiles("test")
 @DisplayName("幂等性服务集成测试")

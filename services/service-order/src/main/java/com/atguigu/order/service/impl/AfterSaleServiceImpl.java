@@ -5,8 +5,11 @@ import com.atguigu.common.exception.BusinessException;
 import com.atguigu.common.mq.OrderNotifyMessage;
 import com.atguigu.order.bean.AfterSaleTicket;
 import com.atguigu.order.bean.Order;
+import com.atguigu.order.bean.OrderItem;
 import com.atguigu.order.bean.VirtualAccountLog;
+import com.atguigu.order.feign.ProductFeign;
 import com.atguigu.order.mapper.AfterSaleTicketMapper;
+import com.atguigu.order.mapper.OrderItemMapper;
 import com.atguigu.order.mapper.OrderMapper;
 import com.atguigu.order.service.AfterSaleService;
 import com.atguigu.order.service.VirtualAccountService;
@@ -30,8 +33,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 售后服务实现类
@@ -49,20 +55,26 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     private final AfterSaleTicketMapper ticketMapper;
     private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
     private final VirtualAccountService virtualAccountService;
+    private final ProductFeign productFeign;
     private final RocketMQTemplate rocketMQTemplate;
     private final RedissonClient redissonClient;
     private final TransactionTemplate requiresNewTemplate;
 
     public AfterSaleServiceImpl(AfterSaleTicketMapper ticketMapper,
                                 OrderMapper orderMapper,
+                                OrderItemMapper orderItemMapper,
                                 VirtualAccountService virtualAccountService,
+                                ProductFeign productFeign,
                                 RocketMQTemplate rocketMQTemplate,
                                 RedissonClient redissonClient,
                                 PlatformTransactionManager transactionManager) {
         this.ticketMapper = ticketMapper;
         this.orderMapper = orderMapper;
+        this.orderItemMapper = orderItemMapper;
         this.virtualAccountService = virtualAccountService;
+        this.productFeign = productFeign;
         this.rocketMQTemplate = rocketMQTemplate;
         this.redissonClient = redissonClient;
         this.requiresNewTemplate = new TransactionTemplate(transactionManager);
@@ -205,6 +217,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean approveAfterSale(Long ticketId, Long merchantId, BigDecimal refundAmount) {
         if (ticketId == null) {
             throw new BusinessException("工单ID不能为空");
@@ -223,11 +236,21 @@ public class AfterSaleServiceImpl implements AfterSaleService {
             }
 
             try {
-                return doApproveAfterSale(ticketId, merchantId, refundAmount);
-            } finally {
+                boolean result = doApproveAfterSale(ticketId, merchantId, refundAmount);
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                });
+                return result;
+            } catch (Exception e) {
                 if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
+                throw e;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -296,6 +319,19 @@ public class AfterSaleServiceImpl implements AfterSaleService {
             ticket.setStatus(AfterSaleTicket.STATUS_PROCESSING);
             sendAfterSaleMessage(ticket, "PROCESSING", "退款失败，需人工处理: " + e.getMessage());
             throw new BusinessException("退款失败，已转为人工处理，请稍后重试或使用手动退款功能");
+        }
+
+        List<OrderItem> orderItems = orderItemMapper.selectByOrderId(ticket.getOrderId());
+        if (orderItems != null && !orderItems.isEmpty()) {
+            List<Map<String, Object>> rollbackItems = orderItems.stream()
+                    .map(item -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("productId", item.getProductId());
+                        map.put("quantity", item.getQuantity());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+            productFeign.batchIncreaseStock(rollbackItems);
         }
 
         try {

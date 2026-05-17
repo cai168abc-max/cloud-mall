@@ -8,11 +8,12 @@ import com.atguigu.product.service.ProductService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -143,11 +144,25 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(rollbackFor = Exception.class)
     public Product saveOrUpdate(Product product) {
         if (product.getId() != null) {
-            String cacheKey = "product:" + product.getId();
-            cacheService.deleteWithDoubleRemoval(cacheKey);
             productMapper.updateProduct(product);
+            final Long productIdRef = product.getId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
         } else {
             productMapper.insertProduct(product);
+            final Long newProductIdRef = product.getId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    if (newProductIdRef != null) {
+                        bloomFilterService.addProduct(newProductIdRef);
+                    }
+                }
+            });
         }
         return product;
     }
@@ -156,6 +171,15 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteProduct(Long productId) {
         int deleted = productMapper.deleteById(productId);
+        if (deleted > 0) {
+            final Long productIdRef = productId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
+        }
         return deleted > 0;
     }
 
@@ -202,38 +226,56 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @GlobalTransactional(name = "decrease-stock", timeoutMills = 60000, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public boolean decreaseStock(Long productId, Integer quantity) {
         int result = productMapper.decreaseStock(productId, quantity);
         if (result > 0) {
-            cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productId);
+            final Long productIdRef = productId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
             return true;
         }
         return false;
     }
 
     @Override
-    @GlobalTransactional(name = "increase-stock", timeoutMills = 60000, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public boolean increaseStock(Long productId, Integer quantity) {
         int result = productMapper.increaseStock(productId, quantity);
         if (result > 0) {
-            cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productId);
+            final Long productIdRef = productId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
             return true;
         }
         return false;
     }
 
     @Override
-    @GlobalTransactional(name = "batch-increase-stock", timeoutMills = 60000, rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public boolean batchIncreaseStock(List<ProductMapper.StockItem> items) {
         if (items == null || items.isEmpty()) {
             return true;
         }
         int result = productMapper.batchIncreaseStock(items);
         if (result > 0) {
-            for (ProductMapper.StockItem item : items) {
-                cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + item.getProductId());
-            }
+            final List<ProductMapper.StockItem> itemsRef = items;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    for (ProductMapper.StockItem item : itemsRef) {
+                        cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + item.getProductId());
+                    }
+                }
+            });
             return true;
         }
         return false;
@@ -243,6 +285,15 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(rollbackFor = Exception.class)
     public boolean updatePrice(Long productId, BigDecimal price) {
         int result = productMapper.updatePrice(productId, price);
+        if (result > 0) {
+            final Long productIdRef = productId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
+        }
         return result > 0;
     }
 
@@ -250,6 +301,15 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(rollbackFor = Exception.class, timeout = 30)
     public boolean updateEnabled(Long productId, Boolean enabled) {
         int result = productMapper.updateEnabled(productId, enabled);
+        if (result > 0) {
+            final Long productIdRef = productId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
+                }
+            });
+        }
         return result > 0;
     }
 
