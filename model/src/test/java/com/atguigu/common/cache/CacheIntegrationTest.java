@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,7 +43,7 @@ class CacheIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        stringRedisTemplate.getConnectionFactory().getConnection().flushAll();
+        Objects.requireNonNull(stringRedisTemplate.getConnectionFactory()).getConnection().serverCommands().flushAll();
     }
 
     @Nested
@@ -226,8 +227,10 @@ class CacheIntegrationTest {
                 latch.countDown();
             });
             t.start();
-            latch.await(2, TimeUnit.SECONDS);
-
+            boolean allDone = latch.await(2, TimeUnit.SECONDS);
+            if (!allDone) {
+                System.out.println("线程未全部执行完，超时了！");
+            }
             assertFalse(acquired2.get(), "其他线程获取锁应失败");
 
             if (lock1.isHeldByCurrentThread()) {
@@ -270,7 +273,10 @@ class CacheIntegrationTest {
             }
 
             startLatch.countDown();
-            endLatch.await(5, TimeUnit.SECONDS);
+            boolean allDone = endLatch.await(5, TimeUnit.SECONDS);
+            if (!allDone) {
+                System.out.println("线程未全部执行完，超时了！");
+            }
             executorService.shutdown();
 
             assertTrue(successCount.get() >= 1, "至少有一个线程应成功获取锁");

@@ -3,6 +3,7 @@ package com.atguigu.common.interceptor;
 import com.atguigu.common.bean.UserInfo;
 import com.atguigu.common.context.UserContext;
 import com.atguigu.common.enums.UserRole;
+import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class UserContextInterceptor implements HandlerInterceptor {
     private static final Logger log = LoggerFactory.getLogger(UserContextInterceptor.class);
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull Object handler) {
         String idStr = request.getHeader("X-User-Id");
         String name = request.getHeader("X-User-Name");
         String roleStr = request.getHeader("X-User-Role");
@@ -50,7 +51,7 @@ public class UserContextInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void afterCompletion(@NonNull HttpServletRequest request,@NonNull HttpServletResponse response,@NonNull Object handler, Exception ex) {
         UserContext.clear();
     }
 }

@@ -31,14 +31,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 数据库操作集成测试类
- * 
  * 测试目的：
  * 1. 验证事务一致性
  * 2. 验证批量操作的正确性
  * 3. 验证并发操作的正确性
- * 
  * 使用Testcontainers提供MySQL容器化测试环境
  */
+@Disabled("需要Docker/Nacos环境，仅在本地手动运行")
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
@@ -355,7 +354,7 @@ class DatabaseIntegrationTest {
         void should_calculateOrderAmount_correctly() {
             // Given
             BigDecimal itemPrice = BigDecimal.valueOf(99.99);
-            Integer quantity = 3;
+            int quantity = 3;
             BigDecimal expectedTotal = itemPrice.multiply(BigDecimal.valueOf(quantity));
 
             // When

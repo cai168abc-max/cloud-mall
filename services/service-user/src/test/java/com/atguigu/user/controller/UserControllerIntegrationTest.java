@@ -1,9 +1,6 @@
 package com.atguigu.user.controller;
 
-import com.atguigu.common.bean.UserAccount;
 import com.atguigu.common.bean.UserAddress;
-import com.atguigu.common.enums.UserRole;
-import com.atguigu.common.utils.PasswordUtil;
 import com.atguigu.user.mapper.UserAccountMapper;
 import com.atguigu.user.mapper.UserAddressMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,22 +20,18 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * UserController 集成测试类
- * 
  * 测试目的：
  * 1. 验证用户注册、登录、信息更新等API的完整业务流程
  * 2. 验证Controller层与Service层、Mapper层的协作是否正常
  * 3. 验证数据库操作的正确性
  * 4. 验证Redis缓存操作的正确性
- * 
  * 使用Testcontainers提供MySQL和Redis容器化测试环境
  */
 @SpringBootTest
@@ -46,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @ActiveProfiles("test")
 @DisplayName("UserController 集成测试")
+@Disabled("需要Docker环境运行Testcontainers，仅在本地手动运行")
 class UserControllerIntegrationTest {
 
     @Container

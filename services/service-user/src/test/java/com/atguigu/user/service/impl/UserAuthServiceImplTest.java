@@ -3,12 +3,16 @@ package com.atguigu.user.service.impl;
 import com.atguigu.common.bean.UserAccount;
 import com.atguigu.common.bean.UserAddress;
 import com.atguigu.common.bean.UserInfo;
+import com.atguigu.common.context.UserContext;
 import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.service.RateLimitService;
 import com.atguigu.common.service.VerificationCodeService;
 import com.atguigu.user.mapper.UserAccountMapper;
 import com.atguigu.user.mapper.UserAddressMapper;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
@@ -33,6 +39,7 @@ import static org.mockito.Mockito.*;
  * 测试用户认证相关业务逻辑
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("UserAuthServiceImpl 单元测试")
 class UserAuthServiceImplTest {
 
@@ -51,17 +58,40 @@ class UserAuthServiceImplTest {
     @Mock
     private VerificationCodeService verificationCodeService;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RLock rLock;
+
     @InjectMocks
     private UserAuthServiceImpl userAuthService;
 
     private static final String JWT_SECRET = "dGVzdFNlY3JldEtleUZvckpXVFRlc3RpbmdQdXJwb3Nlcw==";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws InterruptedException {
         ReflectionTestUtils.setField(userAuthService, "jwtSecret", JWT_SECRET);
         ReflectionTestUtils.setField(userAuthService, "expireSeconds", 3600L);
         ReflectionTestUtils.setField(userAuthService, "jwtIssuer", "cloudtry-auth");
         ReflectionTestUtils.setField(userAuthService, "jwtAudience", "cloudtry-api");
+        
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), any(java.util.concurrent.TimeUnit.class))).thenReturn(true);
+        when(rLock.isHeldByCurrentThread()).thenReturn(true);
+        doNothing().when(rLock).unlock();
+    }
+
+    @AfterEach
+    void tearDown() {
+        UserContext.clear();
+    }
+
+    private UserInfo createTestUser(Long userId, UserRole role) {
+        UserInfo user = new UserInfo();
+        user.setId(userId);
+        user.setRole(role);
+        return user;
     }
 
     @Nested
@@ -71,7 +101,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功注册手机号用户")
         void should_registerPhoneUser_successfully() {
-            // Given
             String phone = "13812345678";
             String password = "password123";
             
@@ -81,10 +110,8 @@ class UserAuthServiceImplTest {
                 return 1;
             });
 
-            // When
             UserAccount result = userAuthService.register(phone, password);
 
-            // Then
             assertNotNull(result, "注册结果不应为空");
             assertEquals(phone, result.getPhone(), "手机号应正确设置");
             assertNull(result.getEmail(), "邮箱应为空");
@@ -97,7 +124,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功注册邮箱用户")
         void should_registerEmailUser_successfully() {
-            // Given
             String email = "test@example.com";
             String password = "password123";
             
@@ -107,10 +133,8 @@ class UserAuthServiceImplTest {
                 return 1;
             });
 
-            // When
             UserAccount result = userAuthService.register(email, password);
 
-            // Then
             assertNotNull(result, "注册结果不应为空");
             assertEquals(email, result.getEmail(), "邮箱应正确设置");
             assertNull(result.getPhone(), "手机号应为空");
@@ -125,7 +149,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功注册商家账号")
         void should_registerMerchant_successfully() {
-            // Given
             String phone = "13812345678";
             String password = "password123";
             String merchantName = "测试商家";
@@ -136,10 +159,8 @@ class UserAuthServiceImplTest {
                 return 1;
             });
 
-            // When
             UserAccount result = userAuthService.registerMerchant(phone, password, merchantName);
 
-            // Then
             assertNotNull(result, "注册结果不应为空");
             assertEquals(UserRole.MERCHANT, result.getRole(), "角色应为商家");
             assertEquals(merchantName, result.getMerchantName(), "商家名称应正确设置");
@@ -154,7 +175,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功登录")
         void should_login_successfully() {
-            // Given
             String phoneOrEmail = "13812345678";
             String password = "password123";
             
@@ -168,26 +188,22 @@ class UserAuthServiceImplTest {
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(false);
             when(userAccountMapper.selectByPhoneOrEmail(phoneOrEmail)).thenReturn(account);
 
-            // When
             String token = userAuthService.login(phoneOrEmail, password);
 
-            // Then
             assertNotNull(token, "Token不应为空");
-            assertTrue(token.length() > 0, "Token长度应大于0");
+            assertTrue(!token.isEmpty(), "Token长度应大于0");
             verify(rateLimitService).clearLoginFailure(phoneOrEmail);
         }
 
         @Test
         @DisplayName("应该拒绝被锁定的账号登录")
         void should_rejectLockedAccount() {
-            // Given
             String phoneOrEmail = "13812345678";
             String password = "password123";
             
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(true);
             when(rateLimitService.getRemainingLockTime(phoneOrEmail)).thenReturn(300L);
 
-            // When & Then
             IllegalStateException exception = assertThrows(IllegalStateException.class, 
                 () -> userAuthService.login(phoneOrEmail, password));
             assertTrue(exception.getMessage().contains("账号已被锁定"));
@@ -196,14 +212,12 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该拒绝不存在的用户登录")
         void should_rejectNonExistentUser() {
-            // Given
             String phoneOrEmail = "13812345678";
             String password = "password123";
             
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(false);
             when(userAccountMapper.selectByPhoneOrEmail(phoneOrEmail)).thenReturn(null);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.login(phoneOrEmail, password));
             assertEquals("用户不存在", exception.getMessage());
@@ -212,7 +226,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该拒绝被禁用的账号登录")
         void should_rejectDisabledAccount() {
-            // Given
             String phoneOrEmail = "13812345678";
             String password = "password123";
             
@@ -224,7 +237,6 @@ class UserAuthServiceImplTest {
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(false);
             when(userAccountMapper.selectByPhoneOrEmail(phoneOrEmail)).thenReturn(account);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.login(phoneOrEmail, password));
             assertEquals("用户账号已被禁用", exception.getMessage());
@@ -233,7 +245,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该拒绝未审核的商家账号登录")
         void should_rejectUnverifiedMerchant() {
-            // Given
             String phoneOrEmail = "merchant@example.com";
             String password = "password123";
             
@@ -247,7 +258,6 @@ class UserAuthServiceImplTest {
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(false);
             when(userAccountMapper.selectByPhoneOrEmail(phoneOrEmail)).thenReturn(account);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.login(phoneOrEmail, password));
             assertEquals("商家账号未通过审核", exception.getMessage());
@@ -256,7 +266,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该拒绝错误密码登录")
         void should_rejectWrongPassword() {
-            // Given
             String phoneOrEmail = "13812345678";
             String correctPassword = "password123";
             String wrongPassword = "wrongpassword";
@@ -271,7 +280,6 @@ class UserAuthServiceImplTest {
             when(rateLimitService.isAccountLocked(phoneOrEmail)).thenReturn(false);
             when(userAccountMapper.selectByPhoneOrEmail(phoneOrEmail)).thenReturn(account);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.login(phoneOrEmail, wrongPassword));
             assertEquals("密码错误", exception.getMessage());
@@ -286,7 +294,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该返回用户信息")
         void should_returnUserInfo() {
-            // Given
             Long userId = 1L;
             
             UserAccount account = new UserAccount();
@@ -299,10 +306,8 @@ class UserAuthServiceImplTest {
             
             when(userAccountMapper.selectById(userId)).thenReturn(account);
 
-            // When
             UserInfo result = userAuthService.getCurrentUser(userId);
 
-            // Then
             assertNotNull(result, "用户信息不应为空");
             assertEquals(userId, result.getId(), "用户ID应正确");
             assertEquals("测试用户", result.getNickName(), "昵称应正确");
@@ -312,14 +317,11 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该返回null对于不存在的用户")
         void should_returnNullForNonExistentUser() {
-            // Given
             Long userId = 999L;
             when(userAccountMapper.selectById(userId)).thenReturn(null);
 
-            // When
             UserInfo result = userAuthService.getCurrentUser(userId);
 
-            // Then
             assertNull(result, "不存在的用户应返回null");
         }
     }
@@ -331,7 +333,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功更新密码")
         void should_updatePassword_successfully() {
-            // Given
             Long userId = 1L;
             String oldPassword = "oldPassword123";
             String newPassword = "newPassword456";
@@ -343,21 +344,17 @@ class UserAuthServiceImplTest {
             when(userAccountMapper.selectById(userId)).thenReturn(account);
             when(userAccountMapper.updatePassword(eq(userId), anyString(), isNull())).thenReturn(1);
 
-            // When
             userAuthService.updatePassword(userId, oldPassword, newPassword);
 
-            // Then
             verify(userAccountMapper).updatePassword(eq(userId), anyString(), isNull());
         }
 
         @Test
         @DisplayName("应该拒绝不存在的用户更新密码")
         void should_rejectNonExistentUser() {
-            // Given
             Long userId = 999L;
             when(userAccountMapper.selectById(userId)).thenReturn(null);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.updatePassword(userId, "old", "new"));
             assertEquals("用户不存在", exception.getMessage());
@@ -366,7 +363,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该拒绝错误的旧密码")
         void should_rejectWrongOldPassword() {
-            // Given
             Long userId = 1L;
             String correctOldPassword = "correctOldPassword";
             String wrongOldPassword = "wrongOldPassword";
@@ -377,10 +373,55 @@ class UserAuthServiceImplTest {
             
             when(userAccountMapper.selectById(userId)).thenReturn(account);
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
                 () -> userAuthService.updatePassword(userId, wrongOldPassword, "newPassword"));
             assertEquals("旧密码错误", exception.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("updateUserInfo 方法测试")
+    class UpdateUserInfoTests {
+
+        @Test
+        @DisplayName("应该成功更新用户信息")
+        void should_updateUserInfo_successfully() {
+            Long userId = 1L;
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId(userId);
+            userInfo.setNickName("新昵称");
+            
+            UserAccount account = new UserAccount();
+            account.setId(userId);
+            account.setPhone("13812345678");
+            account.setNickName("旧昵称");
+            account.setRole(UserRole.USER);
+            
+            UserContext.set(createTestUser(userId, UserRole.USER));
+            when(userAccountMapper.updateUserInfo(eq(userId), nullable(String.class), nullable(String.class), nullable(String.class))).thenReturn(1);
+            when(userAccountMapper.selectById(userId)).thenReturn(account);
+
+            UserInfo result = userAuthService.updateUserInfo(userInfo);
+
+            assertNotNull(result, "更新结果不应为空");
+            verify(userAccountMapper).updateUserInfo(eq(userId), nullable(String.class), nullable(String.class), nullable(String.class));
+        }
+
+        @Test
+        @DisplayName("应该拒绝修改其他用户信息")
+        void should_rejectModifyOtherUserInfo() {
+            Long userId = 1L;
+            Long otherUserId = 2L;
+            
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId(otherUserId);
+            userInfo.setNickName("新昵称");
+            
+            UserContext.set(createTestUser(userId, UserRole.USER));
+
+            SecurityException exception = assertThrows(SecurityException.class, 
+                () -> userAuthService.updateUserInfo(userInfo));
+            assertEquals("无权修改其他用户信息", exception.getMessage());
         }
     }
 
@@ -391,7 +432,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该返回用户地址列表")
         void should_returnUserAddresses() {
-            // Given
             Long userId = 1L;
             List<UserAddress> addresses = Arrays.asList(
                 createTestAddress(1L, userId, "地址1"),
@@ -400,10 +440,8 @@ class UserAuthServiceImplTest {
             
             when(userAddressMapper.selectByUserId(userId)).thenReturn(addresses);
 
-            // When
             List<UserAddress> result = userAuthService.listAddresses(userId);
 
-            // Then
             assertNotNull(result, "地址列表不应为空");
             assertEquals(2, result.size(), "地址数量应正确");
         }
@@ -411,19 +449,18 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功保存新地址")
         void should_saveNewAddress_successfully() {
-            // Given
-            UserAddress address = createTestAddress(null, 1L, "新地址");
+            Long userId = 1L;
+            UserAddress address = createTestAddress(null, userId, "新地址");
             
+            UserContext.set(createTestUser(userId, UserRole.USER));
             when(userAddressMapper.insertAddress(any(UserAddress.class))).thenAnswer(invocation -> {
                 UserAddress addr = invocation.getArgument(0);
                 addr.setId(1L);
                 return 1;
             });
 
-            // When
             UserAddress result = userAuthService.saveOrUpdateAddress(address);
 
-            // Then
             assertNotNull(result, "保存结果不应为空");
             assertNotNull(result.getId(), "ID应被设置");
             verify(userAddressMapper).insertAddress(any(UserAddress.class));
@@ -432,9 +469,10 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功更新地址")
         void should_updateAddress_successfully() {
-            // Given
-            UserAddress address = createTestAddress(1L, 1L, "更新地址");
+            Long userId = 1L;
+            UserAddress address = createTestAddress(1L, userId, "更新地址");
             
+            UserContext.set(createTestUser(userId, UserRole.USER));
             when(userAddressMapper.updateAddress(
                 eq(address.getId()), 
                 eq(address.getUserId()), 
@@ -446,10 +484,8 @@ class UserAuthServiceImplTest {
                 eq(address.getDetail())
             )).thenReturn(1);
 
-            // When
             UserAddress result = userAuthService.saveOrUpdateAddress(address);
 
-            // Then
             assertNotNull(result, "更新结果不应为空");
             verify(userAddressMapper).updateAddress(
                 eq(address.getId()), 
@@ -464,18 +500,30 @@ class UserAuthServiceImplTest {
         }
 
         @Test
+        @DisplayName("应该拒绝操作其他用户的地址")
+        void should_rejectOtherUserAddress() {
+            Long userId = 1L;
+            Long otherUserId = 2L;
+            
+            UserAddress address = createTestAddress(1L, otherUserId, "其他用户地址");
+            
+            UserContext.set(createTestUser(userId, UserRole.USER));
+
+            SecurityException exception = assertThrows(SecurityException.class, 
+                () -> userAuthService.saveOrUpdateAddress(address));
+            assertEquals("无权操作其他用户的地址", exception.getMessage());
+        }
+
+        @Test
         @DisplayName("应该成功删除地址")
         void should_deleteAddress_successfully() {
-            // Given
             Long userId = 1L;
             Long addressId = 1L;
             
             when(userAddressMapper.deleteById(addressId, userId)).thenReturn(1);
 
-            // When
             userAuthService.deleteAddress(userId, addressId);
 
-            // Then
             verify(userAddressMapper).deleteById(addressId, userId);
         }
     }
@@ -487,54 +535,72 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该成功更新用户状态")
         void should_updateUserStatus_successfully() {
-            // Given
             Long userId = 1L;
             boolean enabled = false;
             
+            UserContext.set(createTestUser(99L, UserRole.ADMIN));
             when(userAccountMapper.updateStatus(userId, enabled)).thenReturn(1);
 
-            // When
             userAuthService.updateUserStatus(userId, enabled);
 
-            // Then
             verify(userAccountMapper).updateStatus(userId, enabled);
+        }
+
+        @Test
+        @DisplayName("应该拒绝非管理员更新用户状态")
+        void should_rejectNonAdminUpdateStatus() {
+            Long userId = 1L;
+            boolean enabled = false;
+            
+            UserContext.set(createTestUser(2L, UserRole.USER));
+
+            SecurityException exception = assertThrows(SecurityException.class, 
+                () -> userAuthService.updateUserStatus(userId, enabled));
+            assertEquals("仅管理员可修改用户状态", exception.getMessage());
         }
 
         @Test
         @DisplayName("应该成功更新用户角色")
         void should_updateUserRole_successfully() {
-            // Given
+            Long userId = 1L;
+            UserRole role = UserRole.MERCHANT;
+            
+            UserContext.set(createTestUser(99L, UserRole.ADMIN));
+            when(userAccountMapper.updateRole(userId, role.name())).thenReturn(1);
+
+            userAuthService.updateUserRole(userId, role);
+
+            verify(userAccountMapper).updateRole(userId, role.name());
+        }
+
+        @Test
+        @DisplayName("应该拒绝非管理员更新用户角色")
+        void should_rejectNonAdminUpdateRole() {
             Long userId = 1L;
             UserRole role = UserRole.ADMIN;
             
-            when(userAccountMapper.updateRole(userId, role.name())).thenReturn(1);
+            UserContext.set(createTestUser(2L, UserRole.USER));
 
-            // When
-            userAuthService.updateUserRole(userId, role);
-
-            // Then
-            verify(userAccountMapper).updateRole(userId, role.name());
+            SecurityException exception = assertThrows(SecurityException.class, 
+                () -> userAuthService.updateUserRole(userId, role));
+            assertEquals("仅管理员可修改用户角色", exception.getMessage());
         }
 
         @Test
         @DisplayName("应该成功删除用户")
         void should_deleteUser_successfully() {
-            // Given
             Long userId = 1L;
             
             when(userAccountMapper.deleteById(userId)).thenReturn(1);
 
-            // When
             userAuthService.deleteUser(userId);
 
-            // Then
             verify(userAccountMapper).deleteById(userId);
         }
 
         @Test
         @DisplayName("应该批量更新用户状态")
         void should_batchUpdateUserStatus_successfully() {
-            // Given
             Map<Long, Boolean> statusMap = new HashMap<>();
             statusMap.put(1L, true);
             statusMap.put(2L, false);
@@ -542,10 +608,8 @@ class UserAuthServiceImplTest {
             when(userAccountMapper.updateStatus(1L, true)).thenReturn(1);
             when(userAccountMapper.updateStatus(2L, false)).thenReturn(1);
 
-            // When
             Map<Long, Boolean> result = userAuthService.batchUpdateUserStatus(statusMap);
 
-            // Then
             assertEquals(2, result.size(), "结果数量应正确");
             assertTrue(result.get(1L), "用户1更新应成功");
             assertTrue(result.get(2L), "用户2更新应成功");
@@ -554,7 +618,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该批量更新用户角色")
         void should_batchUpdateUserRole_successfully() {
-            // Given
             Map<Long, UserRole> roleMap = new HashMap<>();
             roleMap.put(1L, UserRole.ADMIN);
             roleMap.put(2L, UserRole.USER);
@@ -562,10 +625,8 @@ class UserAuthServiceImplTest {
             when(userAccountMapper.updateRole(1L, UserRole.ADMIN.name())).thenReturn(1);
             when(userAccountMapper.updateRole(2L, UserRole.USER.name())).thenReturn(1);
 
-            // When
             Map<Long, Boolean> result = userAuthService.batchUpdateUserRole(roleMap);
 
-            // Then
             assertEquals(2, result.size(), "结果数量应正确");
             assertTrue(result.get(1L), "用户1更新应成功");
             assertTrue(result.get(2L), "用户2更新应成功");
@@ -574,17 +635,14 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该批量删除用户")
         void should_batchDeleteUsers_successfully() {
-            // Given
             List<Long> userIds = Arrays.asList(1L, 2L, 3L);
             
             when(userAccountMapper.deleteById(1L)).thenReturn(1);
             when(userAccountMapper.deleteById(2L)).thenReturn(1);
             when(userAccountMapper.deleteById(3L)).thenReturn(0);
 
-            // When
             Map<Long, Boolean> result = userAuthService.batchDeleteUsers(userIds);
 
-            // Then
             assertEquals(3, result.size(), "结果数量应正确");
             assertTrue(result.get(1L), "用户1删除应成功");
             assertTrue(result.get(2L), "用户2删除应成功");
@@ -599,7 +657,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该返回商家信息")
         void should_returnMerchantInfo() {
-            // Given
             Long merchantId = 1L;
             
             UserAccount merchant = new UserAccount();
@@ -609,10 +666,8 @@ class UserAuthServiceImplTest {
             
             when(userAccountMapper.selectById(merchantId)).thenReturn(merchant);
 
-            // When
             UserAccount result = userAuthService.getMerchantById(merchantId);
 
-            // Then
             assertNotNull(result, "商家信息不应为空");
             assertEquals(UserRole.MERCHANT, result.getRole(), "角色应为商家");
         }
@@ -620,7 +675,6 @@ class UserAuthServiceImplTest {
         @Test
         @DisplayName("应该返回null对于非商家用户")
         void should_returnNullForNonMerchant() {
-            // Given
             Long userId = 1L;
             
             UserAccount user = new UserAccount();
@@ -629,26 +683,21 @@ class UserAuthServiceImplTest {
             
             when(userAccountMapper.selectById(userId)).thenReturn(user);
 
-            // When
             UserAccount result = userAuthService.getMerchantById(userId);
 
-            // Then
             assertNull(result, "非商家用户应返回null");
         }
 
         @Test
         @DisplayName("应该成功审核商家")
         void should_verifyMerchant_successfully() {
-            // Given
             Long merchantId = 1L;
             boolean approved = true;
             
             when(userAccountMapper.updateMerchantVerify(merchantId, approved, approved)).thenReturn(1);
 
-            // When
             userAuthService.verifyMerchant(merchantId, approved);
 
-            // Then
             verify(userAccountMapper).updateMerchantVerify(merchantId, approved, approved);
         }
     }

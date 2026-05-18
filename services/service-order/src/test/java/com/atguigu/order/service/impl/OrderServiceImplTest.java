@@ -3,8 +3,6 @@ package com.atguigu.order.service.impl;
 import com.atguigu.common.enums.OrderStatus;
 import com.atguigu.common.exception.BusinessException;
 import com.atguigu.common.service.IdempotencyService;
-import com.atguigu.order.bean.CartItem;
-import com.atguigu.order.bean.Coupon;
 import com.atguigu.order.bean.Order;
 import com.atguigu.order.bean.OrderItem;
 import com.atguigu.order.bean.VirtualAccountLog;
@@ -18,6 +16,7 @@ import com.atguigu.product.bean.Product;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,9 +24,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,6 +42,7 @@ import static org.mockito.Mockito.*;
  * 测试订单服务相关业务逻辑
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("OrderServiceImpl 单元测试")
 class OrderServiceImplTest {
 
@@ -65,8 +70,22 @@ class OrderServiceImplTest {
     @Mock
     private VirtualAccountService virtualAccountService;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RLock rLock;
+
     @InjectMocks
     private OrderServiceImpl orderService;
+
+    @BeforeEach
+    void setUp() throws InterruptedException {
+        when(redissonClient.getLock(anyString())).thenReturn(rLock);
+        when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+        when(rLock.isHeldByCurrentThread()).thenReturn(true);
+        doNothing().when(rLock).unlock();
+    }
 
     @Nested
     @DisplayName("getOrderById 方法测试")
@@ -152,7 +171,7 @@ class OrderServiceImplTest {
             
             when(orderMapper.selectById(orderId)).thenReturn(order);
             VirtualAccountLog payLog = new VirtualAccountLog();
-            when(virtualAccountService.pay(eq(userId), eq(payAmount), eq(orderId), isNull())).thenReturn(payLog);
+            when(virtualAccountService.pay(eq(userId), eq(payAmount), eq(orderId), anyString())).thenReturn(payLog);
             when(orderMapper.updateStatusToPaid(orderId, OrderStatus.PAID.name())).thenReturn(1);
 
             // When
@@ -161,7 +180,7 @@ class OrderServiceImplTest {
             // Then
             assertNotNull(result, "应返回订单");
             assertEquals(OrderStatus.PAID, result.getStatus(), "订单状态应为已支付");
-            verify(virtualAccountService).pay(userId, payAmount, orderId, null);
+            verify(virtualAccountService).pay(eq(userId), eq(payAmount), eq(orderId), matches("PAY_\\d+_\\d+"));
         }
 
         @Test
@@ -331,7 +350,7 @@ class OrderServiceImplTest {
             OrderItem orderItem = createTestOrderItem(1L, orderId, 1L, 1);
             
             when(orderMapper.selectById(orderId)).thenReturn(order);
-            when(orderItemMapper.selectByOrderId(orderId)).thenReturn(Arrays.asList(orderItem));
+            when(orderItemMapper.selectByOrderId(orderId)).thenReturn(List.of(orderItem));
             when(productFeign.batchIncreaseStock(anyList())).thenReturn(1);
             when(orderMapper.updateStatus(orderId, OrderStatus.CANCELED.name())).thenReturn(1);
 
@@ -440,10 +459,10 @@ class OrderServiceImplTest {
             OrderItem orderItem = createTestOrderItem(1L, orderId, 1L, 1);
             
             when(orderMapper.selectById(orderId)).thenReturn(order);
-            when(orderItemMapper.selectByOrderId(orderId)).thenReturn(Arrays.asList(orderItem));
+            when(orderItemMapper.selectByOrderId(orderId)).thenReturn(List.of(orderItem));
             when(productFeign.batchIncreaseStock(anyList())).thenReturn(1);
             VirtualAccountLog refundLog = new VirtualAccountLog();
-            when(virtualAccountService.refund(eq(userId), eq(payAmount), eq(orderId), isNull())).thenReturn(refundLog);
+            when(virtualAccountService.refund(eq(userId), eq(payAmount), eq(orderId), anyString())).thenReturn(refundLog);
             when(orderMapper.updateStatus(orderId, OrderStatus.REFUNDED.name())).thenReturn(1);
 
             // When
@@ -451,7 +470,7 @@ class OrderServiceImplTest {
 
             // Then
             assertTrue(result, "批准退款应成功");
-            verify(virtualAccountService).refund(userId, payAmount, orderId, null);
+            verify(virtualAccountService).refund(eq(userId), eq(payAmount), eq(orderId), matches("REFUND_\\d+_\\d+"));
         }
 
         @Test
@@ -541,6 +560,8 @@ class OrderServiceImplTest {
             when(orderMapper.batchSelectByIdsAndStatus(orderIds, OrderStatus.CREATED.name()))
                 .thenReturn(Arrays.asList(order1, order2));
             when(orderMapper.batchUpdateStatusToPaid(anyList(), eq(OrderStatus.PAID.name()))).thenReturn(2);
+            when(virtualAccountService.pay(eq(userId), any(BigDecimal.class), anyLong(), anyString()))
+                .thenReturn(new VirtualAccountLog());
 
             // When
             Map<Long, Order> result = orderService.batchPayOrders(orderIds, userId);

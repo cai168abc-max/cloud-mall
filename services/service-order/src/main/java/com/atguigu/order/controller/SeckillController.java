@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 秒杀控制器
- * 
  * 安全特性：
  * 1. 用户维度限流：防止用户频繁刷单
  * 2. 角色校验：仅普通用户可参与秒杀

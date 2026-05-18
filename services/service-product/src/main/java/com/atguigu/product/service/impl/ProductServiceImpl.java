@@ -34,6 +34,19 @@ public class ProductServiceImpl implements ProductService {
 
     private final BloomFilterService bloomFilterService;
 
+    private void executeAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
+
     @Override
     public Product getProductById(Long productId) {
         if (productId == null) {
@@ -146,21 +159,13 @@ public class ProductServiceImpl implements ProductService {
         if (product.getId() != null) {
             productMapper.updateProduct(product);
             final Long productIdRef = product.getId();
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
         } else {
             productMapper.insertProduct(product);
             final Long newProductIdRef = product.getId();
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    if (newProductIdRef != null) {
-                        bloomFilterService.addProduct(newProductIdRef);
-                    }
+            executeAfterCommit(() -> {
+                if (newProductIdRef != null) {
+                    bloomFilterService.addProduct(newProductIdRef);
                 }
             });
         }
@@ -173,12 +178,7 @@ public class ProductServiceImpl implements ProductService {
         int deleted = productMapper.deleteById(productId);
         if (deleted > 0) {
             final Long productIdRef = productId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
         }
         return deleted > 0;
     }
@@ -231,12 +231,7 @@ public class ProductServiceImpl implements ProductService {
         int result = productMapper.decreaseStock(productId, quantity);
         if (result > 0) {
             final Long productIdRef = productId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
             return true;
         }
         return false;
@@ -248,12 +243,7 @@ public class ProductServiceImpl implements ProductService {
         int result = productMapper.increaseStock(productId, quantity);
         if (result > 0) {
             final Long productIdRef = productId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
             return true;
         }
         return false;
@@ -268,12 +258,9 @@ public class ProductServiceImpl implements ProductService {
         int result = productMapper.batchIncreaseStock(items);
         if (result > 0) {
             final List<ProductMapper.StockItem> itemsRef = items;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    for (ProductMapper.StockItem item : itemsRef) {
-                        cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + item.getProductId());
-                    }
+            executeAfterCommit(() -> {
+                for (ProductMapper.StockItem item : itemsRef) {
+                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + item.getProductId());
                 }
             });
             return true;
@@ -287,12 +274,7 @@ public class ProductServiceImpl implements ProductService {
         int result = productMapper.updatePrice(productId, price);
         if (result > 0) {
             final Long productIdRef = productId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
         }
         return result > 0;
     }
@@ -303,12 +285,7 @@ public class ProductServiceImpl implements ProductService {
         int result = productMapper.updateEnabled(productId, enabled);
         if (result > 0) {
             final Long productIdRef = productId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef);
-                }
-            });
+            executeAfterCommit(() -> cacheService.deleteWithDoubleRemoval(PRODUCT_CACHE_KEY_PREFIX + productIdRef));
         }
         return result > 0;
     }

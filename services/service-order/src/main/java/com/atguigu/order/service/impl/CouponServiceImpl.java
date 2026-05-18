@@ -26,6 +26,19 @@ public class CouponServiceImpl implements CouponService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final CouponMapper couponMapper;
 
+    private void executeAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
+
     private static final String DEDUCT_STOCK_SCRIPT = """
             local stockKey = KEYS[1]
             local quantity = tonumber(ARGV[1])
@@ -54,12 +67,9 @@ public class CouponServiceImpl implements CouponService {
 
         final Long couponId = coupon.getId();
         final Integer stock = coupon.getStock();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                String stockKey = COUPON_STOCK_KEY_PREFIX + couponId;
-                redisTemplate.opsForValue().set(stockKey, stock);
-            }
+        executeAfterCommit(() -> {
+            String stockKey = COUPON_STOCK_KEY_PREFIX + couponId;
+            redisTemplate.opsForValue().set(stockKey, stock);
         });
         return coupon;
     }
@@ -152,12 +162,9 @@ public class CouponServiceImpl implements CouponService {
     public Coupon updateCoupon(Coupon coupon) {
         couponMapper.updateById(coupon);
         final Long couponIdRef = coupon.getId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
-                redisTemplate.delete(stockKey);
-            }
+        executeAfterCommit(() -> {
+            String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
+            redisTemplate.delete(stockKey);
         });
         return couponMapper.selectById(coupon.getId());
     }
@@ -167,12 +174,9 @@ public class CouponServiceImpl implements CouponService {
     public void deleteCoupon(Long couponId) {
         couponMapper.deleteById(couponId);
         final Long couponIdRef = couponId;
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
-                redisTemplate.delete(stockKey);
-            }
+        executeAfterCommit(() -> {
+            String stockKey = COUPON_STOCK_KEY_PREFIX + couponIdRef;
+            redisTemplate.delete(stockKey);
         });
     }
 

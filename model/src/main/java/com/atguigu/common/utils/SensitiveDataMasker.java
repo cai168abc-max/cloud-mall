@@ -41,7 +41,7 @@ public class SensitiveDataMasker {
         if (atIndex <= 1) {
             return email;
         }
-        return email.substring(0, 1) + "***" + email.substring(atIndex);
+        return email.charAt(0) + "***" + email.substring(atIndex);
     }
     
     /**
@@ -74,7 +74,7 @@ public class SensitiveDataMasker {
         if (code == null || code.length() < 2) {
             return code;
         }
-        return code.substring(0, 1) + "****";
+        return code.charAt(0) + "****";
     }
     
     /**
@@ -108,7 +108,7 @@ public class SensitiveDataMasker {
      */
     public static String maskIdCard(String idCard) {
         if (idCard == null) {
-            return idCard;
+            return null;
         }
         if (idCard.length() == 18) {
             return idCard.substring(0, 4) + "**********" + idCard.substring(14);
@@ -146,11 +146,7 @@ public class SensitiveDataMasker {
         if (name == null || name.length() < 2) {
             return name;
         }
-        StringBuilder masked = new StringBuilder(name.substring(0, 1));
-        for (int i = 1; i < name.length(); i++) {
-            masked.append("*");
-        }
-        return masked.toString();
+        return name.charAt(0) + "*".repeat(name.length() - 1);
     }
     
     /**

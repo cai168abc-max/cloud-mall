@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Feign请求拦截器：传递认证信息到下游服务
- * 
  * 功能：
  * 1. 传递原始JWT Token（Authorization头）
  * 2. 传递用户上下文信息（X-User-*头）

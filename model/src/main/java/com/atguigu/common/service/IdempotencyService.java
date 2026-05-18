@@ -1,5 +1,6 @@
 package com.atguigu.common.service;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -300,10 +301,7 @@ public class IdempotencyService {
 
         String cachedThreadId = lockCache.get(fullKey);
         if (cachedThreadId != null) {
-            if (cachedThreadId.equals(String.valueOf(Thread.currentThread().getId()))) {
-                return true;
-            }
-            return false;
+            return cachedThreadId.equals(String.valueOf(Thread.currentThread().getId()));
         }
 
         try {
@@ -404,6 +402,7 @@ public class IdempotencyService {
     /**
      * 锁获取结果
      */
+    @Getter
     public static class IdempotencyResult {
         private final boolean success;
         private final FailureReason failureReason;
@@ -427,25 +426,14 @@ public class IdempotencyService {
             return new IdempotencyResult(false, reason, message);
         }
 
-        public boolean isSuccess() {
-            return success;
-        }
-
         public boolean isFailure() {
             return !success;
-        }
-
-        public FailureReason getFailureReason() {
-            return failureReason;
-        }
-
-        public String getMessage() {
-            return message;
         }
 
         /**
          * 失败原因枚举
          */
+        @Getter
         public enum FailureReason {
             DUPLICATE_REQUEST("重复请求，锁已被其他线程持有"),
             TIMEOUT("获取锁超时"),
@@ -458,15 +446,13 @@ public class IdempotencyService {
                 this.description = description;
             }
 
-            public String getDescription() {
-                return description;
-            }
         }
     }
 
     /**
      * 锁释放结果
      */
+    @Getter
     public static class ReleaseResult {
         private final boolean success;
         private final ReleaseStatus status;
@@ -494,18 +480,6 @@ public class IdempotencyService {
             return new ReleaseResult(false, ReleaseStatus.ERROR, message);
         }
 
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public ReleaseStatus getStatus() {
-            return status;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
         /**
          * 释放状态枚举
          */
@@ -518,46 +492,20 @@ public class IdempotencyService {
     }
 
     /**
-     * 锁竞争统计信息
-     */
-    public static class LockStatistics {
-        private final long successCount;
-        private final long failureCount;
-        private final long releaseCount;
-        private final long exceptionCount;
+         * 锁竞争统计信息
+         */
 
-        public LockStatistics(long successCount, long failureCount, long releaseCount, long exceptionCount) {
-            this.successCount = successCount;
-            this.failureCount = failureCount;
-            this.releaseCount = releaseCount;
-            this.exceptionCount = exceptionCount;
-        }
-
-        public long getSuccessCount() {
-            return successCount;
-        }
-
-        public long getFailureCount() {
-            return failureCount;
-        }
-
-        public long getReleaseCount() {
-            return releaseCount;
-        }
-
-        public long getExceptionCount() {
-            return exceptionCount;
-        }
+        public record LockStatistics(long successCount, long failureCount, long releaseCount, long exceptionCount) {
 
         public double getFailureRate() {
-            long total = successCount + failureCount;
-            return total == 0 ? 0 : (double) failureCount / total;
-        }
+                long total = successCount + failureCount;
+                return total == 0 ? 0 : (double) failureCount / total;
+            }
 
-        @Override
-        public String toString() {
-            return String.format("LockStatistics{success=%d, failure=%d, release=%d, exception=%d, failureRate=%.2f%%}",
-                successCount, failureCount, releaseCount, exceptionCount, getFailureRate() * 100);
+            @Override
+            public String toString() {
+                return String.format("LockStatistics{success=%d, failure=%d, release=%d, exception=%d, failureRate=%.2f%%}",
+                        successCount, failureCount, releaseCount, exceptionCount, getFailureRate() * 100);
+            }
         }
-    }
 }

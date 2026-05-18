@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 商品审核服务实现类
- * 
  * 实现功能：
  * 1. 分布式锁防重复审核
  * 2. 商品状态校验

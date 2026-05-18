@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * <p>用于获取天气信息，支持根据城市ID或城市名称查询</p>
  * <p>fallback配置确保服务不可用时有明确的降级处理</p>
  */
-@FeignClient(value = "weather-client", url = "${weather.api.url:http://aliv18.data.moji.com}", fallbackFactory = WeatherFeignFallbackFactory.class)
+@FeignClient(value = "weather-client", url = "${weather.api.url:https://aliv18.data.moji.com}", fallbackFactory = WeatherFeignFallbackFactory.class)
 public interface WeatherFeign {
 
     /**

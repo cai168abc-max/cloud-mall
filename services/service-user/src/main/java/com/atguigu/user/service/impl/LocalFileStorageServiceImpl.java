@@ -4,7 +4,6 @@ import com.atguigu.user.config.FileUploadProperties;
 import com.atguigu.user.service.FileStorageService;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
-import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -217,26 +215,24 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
             return false;
         }
 
-        String hexHeader = bytesToHex(Arrays.copyOfRange(bytes, 0, Math.min(8, bytes.length)));
+        String hexHeader = bytesToHex(Arrays.copyOfRange(bytes, 0, 8));
         String extension = getFileExtension(file.getOriginalFilename()).toLowerCase();
 
-        switch (extension) {
-            case "jpg":
-            case "jpeg":
+        return switch (extension) {
+            case "jpg", "jpeg" ->
                 // JPEG文件以FFD8FF开头
-                return hexHeader.startsWith("FFD8FF");
-            case "png":
+                    hexHeader.startsWith("FFD8FF");
+            case "png" ->
                 // PNG文件以89504E47开头
-                return hexHeader.startsWith("89504E47");
-            case "gif":
+                    hexHeader.startsWith("89504E47");
+            case "gif" ->
                 // GIF文件以47494638开头
-                return hexHeader.startsWith("47494638");
-            case "webp":
+                    hexHeader.startsWith("47494638");
+            case "webp" ->
                 // WEBP文件以52494646开头，后面包含57454250
-                return hexHeader.startsWith("52494646");
-            default:
-                return false;
-        }
+                    hexHeader.startsWith("52494646");
+            default -> false;
+        };
     }
 
     /**
@@ -334,7 +330,7 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
     /**
      * 检查磁盘空间
      */
-    private void checkDiskSpace(Path targetPath) throws IOException {
+    private void checkDiskSpace(Path targetPath) {
         File parentDir = targetPath.getParent().toFile();
         if (!parentDir.exists()) {
             parentDir = new File(properties.getPath());

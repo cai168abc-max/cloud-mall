@@ -12,12 +12,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -118,9 +119,9 @@ class CouponServiceImplTest {
             coupon.setValidTo(LocalDateTime.now().plusDays(7));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(true);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
             when(couponMapper.selectById(couponId)).thenReturn(coupon);
-            when(valueOperations.decrement(startsWith(COUPON_STOCK_KEY_PREFIX))).thenReturn(99L);
+            when(redisTemplate.execute(any(DefaultRedisScript.class), anyList(), any())).thenReturn(99L);
 
             // When
             boolean result = couponService.acquireCoupon(couponId, userId);
@@ -138,7 +139,7 @@ class CouponServiceImplTest {
             String userKey = USER_COUPON_KEY_PREFIX + userId + ":" + couponId;
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(false);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(false);
 
             // When
             boolean result = couponService.acquireCoupon(couponId, userId);
@@ -157,7 +158,7 @@ class CouponServiceImplTest {
             String userKey = USER_COUPON_KEY_PREFIX + userId + ":" + couponId;
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(true);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
             when(couponMapper.selectById(couponId)).thenReturn(null);
 
             // When
@@ -179,7 +180,7 @@ class CouponServiceImplTest {
             coupon.setStatus(CouponStatus.USED_OUT);
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(true);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
             when(couponMapper.selectById(couponId)).thenReturn(coupon);
 
             // When
@@ -202,7 +203,7 @@ class CouponServiceImplTest {
             coupon.setValidTo(LocalDateTime.now().minusDays(1)); // 已过期
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(true);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
             when(couponMapper.selectById(couponId)).thenReturn(coupon);
 
             // When
@@ -225,10 +226,10 @@ class CouponServiceImplTest {
             coupon.setValidTo(LocalDateTime.now().plusDays(7));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.setIfAbsent(userKey, "1")).thenReturn(true);
+            when(valueOperations.setIfAbsent(eq(userKey), eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
             when(couponMapper.selectById(couponId)).thenReturn(coupon);
-            when(valueOperations.decrement(startsWith(COUPON_STOCK_KEY_PREFIX))).thenReturn(-1L);
-            when(valueOperations.increment(startsWith(COUPON_STOCK_KEY_PREFIX))).thenReturn(0L);
+            when(redisTemplate.execute(any(DefaultRedisScript.class), anyList(), any())).thenReturn(-1L);
+            when(redisTemplate.delete(userKey)).thenReturn(true);
 
             // When
             boolean result = couponService.acquireCoupon(couponId, userId);
@@ -385,7 +386,7 @@ class CouponServiceImplTest {
             coupon1.setValidTo(LocalDateTime.now().plusDays(7));
             
             when(couponMapper.selectValidCouponsForUser(eq(userId), any(LocalDateTime.class)))
-                .thenReturn(Arrays.asList(coupon1));
+                .thenReturn(List.of(coupon1));
 
             // When
             List<Coupon> result = couponService.listValidCouponsForUser(userId);

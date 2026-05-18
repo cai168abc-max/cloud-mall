@@ -4,7 +4,6 @@ import com.atguigu.common.result.R;
 import com.atguigu.common.bean.UserAccount;
 import com.atguigu.common.bean.UserAddress;
 import com.atguigu.common.bean.UserInfo;
-import com.atguigu.common.enums.UserRole;
 import com.atguigu.user.service.UserAuthService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;

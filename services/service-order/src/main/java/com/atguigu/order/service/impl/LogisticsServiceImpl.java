@@ -98,7 +98,7 @@ public class LogisticsServiceImpl implements LogisticsService {
         String lockKey = CacheKeyConstants.orderShipLock(orderId);
         RLock lock = redissonClient.getLock(lockKey);
         
-        boolean locked = false;
+        boolean locked;
         try {
             locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException e) {

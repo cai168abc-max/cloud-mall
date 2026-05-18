@@ -45,8 +45,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000
@@ -83,8 +82,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000
@@ -106,8 +104,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000
@@ -129,8 +126,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000
@@ -152,8 +148,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000

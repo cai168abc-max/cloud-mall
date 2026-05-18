@@ -9,27 +9,25 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * XSS攻击防护过滤器
- * 
  * 功能说明：
  * 1. 拦截所有HTTP请求
  * 2. 对请求参数进行XSS过滤
  * 3. 防止脚本注入攻击
  * 4. 支持配置化排除URL
  * 5. 智能识别Content-Type，避免过滤二进制数据
- * 
  * 使用方式：
  * - 在model模块中作为公共组件
  * - 各微服务引入model模块后自动生效
  * - 通过@Order(1)确保最先执行
  * - 通过配置文件 xss.filter.exclude-urls 自定义排除URL
  * - 通过配置 xss.filter.enabled=false 禁用过滤器
- * 
  * 安全特性：
  * - URL路径规范化，防止路径遍历绕过
  * - Content-Type检查，避免过滤文件上传
@@ -109,13 +107,12 @@ public class XssFilter implements Filter {
         }
 
         // 类型安全检查：确保是HTTP请求
-        if (!(request instanceof HttpServletRequest)) {
+        if (!(request instanceof HttpServletRequest httpRequest)) {
             log.debug("非HTTP请求，直接放行");
             chain.doFilter(request, response);
             return;
         }
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
         String requestURI = httpRequest.getRequestURI();
         String method = httpRequest.getMethod();
 
@@ -182,10 +179,10 @@ public class XssFilter implements Filter {
         }
 
         // 解码URL编码字符（处理编码绕过）
-        String decoded = url;
+        String decoded;
         try {
             // 使用java.net.URLDecoder解码
-            decoded = java.net.URLDecoder.decode(url, "UTF-8");
+            decoded = java.net.URLDecoder.decode(url, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.warn("URL解码失败，使用原始URL: {}", url);
             decoded = url;

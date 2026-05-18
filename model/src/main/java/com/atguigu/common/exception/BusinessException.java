@@ -1,11 +1,19 @@
 package com.atguigu.common.exception;
 
+import lombok.Getter;
+
 /**
  * 自定义业务异常
  * 用于业务逻辑中抛出的可预期异常
  */
+@Getter
 public class BusinessException extends RuntimeException {
-    
+
+    /**
+     * -- GETTER --
+     *  获取错误码
+     *
+     */
     private final int code;
     
     /**
@@ -26,12 +34,5 @@ public class BusinessException extends RuntimeException {
         super(message);
         this.code = code;
     }
-    
-    /**
-     * 获取错误码
-     * @return 错误码
-     */
-    public int getCode() {
-        return code;
-    }
+
 }

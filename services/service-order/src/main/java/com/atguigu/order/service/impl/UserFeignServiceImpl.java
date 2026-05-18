@@ -42,8 +42,7 @@ public class UserFeignServiceImpl implements UserFeignService {
     @Override
     @Retryable(
         retryFor = Exception.class,
-        maxAttempts = 3,
-        backoff = @Backoff(
+            backoff = @Backoff(
             delay = 1000,
             multiplier = 2.0,
             maxDelay = 5000

@@ -1,15 +1,16 @@
 package com.atguigu.common.exception;
 
 import com.atguigu.common.enums.RequireMode;
+import lombok.Getter;
 
 /**
  * 权限拒绝异常
  * 当用户缺少所需权限时抛出此异常
- * 
  * 与ForbiddenException的区别：
  * - ForbiddenException: 用于通用的权限不足场景（如资源访问被拒绝）
  * - PermissionDeniedException: 专门用于@RequirePermission注解的权限验证失败场景
  */
+@Getter
 public class PermissionDeniedException extends BusinessException {
     
     /**
@@ -59,19 +60,7 @@ public class PermissionDeniedException extends BusinessException {
         super(403, message);
         this.requiredPermissions = new String[]{requiredPermission};
     }
-    
-    public String[] getUserPermissions() {
-        return userPermissions;
-    }
-    
-    public String[] getRequiredPermissions() {
-        return requiredPermissions;
-    }
-    
-    public RequireMode getMode() {
-        return mode;
-    }
-    
+
     /**
      * 获取格式化的权限详情
      * @return 权限详情字符串

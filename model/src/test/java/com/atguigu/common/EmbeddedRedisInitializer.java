@@ -1,5 +1,6 @@
 package com.atguigu.common;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
@@ -13,7 +14,7 @@ public class EmbeddedRedisInitializer implements ApplicationContextInitializer<C
     private static final Logger log = LoggerFactory.getLogger(EmbeddedRedisInitializer.class);
 
     @Override
-    public void initialize(ConfigurableApplicationContext context) {
+    public void initialize(@NotNull ConfigurableApplicationContext context) {
         try {
             RedisServer redisServer = RedisServer.builder()
                     .port(6379)

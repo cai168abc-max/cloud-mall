@@ -4,7 +4,6 @@ import com.atguigu.common.annotation.RequirePermission;
 import com.atguigu.common.bean.UserInfo;
 import com.atguigu.common.context.UserContext;
 import com.atguigu.common.enums.RequireMode;
-import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
 import com.atguigu.order.bean.Order;
 import com.atguigu.order.service.OrderService;

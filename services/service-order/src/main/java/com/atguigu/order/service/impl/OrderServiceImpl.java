@@ -2,7 +2,6 @@ package com.atguigu.order.service.impl;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.nacos.shaded.com.google.common.collect.Lists;
 import org.apache.seata.spring.annotation.GlobalTransactional;
 import com.atguigu.common.enums.OrderStatus;
 import com.atguigu.common.exception.BusinessException;
@@ -46,6 +45,19 @@ public class OrderServiceImpl implements OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     private static final String ORDER_LOCK_PREFIX = "order:lock:";
+
+    private void executeAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
     private static final long LOCK_WAIT_SECONDS = 3;
     private static final long LOCK_LEASE_SECONDS = 10;
 
@@ -71,12 +83,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             Order order = doCreateOrder(productId, userId, null);
             final String keyRef = idempotencyKey;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    idempotencyService.releaseLock(keyRef);
-                }
-            });
+            executeAfterCommit(() -> idempotencyService.releaseLock(keyRef));
             return order;
         } catch (Exception e) {
             idempotencyService.releaseLock(idempotencyKey);
@@ -100,12 +107,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             Order order = doCreateOrder(productId, userId, couponId);
             final String keyRef = idempotencyKey;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    idempotencyService.releaseLock(keyRef);
-                }
-            });
+            executeAfterCommit(() -> idempotencyService.releaseLock(keyRef));
             return order;
         } catch (Exception e) {
             idempotencyService.releaseLock(idempotencyKey);
@@ -166,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
         order.setMerchantId(product.getMerchantId());
         order.setNickName("用户-" + userId);
         order.setAddress("默认地址");
-        order.setProductList(Arrays.asList(product));
+        order.setProductList(List.of(product));
         order.setStatus(OrderStatus.CREATED);
         order.setDiscountAmount(BigDecimal.ZERO);
         return order;
@@ -219,12 +221,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 发送订单通知（事务提交后执行）
         final Order orderRef = order;
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                sendOrderNotification(orderRef);
-            }
-        });
+        executeAfterCommit(() -> sendOrderNotification(orderRef));
     }
 
     private void sendOrderNotification(Order order) {
@@ -306,12 +303,9 @@ public class OrderServiceImpl implements OrderService {
 
                 log.info("订单支付成功, orderId={}, userId={}, payAmount={}", orderId, userId, order.getPayAmount());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -348,12 +342,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.SHIPPED);
                 orderMapper.updateStatusToShipped(orderId, OrderStatus.SHIPPED.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -390,12 +381,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.COMPLETED);
                 orderMapper.updateStatusToCompleted(orderId, OrderStatus.COMPLETED.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -444,12 +432,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.CANCELED);
                 orderMapper.updateStatus(orderId, OrderStatus.CANCELED.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -486,12 +471,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.REFUNDING);
                 orderMapper.updateStatus(orderId, OrderStatus.REFUNDING.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -550,12 +532,9 @@ public class OrderServiceImpl implements OrderService {
 
                 log.info("订单退款成功, orderId={}, userId={}, refundAmount={}", orderId, order.getUserId(), order.getPayAmount());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return true;
@@ -592,12 +571,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.PAID);
                 orderMapper.updateStatus(orderId, OrderStatus.PAID.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return true;
@@ -634,12 +610,9 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.REFUNDING);
                 orderMapper.updateStatus(orderId, OrderStatus.REFUNDING.name());
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 return order;
@@ -718,12 +691,9 @@ public class OrderServiceImpl implements OrderService {
                     }
                 }
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 
@@ -787,12 +757,9 @@ public class OrderServiceImpl implements OrderService {
                     }
                 }
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 
@@ -851,12 +818,9 @@ public class OrderServiceImpl implements OrderService {
                     }
                 }
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 
@@ -874,7 +838,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @GlobalTransactional(name = "batch-cancel-orders", timeoutMills = 60000, rollbackFor = Exception.class)
+    @GlobalTransactional(name = "batch-cancel-orders", rollbackFor = Exception.class)
     public Map<Long, Order> batchCancelOrders(List<Long> orderIds, Long userId) {
         String lockKey = "batch-cancel:" + userId;
         RLock lock = redissonClient.getLock(lockKey);
@@ -897,7 +861,7 @@ public class OrderServiceImpl implements OrderService {
                 
                 List<Order> userOrders = orders.stream()
                         .filter(order -> order.getUserId().equals(userId))
-                        .collect(Collectors.toList());
+                        .toList();
                 
                 if (userOrders.isEmpty()) {
                     return result;
@@ -929,12 +893,9 @@ public class OrderServiceImpl implements OrderService {
                     result.put(order.getId(), order);
                 }
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
                 
@@ -965,7 +926,7 @@ public class OrderServiceImpl implements OrderService {
      * 注意：此方法不使用全局事务，每个订单独立处理，失败不影响其他订单
      */
     @Override
-    @GlobalTransactional(name = "create-orders-from-cart", timeoutMills = 60000, rollbackFor = Exception.class)
+    @GlobalTransactional(name = "create-orders-from-cart", rollbackFor = Exception.class)
     public Map<String, Object> createOrdersFromCart(Long userId) {
         Map<String, Object> result = new HashMap<>();
         List<Order> successOrders = new ArrayList<>();
@@ -1093,12 +1054,7 @@ public class OrderServiceImpl implements OrderService {
                 orderItemMapper.insertOrderItem(orderItem);
 
                 final Order orderRef = order;
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        sendOrderNotification(orderRef);
-                    }
-                });
+                executeAfterCommit(() -> sendOrderNotification(orderRef));
                 
             } catch (Exception e) {
                 // 订单创建失败，需要回滚库存
@@ -1122,12 +1078,7 @@ public class OrderServiceImpl implements OrderService {
         // 清空已处理的购物车项（事务提交后执行，防止回滚时购物车数据丢失）
         if (!successOrders.isEmpty()) {
             final Long userIdRef = userId;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    cartService.clearCheckedItems(userIdRef);
-                }
-            });
+            executeAfterCommit(() -> cartService.clearCheckedItems(userIdRef));
         }
 
         result.put("successOrders", successOrders);

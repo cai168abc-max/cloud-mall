@@ -45,6 +45,19 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     private static final Logger log = LoggerFactory.getLogger(UserAuthServiceImpl.class);
 
+    private void executeAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
+
     private final UserAccountMapper userAccountMapper;
 
     private final UserAddressMapper userAddressMapper;
@@ -308,12 +321,9 @@ public class UserAuthServiceImpl implements UserAuthService {
                 String hash = PasswordUtil.hashPassword(newPassword);
                 userAccountMapper.updatePassword(userId, hash, null);
 
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (lock.isHeldByCurrentThread()) {
-                            lock.unlock();
-                        }
+                executeAfterCommit(() -> {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
                     }
                 });
             } catch (Exception e) {

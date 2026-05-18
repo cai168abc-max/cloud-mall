@@ -1,13 +1,21 @@
 package com.atguigu.common.exception;
 
+import lombok.Getter;
+
 import java.util.List;
 
 /**
  * 参数校验异常
  * 用于参数验证失败的场景，返回400错误码
  */
+@Getter
 public class ValidationException extends BusinessException {
-    
+
+    /**
+     * -- GETTER --
+     *  获取校验错误列表
+     *
+     */
     private List<String> validationErrors;
     
     /**
@@ -27,12 +35,5 @@ public class ValidationException extends BusinessException {
         super(400, message);
         this.validationErrors = validationErrors;
     }
-    
-    /**
-     * 获取校验错误列表
-     * @return 校验错误列表
-     */
-    public List<String> getValidationErrors() {
-        return validationErrors;
-    }
+
 }

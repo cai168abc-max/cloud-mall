@@ -25,7 +25,7 @@ import java.io.PrintWriter;
 public class SentinelBlockHandler implements BlockExceptionHandler {
     
     private static final Logger log = LoggerFactory.getLogger(SentinelBlockHandler.class);
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String resourceName, BlockException e) throws Exception {

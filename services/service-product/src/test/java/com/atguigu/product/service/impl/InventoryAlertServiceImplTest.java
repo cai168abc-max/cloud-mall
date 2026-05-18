@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,11 +19,9 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -101,7 +98,7 @@ class InventoryAlertServiceImplTest {
             InventoryAlertConfig config = createTestConfig(1L, 1L, 10);
             Product product = createTestProduct(1L, "商品", 100); // 库存100，阈值10
             
-            when(alertConfigMapper.selectAllEnabled()).thenReturn(Arrays.asList(config));
+            when(alertConfigMapper.selectAllEnabled()).thenReturn(List.of(config));
             when(productMapper.selectById(1L)).thenReturn(product);
 
             // When
@@ -118,7 +115,7 @@ class InventoryAlertServiceImplTest {
             // Given
             InventoryAlertConfig config = createTestConfig(1L, 1L, 10);
             
-            when(alertConfigMapper.selectAllEnabled()).thenReturn(Arrays.asList(config));
+            when(alertConfigMapper.selectAllEnabled()).thenReturn(List.of(config));
             when(productMapper.selectById(1L)).thenReturn(null);
 
             // When
@@ -135,7 +132,7 @@ class InventoryAlertServiceImplTest {
             // Given
             InventoryAlertConfig config = createTestConfig(1L, null, 10);
             
-            when(alertConfigMapper.selectAllEnabled()).thenReturn(Arrays.asList(config));
+            when(alertConfigMapper.selectAllEnabled()).thenReturn(List.of(config));
 
             // When
             inventoryAlertService.checkInventoryAlert();

@@ -78,7 +78,7 @@ class CartServiceImplTest {
             Long productId = 1L;
             Integer quantity = 2;
             
-            Product product = createTestProduct(productId, "测试商品", BigDecimal.valueOf(100), 10);
+            Product product = createTestProduct(productId, BigDecimal.valueOf(100));
             Cart existingCart = new Cart();
             existingCart.setUserId(userId);
             existingCart.setItems(new ArrayList<>());
@@ -106,7 +106,7 @@ class CartServiceImplTest {
         void should_rejectNonExistentProduct() throws InterruptedException {
             // Given
             Long userId = 1L;
-            Long productId = 999L;
+            long productId = 999L;
             Integer quantity = 1;
             
             when(redissonClient.getLock(anyString())).thenReturn(rLock);
@@ -130,7 +130,7 @@ class CartServiceImplTest {
             Long productId = 1L;
             Integer quantity = 100; // 请求100个
             
-            Product product = createTestProduct(productId, "测试商品", BigDecimal.valueOf(100), 10); // 库存只有10
+            Product product = createTestProduct(productId, BigDecimal.valueOf(100)); // 库存只有10
             
             when(redissonClient.getLock(anyString())).thenReturn(rLock);
             when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
@@ -155,7 +155,7 @@ class CartServiceImplTest {
             Integer existingQuantity = 2;
             Integer newQuantity = 3;
             
-            Product product = createTestProduct(productId, "测试商品", BigDecimal.valueOf(100), 10);
+            Product product = createTestProduct(productId, BigDecimal.valueOf(100));
             
             CartItem existingItem = new CartItem();
             existingItem.setProductId(productId);
@@ -166,7 +166,7 @@ class CartServiceImplTest {
             
             Cart existingCart = new Cart();
             existingCart.setUserId(userId);
-            existingCart.setItems(new ArrayList<>(Arrays.asList(existingItem)));
+            existingCart.setItems(new ArrayList<>(List.of(existingItem)));
             
             when(redissonClient.getLock(anyString())).thenReturn(rLock);
             when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
@@ -208,11 +208,15 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该成功移除商品")
-        void should_removeItemFromCart_successfully() {
+        void should_removeItemFromCart_successfully() throws InterruptedException {
             // Given
             Long userId = 1L;
             Long productId = 1L;
-            
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
             CartItem item1 = new CartItem();
             item1.setProductId(productId);
             item1.setQuantity(2);
@@ -238,11 +242,15 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该处理空购物车")
-        void should_handleEmptyCart() {
+        void should_handleEmptyCart() throws InterruptedException {
             // Given
             Long userId = 1L;
             Long productId = 1L;
-            
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
             Cart cart = new Cart();
             cart.setUserId(userId);
             cart.setItems(new ArrayList<>());
@@ -275,13 +283,17 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该成功更新商品数量")
-        void should_updateItemQuantity_successfully() {
+        void should_updateItemQuantity_successfully() throws InterruptedException {
             // Given
             Long userId = 1L;
             Long productId = 1L;
             Integer newQuantity = 5;
-            
-            Product product = createTestProduct(productId, "测试商品", BigDecimal.valueOf(100), 10);
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
+            Product product = createTestProduct(productId, BigDecimal.valueOf(100));
             
             CartItem item = new CartItem();
             item.setProductId(productId);
@@ -289,7 +301,7 @@ class CartServiceImplTest {
             
             Cart cart = new Cart();
             cart.setUserId(userId);
-            cart.setItems(new ArrayList<>(Arrays.asList(item)));
+            cart.setItems(new ArrayList<>(List.of(item)));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.get(CART_KEY_PREFIX + userId)).thenReturn(cart);
@@ -305,13 +317,17 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该拒绝库存不足的更新")
-        void should_rejectInsufficientStockUpdate() {
+        void should_rejectInsufficientStockUpdate() throws InterruptedException {
             // Given
             Long userId = 1L;
             Long productId = 1L;
             Integer newQuantity = 100;
-            
-            Product product = createTestProduct(productId, "测试商品", BigDecimal.valueOf(100), 10);
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
+            Product product = createTestProduct(productId, BigDecimal.valueOf(100));
             
             CartItem item = new CartItem();
             item.setProductId(productId);
@@ -319,7 +335,7 @@ class CartServiceImplTest {
             
             Cart cart = new Cart();
             cart.setUserId(userId);
-            cart.setItems(new ArrayList<>(Arrays.asList(item)));
+            cart.setItems(new ArrayList<>(List.of(item)));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.get(CART_KEY_PREFIX + userId)).thenReturn(cart);
@@ -338,19 +354,23 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该成功更新商品选中状态")
-        void should_updateItemChecked_successfully() {
+        void should_updateItemChecked_successfully() throws InterruptedException {
             // Given
             Long userId = 1L;
             Long productId = 1L;
             Boolean checked = false;
-            
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
             CartItem item = new CartItem();
             item.setProductId(productId);
             item.setChecked(true);
             
             Cart cart = new Cart();
             cart.setUserId(userId);
-            cart.setItems(new ArrayList<>(Arrays.asList(item)));
+            cart.setItems(new ArrayList<>(List.of(item)));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.get(CART_KEY_PREFIX + userId)).thenReturn(cart);
@@ -369,11 +389,15 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该成功更新所有商品选中状态")
-        void should_updateAllItemsChecked_successfully() {
+        void should_updateAllItemsChecked_successfully() throws InterruptedException {
             // Given
             Long userId = 1L;
             Boolean checked = true;
-            
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
             CartItem item1 = new CartItem();
             item1.setProductId(1L);
             item1.setChecked(false);
@@ -404,10 +428,14 @@ class CartServiceImplTest {
 
         @Test
         @DisplayName("应该成功清空购物车")
-        void should_clearCart_successfully() {
+        void should_clearCart_successfully() throws InterruptedException {
             // Given
             Long userId = 1L;
-            
+
+            when(redissonClient.getLock(anyString())).thenReturn(rLock);
+            when(rLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(rLock.isHeldByCurrentThread()).thenReturn(true);
+
             when(redisTemplate.delete(CART_KEY_PREFIX + userId)).thenReturn(true);
 
             // When
@@ -436,7 +464,7 @@ class CartServiceImplTest {
             
             Cart cart = new Cart();
             cart.setUserId(userId);
-            cart.setItems(new ArrayList<>(Arrays.asList(item)));
+            cart.setItems(new ArrayList<>(List.of(item)));
             
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.get(CART_KEY_PREFIX + userId)).thenReturn(cart);
@@ -569,12 +597,12 @@ class CartServiceImplTest {
 
     // ========== 辅助方法 ==========
 
-    private Product createTestProduct(Long id, String name, BigDecimal price, Integer stock) {
+    private Product createTestProduct(Long id, BigDecimal price) {
         Product product = new Product();
         product.setId(id);
-        product.setName(name);
+        product.setName("测试商品");
         product.setPrice(price);
-        product.setNum(stock);
+        product.setNum(10);
         product.setMerchantId(1L);
         return product;
     }

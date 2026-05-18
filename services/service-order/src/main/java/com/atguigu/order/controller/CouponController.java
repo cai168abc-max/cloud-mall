@@ -5,7 +5,6 @@ import com.atguigu.common.enums.UserRole;
 import com.atguigu.order.bean.Coupon;
 import com.atguigu.common.context.UserContext;
 import com.atguigu.order.service.CouponService;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

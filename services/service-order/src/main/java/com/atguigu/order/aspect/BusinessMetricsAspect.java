@@ -1,6 +1,5 @@
 package com.atguigu.order.aspect;
 
-import com.atguigu.common.enums.OrderStatus;
 import com.atguigu.order.bean.Order;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

@@ -3,6 +3,7 @@ package com.atguigu.common.exception;
 import com.atguigu.common.result.R;
 import com.atguigu.common.utils.SensitiveDataMasker;
 import feign.FeignException;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +181,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public R handleConstraintViolationException(ConstraintViolationException e) {
         String msg = e.getConstraintViolations().stream()
-                .map(v -> v.getMessage())
+                .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
         log.warn("[traceId={}] 参数校验失败: {}", getTraceId(), msg);
         return R.badRequest(msg);

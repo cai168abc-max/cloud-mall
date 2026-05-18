@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 /**
  * 权限验证注解
  * 用于标注在Controller方法或类上，声明访问该资源所需的权限
- * 
  * 使用示例：
  * <pre>
  * // 单个权限

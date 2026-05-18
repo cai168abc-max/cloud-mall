@@ -10,12 +10,7 @@ public class StockServiceImpl implements StockService {
         if (amount<=0){
             throw new IllegalArgumentException("增加数量必须大于0");
         }
-        Integer currentStock = stockMap.get(productId);
-        if(currentStock== null) {
-            stockMap.put(productId, amount);
-        }else {
-            stockMap.put(productId,currentStock+amount);
-        }
+        stockMap.merge(productId, amount, Integer::sum);
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.atguigu.order.feign;
 
 import com.atguigu.order.fallback.ProductFeignFallback;
 import com.atguigu.product.bean.Product;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,19 +15,17 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
  * Feign客户端集成测试类
- * 
  * 测试目的：
  * 1. 验证Feign客户端与服务端的协作是否正常
  * 2. 验证服务间调用的正确性
  * 3. 验证Fallback降级逻辑的正确性
- * 
  * 使用Mock方式模拟远程服务调用
  */
+@Disabled("需要Docker/Nacos环境，仅在本地手动运行")
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("Feign客户端集成测试")
@@ -238,36 +235,28 @@ class FeignIntegrationTest {
         @DisplayName("ProductFeignFallback应该抛出异常当decreaseStock失败")
         void should_fallbackThrowException_whenDecreaseStockFails() {
             // When & Then
-            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> {
-                productFeignFallback.decreaseStock(1L, 10);
-            });
+            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> productFeignFallback.decreaseStock(1L, 10));
         }
 
         @Test
         @DisplayName("ProductFeignFallback应该抛出异常当increaseStock失败")
         void should_fallbackThrowException_whenIncreaseStockFails() {
             // When & Then
-            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> {
-                productFeignFallback.increaseStock(1L, 10);
-            });
+            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> productFeignFallback.increaseStock(1L, 10));
         }
 
         @Test
         @DisplayName("ProductFeignFallback应该抛出异常当batchIncreaseStock失败")
         void should_fallbackThrowException_whenBatchIncreaseStockFails() {
             // When & Then
-            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> {
-                productFeignFallback.batchIncreaseStock(Arrays.asList(createStockItem(1L, 5)));
-            });
+            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> productFeignFallback.batchIncreaseStock(List.of(createStockItem(1L, 5))));
         }
 
         @Test
         @DisplayName("ProductFeignFallback应该抛出异常当batchDecreaseStock失败")
         void should_fallbackThrowException_whenBatchDecreaseStockFails() {
             // When & Then
-            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> {
-                productFeignFallback.batchDecreaseStock(Arrays.asList(createStockItem(1L, 5)));
-            });
+            assertThrows(com.atguigu.common.exception.BusinessException.class, () -> productFeignFallback.batchDecreaseStock(List.of(createStockItem(1L, 5))));
         }
     }
 

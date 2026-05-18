@@ -1,37 +1,60 @@
 package com.atguigu.order.bean;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-/**
- * 用户购物车
- */
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class Cart {
     private Long userId;
-    private List<CartItem> items;
+    private List<CartItem> items = new ArrayList<>();
     private Integer totalCount;
     private BigDecimal totalAmount;
     
-    /**
-     * 计算购物车总价
-     */
+    public Cart() {
+        this.items = new ArrayList<>();
+    }
+    
+    public void setItems(List<CartItem> items) {
+        this.items = items != null ? items : new ArrayList<>();
+    }
+    
+    public List<CartItem> getItems() {
+        if (items == null) {
+            items = new ArrayList<>();
+        }
+        return items;
+    }
+    
     public void calculateTotal() {
-        if (items == null || items.isEmpty()) {
+        List<CartItem> safeItems = getItems();
+        
+        if (safeItems.isEmpty()) {
             this.totalCount = 0;
             this.totalAmount = BigDecimal.ZERO;
             return;
         }
         
-        this.totalCount = items.stream()
-                .filter(CartItem::getChecked)
+        this.totalCount = safeItems.stream()
+                .filter(Objects::nonNull)
+                .filter(item -> Boolean.TRUE.equals(item.getChecked()))
+                .filter(item -> item.getQuantity() != null && item.getQuantity() > 0)
                 .mapToInt(CartItem::getQuantity)
                 .sum();
                 
-        this.totalAmount = items.stream()
-                .filter(CartItem::getChecked)
+        this.totalAmount = safeItems.stream()
+                .filter(Objects::nonNull)
+                .filter(item -> Boolean.TRUE.equals(item.getChecked()))
+                .filter(item -> item.getPrice() != null && item.getQuantity() != null && item.getQuantity() > 0)
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

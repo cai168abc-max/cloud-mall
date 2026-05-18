@@ -1,6 +1,8 @@
 package com.atguigu.product.service;
 
 import com.atguigu.product.bean.ProductAuditLog;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,8 @@ public interface ProductAuditService {
     /**
      * 审核结果DTO
      */
+    @Setter
+    @Getter
     class AuditResult {
         private boolean success;
         private String message;
@@ -24,34 +28,13 @@ public interface ProductAuditService {
             this.productId = productId;
         }
 
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public void setSuccess(boolean success) {
-            this.success = success;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
-        public Long getProductId() {
-            return productId;
-        }
-
-        public void setProductId(Long productId) {
-            this.productId = productId;
-        }
     }
 
     /**
      * 批量审核结果DTO
      */
+    @Setter
+    @Getter
     class BatchAuditResult {
         private int totalCount;
         private int successCount;
@@ -65,37 +48,6 @@ public interface ProductAuditService {
             this.failedProducts = failedProducts;
         }
 
-        public int getTotalCount() {
-            return totalCount;
-        }
-
-        public void setTotalCount(int totalCount) {
-            this.totalCount = totalCount;
-        }
-
-        public int getSuccessCount() {
-            return successCount;
-        }
-
-        public void setSuccessCount(int successCount) {
-            this.successCount = successCount;
-        }
-
-        public int getFailCount() {
-            return failCount;
-        }
-
-        public void setFailCount(int failCount) {
-            this.failCount = failCount;
-        }
-
-        public Map<Long, String> getFailedProducts() {
-            return failedProducts;
-        }
-
-        public void setFailedProducts(Map<Long, String> failedProducts) {
-            this.failedProducts = failedProducts;
-        }
     }
 
     /**

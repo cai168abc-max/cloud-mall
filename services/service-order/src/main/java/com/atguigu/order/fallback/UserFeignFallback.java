@@ -3,7 +3,6 @@ package com.atguigu.order.fallback;
 import com.atguigu.common.bean.UserInfo;
 import com.atguigu.common.cache.CacheKeyConstants;
 import com.atguigu.common.enums.UserRole;
-import com.atguigu.common.exception.BusinessException;
 import com.atguigu.common.result.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

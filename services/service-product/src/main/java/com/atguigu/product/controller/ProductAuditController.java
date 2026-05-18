@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,6 @@ import java.util.Map;
 
 /**
  * 商品审核Controller
- * 
  * 提供商品审核相关接口：
  * - 单个商品审核
  * - 批量商品审核
@@ -40,6 +41,8 @@ public class ProductAuditController {
     /**
      * 审核请求DTO
      */
+    @Setter
+    @Getter
     public static class AuditRequest {
         @NotNull(message = "商品ID不能为空")
         private Long productId;
@@ -49,34 +52,13 @@ public class ProductAuditController {
 
         private String reason;
 
-        public Long getProductId() {
-            return productId;
-        }
-
-        public void setProductId(Long productId) {
-            this.productId = productId;
-        }
-
-        public Boolean getApproved() {
-            return approved;
-        }
-
-        public void setApproved(Boolean approved) {
-            this.approved = approved;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
     }
 
     /**
      * 批量审核请求DTO
      */
+    @Setter
+    @Getter
     public static class BatchAuditRequest {
         @NotEmpty(message = "商品ID列表不能为空")
         private List<Long> productIds;
@@ -86,29 +68,6 @@ public class ProductAuditController {
 
         private String reason;
 
-        public List<Long> getProductIds() {
-            return productIds;
-        }
-
-        public void setProductIds(List<Long> productIds) {
-            this.productIds = productIds;
-        }
-
-        public Boolean getApproved() {
-            return approved;
-        }
-
-        public void setApproved(Boolean approved) {
-            this.approved = approved;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
     }
 
     /**

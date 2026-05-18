@@ -1,12 +1,25 @@
 package com.atguigu.common.exception;
 
+import lombok.Getter;
+
 /**
  * 权限不足异常
  * 用于用户无权访问资源的场景，返回403错误码
  */
+@Getter
 public class ForbiddenException extends BusinessException {
-    
+
+    /**
+     * -- GETTER --
+     *  获取资源名称
+     *
+     */
     private String resource;
+    /**
+     * -- GETTER --
+     *  获取操作类型
+     *
+     */
     private String action;
     
     /**
@@ -27,20 +40,5 @@ public class ForbiddenException extends BusinessException {
         this.resource = resource;
         this.action = action;
     }
-    
-    /**
-     * 获取资源名称
-     * @return 资源名称
-     */
-    public String getResource() {
-        return resource;
-    }
-    
-    /**
-     * 获取操作类型
-     * @return 操作类型
-     */
-    public String getAction() {
-        return action;
-    }
+
 }

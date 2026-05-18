@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,7 +32,7 @@ class IdempotencyIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        stringRedisTemplate.getConnectionFactory().getConnection().flushAll();
+        Objects.requireNonNull(stringRedisTemplate.getConnectionFactory()).getConnection().serverCommands().flushAll();
     }
 
     @Nested
@@ -141,7 +142,7 @@ class IdempotencyIntegrationTest {
 
         @Test
         @DisplayName("应该在等待时间内获取锁")
-        void should_acquireLockWithinWaitTime() throws InterruptedException {
+        void should_acquireLockWithinWaitTime() {
             String key = TEST_KEY_PREFIX + "wait:lock";
             long waitSeconds = 2;
             long expireSeconds = 5;
@@ -156,7 +157,7 @@ class IdempotencyIntegrationTest {
 
         @Test
         @DisplayName("应该在等待超时后返回失败")
-        void should_returnFailureAfterWaitTimeout() throws InterruptedException {
+        void should_returnFailureAfterWaitTimeout() {
             String key = TEST_KEY_PREFIX + "timeout:lock";
 
             idempotencyService.tryLock(key, 10);
@@ -210,7 +211,10 @@ class IdempotencyIntegrationTest {
             }
 
             startLatch.countDown();
-            endLatch.await(10, TimeUnit.SECONDS);
+            boolean allDone = endLatch.await(10, TimeUnit.SECONDS);
+            if (!allDone) {
+                System.out.println("线程未全部执行完，超时了！");
+            }
             executorService.shutdown();
 
             assertTrue(successCount.get() >= 1, "至少有一个线程应成功获取锁");
@@ -241,7 +245,10 @@ class IdempotencyIntegrationTest {
                 });
             }
 
-            latch.await(30, TimeUnit.SECONDS);
+            boolean allDone = latch.await(30, TimeUnit.SECONDS);
+            if (!allDone) {
+                System.out.println("线程未全部执行完，超时了！");
+            }
             executorService.shutdown();
 
             assertEquals(operationCount, successCount.get(), "所有操作应成功");
@@ -264,9 +271,9 @@ class IdempotencyIntegrationTest {
             idempotencyService.releaseLock(key);
 
             IdempotencyService.LockStatistics stats = idempotencyService.getStatistics();
-            assertEquals(1, stats.getSuccessCount(), "成功次数应为1");
-            assertEquals(1, stats.getFailureCount(), "失败次数应为1");
-            assertEquals(1, stats.getReleaseCount(), "释放次数应为1");
+            assertEquals(1, stats.successCount(), "成功次数应为1");
+            assertEquals(1, stats.failureCount(), "失败次数应为1");
+            assertEquals(1, stats.releaseCount(), "释放次数应为1");
         }
 
         @Test
@@ -292,38 +299,26 @@ class IdempotencyIntegrationTest {
         @Test
         @DisplayName("应该拒绝空key")
         void should_rejectNullKey() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                idempotencyService.tryLock(null);
-            });
+            assertThrows(IllegalArgumentException.class, () -> idempotencyService.tryLock(null));
         }
 
         @Test
         @DisplayName("应该拒绝空字符串key")
         void should_rejectEmptyKey() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                idempotencyService.tryLock("");
-            });
+            assertThrows(IllegalArgumentException.class, () -> idempotencyService.tryLock(""));
         }
 
         @Test
         @DisplayName("应该拒绝过长的key")
         void should_rejectTooLongKey() {
-            StringBuilder longKey = new StringBuilder();
-            for (int i = 0; i < 300; i++) {
-                longKey.append("a");
-            }
 
-            assertThrows(IllegalArgumentException.class, () -> {
-                idempotencyService.tryLock(longKey.toString());
-            });
+            assertThrows(IllegalArgumentException.class, () -> idempotencyService.tryLock("a".repeat(300)));
         }
 
         @Test
         @DisplayName("应该拒绝无效的过期时间")
         void should_rejectInvalidExpireTime() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                idempotencyService.tryLock("test-key", 0);
-            });
+            assertThrows(IllegalArgumentException.class, () -> idempotencyService.tryLock("test-key", 0));
         }
     }
 

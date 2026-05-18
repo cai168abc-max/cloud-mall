@@ -11,7 +11,6 @@ import com.atguigu.product.mapper.ProductMapper;
 import com.atguigu.product.service.InventoryAlertService;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,7 +163,6 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
                     count = Integer.parseInt(countStr);
                 } catch (NumberFormatException e) {
                     log.warn("解析预警次数失败，countStr={}", countStr, e);
-                    count = 0;
                 }
             }
             return count < MAX_ALERT_PER_DAY;

@@ -16,13 +16,11 @@ import java.lang.reflect.Method;
 /**
  * 权限验证切面
  * 拦截带有@RequirePermission注解的方法，进行权限验证
- * 
  * 功能特性：
  * 1. 支持方法级别和类级别的权限注解
  * 2. 方法级别注解优先于类级别注解
  * 3. 记录权限验证日志
  * 4. 权限验证失败时抛出PermissionDeniedException
- * 
  * 执行顺序：
  * 设置为较高优先级（Order=1），确保在业务逻辑执行前完成权限验证
  */

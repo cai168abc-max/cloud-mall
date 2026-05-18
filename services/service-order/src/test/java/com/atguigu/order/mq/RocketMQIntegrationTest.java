@@ -19,15 +19,14 @@ import static org.mockito.Mockito.*;
 
 /**
  * 消息队列集成测试类
- * 
  * 测试目的：
  * 1. 验证RocketMQ消息发送和接收的正确性
  * 2. 验证消息顺序性的正确性
  * 3. 验证消息重试机制的正确性
- * 
  * 注意：由于RocketMQ Testcontainers配置较复杂，本测试使用Mock方式
  * 实际项目中可以使用嵌入式RocketMQ或Testcontainers进行完整集成测试
  */
+@Disabled("需要Docker/Nacos环境，仅在本地手动运行")
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("消息队列集成测试")

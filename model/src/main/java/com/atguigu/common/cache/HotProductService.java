@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -44,8 +45,9 @@ public class HotProductService {
                     .count(100) // 每次扫描的建议数量
                     .build();
 
-            try (Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
+            try (Cursor<byte[]> cursor = Objects.requireNonNull(redisTemplate.getConnectionFactory())
                     .getConnection()
+                    .keyCommands()
                     .scan(options)) {
 
                 while (cursor.hasNext()) {

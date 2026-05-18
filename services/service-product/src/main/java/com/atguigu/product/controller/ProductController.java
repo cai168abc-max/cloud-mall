@@ -6,9 +6,7 @@ import com.atguigu.common.context.UserContext;
 import com.atguigu.common.enums.RequireMode;
 import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
-import com.atguigu.product.bean.Category;
 import com.atguigu.product.bean.Product;
-import com.atguigu.product.mapper.ProductMapper;
 import com.atguigu.product.service.CategoryService;
 import com.atguigu.product.service.ProductService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -21,8 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 商品控制器

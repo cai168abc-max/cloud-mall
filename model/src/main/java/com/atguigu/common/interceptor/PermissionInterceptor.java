@@ -16,16 +16,13 @@ import java.util.Set;
 /**
  * 权限验证拦截器
  * 用于验证用户是否具有所需的权限
- * 
  * 权限体系设计：
  * 1. 基于角色的权限映射：
  *    - ADMIN: 拥有所有权限
  *    - MERCHANT: 拥有商品管理、订单管理等商家权限
  *    - USER: 拥有基础用户权限
- * 
  * 2. 权限标识格式：资源:操作
  *    例如：user:read, product:write, order:delete
- * 
  * 3. 验证模式：
  *    - ANY: 满足任一权限即可
  *    - ALL: 必须满足所有权限
@@ -112,16 +109,11 @@ public class PermissionInterceptor {
             return new HashSet<>();
         }
 
-        switch (role) {
-            case ADMIN:
-                return ADMIN_PERMISSIONS;
-            case MERCHANT:
-                return MERCHANT_PERMISSIONS;
-            case USER:
-                return USER_PERMISSIONS;
-            default:
-                return new HashSet<>();
-        }
+        return switch (role) {
+            case ADMIN -> ADMIN_PERMISSIONS;
+            case MERCHANT -> MERCHANT_PERMISSIONS;
+            case USER -> USER_PERMISSIONS;
+        };
     }
 
     /**
@@ -173,9 +165,7 @@ public class PermissionInterceptor {
         String[] parts = requiredPermission.split(":");
         if (parts.length == 2) {
             String wildcardPermission = parts[0] + ":*";
-            if (userPermissions.contains(wildcardPermission)) {
-                return true;
-            }
+            return userPermissions.contains(wildcardPermission);
         }
 
         return false;

@@ -9,12 +9,10 @@ import java.util.regex.Pattern;
 
 /**
  * XSS攻击防护请求包装器
- * 
  * 功能说明：
  * 1. 对请求参数进行XSS过滤
  * 2. 防止脚本注入攻击
  * 3. 支持多种XSS攻击向量的检测和过滤
- * 
  * 安全特性：
  * - 覆盖HTML标签注入
  * - 覆盖JavaScript事件处理器
@@ -22,7 +20,6 @@ import java.util.regex.Pattern;
  * - 覆盖SVG/MathML向量
  * - 覆盖数据URI攻击
  * - HTML实体编码防护
- * 
  * 注意事项：
  * - 此包装器仅过滤请求参数和头部，不处理请求体
  * - 对于JSON请求体，应在业务层进行处理
@@ -197,7 +194,6 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     /**
      * HTML实体编码
      * 将特殊字符转换为HTML实体，防止HTML注入
-     * 
      * 注意：此方法会修改原始数据，应在输出时进行编码而非输入时
      * 当前实现保留此方法以兼容现有逻辑，建议后续优化
      *
@@ -261,9 +257,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
             if (Character.isLetter(next)) {
                 // 查找分号结束
                 int semicolonIndex = value.indexOf(';', index);
-                if (semicolonIndex > 0 && semicolonIndex - index <= 10) {
-                    return true;
-                }
+                return semicolonIndex > 0 && semicolonIndex - index <= 10;
             }
         }
         return false;

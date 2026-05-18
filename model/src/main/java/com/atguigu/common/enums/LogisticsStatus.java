@@ -1,8 +1,11 @@
 package com.atguigu.common.enums;
 
+import lombok.Getter;
+
 /**
  * 物流状态枚举
  */
+@Getter
 public enum LogisticsStatus {
     /**
      * 待发货
@@ -29,8 +32,5 @@ public enum LogisticsStatus {
     LogisticsStatus(String description) {
         this.description = description;
     }
-    
-    public String getDescription() {
-        return description;
-    }
+
 }

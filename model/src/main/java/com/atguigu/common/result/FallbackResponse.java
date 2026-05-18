@@ -2,6 +2,7 @@ package com.atguigu.common.result;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 @Data
 public class FallbackResponse<T> implements Serializable {
     
+    @Serial
     private static final long serialVersionUID = 1L;
     
     /**
