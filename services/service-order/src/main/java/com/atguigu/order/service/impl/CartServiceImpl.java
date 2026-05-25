@@ -75,7 +75,7 @@ public class CartServiceImpl implements CartService {
 
             Cart cart = getCartInternal(userId);
 
-            Optional<CartItem> existingItemOpt = cart.getItems().stream()
+            Optional<CartItem> existingItemOpt = cart.getItemsInternal().stream()
                     .filter(item -> Objects.equals(item.getProductId(), productId))
                     .findFirst();
 
@@ -90,7 +90,7 @@ public class CartServiceImpl implements CartService {
                 newItem.setQuantity(quantity);
                 newItem.setCategoryId(product.getCategoryId());
                 newItem.setChecked(true);
-                cart.getItems().add(newItem);
+                cart.getItemsInternal().add(newItem);
             }
 
             cart.calculateTotal();
@@ -118,10 +118,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItems().isEmpty()) {
+            if (cart == null || cart.getItemsInternal().isEmpty()) {
                 return cart;
             }
-            cart.getItems().removeIf(item -> Objects.equals(item.getProductId(), productId));
+            cart.getItemsInternal().removeIf(item -> Objects.equals(item.getProductId(), productId));
             cart.calculateTotal();
             saveCartToRedis(cart);
             return cart;
@@ -148,10 +148,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItems().isEmpty()) {
+            if (cart == null || cart.getItemsInternal().isEmpty()) {
                 return cart;
             }
-            Optional<CartItem> itemOpt = cart.getItems().stream()
+            Optional<CartItem> itemOpt = cart.getItemsInternal().stream()
                     .filter(item -> Objects.equals(item.getProductId(), productId))
                     .findFirst();
             if (itemOpt.isPresent()) {
@@ -185,10 +185,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItems().isEmpty()) {
+            if (cart == null || cart.getItemsInternal().isEmpty()) {
                 return cart;
             }
-            Optional<CartItem> itemOpt = cart.getItems().stream()
+            Optional<CartItem> itemOpt = cart.getItemsInternal().stream()
                     .filter(item -> Objects.equals(item.getProductId(), productId))
                     .findFirst();
             if (itemOpt.isPresent()) {
@@ -218,10 +218,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItems().isEmpty()) {
+            if (cart == null || cart.getItemsInternal().isEmpty()) {
                 return cart;
             }
-            cart.getItems().forEach(item -> item.setChecked(checked));
+            cart.getItemsInternal().forEach(item -> item.setChecked(checked));
             cart.calculateTotal();
             saveCartToRedis(cart);
             return cart;
