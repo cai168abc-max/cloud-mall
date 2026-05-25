@@ -10,7 +10,7 @@ public class ServiceUnavailableException extends BusinessException {
      * 构造函数，错误码固定为503
      * @param message 异常信息
      */
-    public ServiceUnavailableException(String message) {
+    public ServiceUnavailableException(final String message) {
         super(503, message);
     }
     
@@ -19,7 +19,7 @@ public class ServiceUnavailableException extends BusinessException {
      * @param message 异常信息
      * @param cause 原因异常
      */
-    public ServiceUnavailableException(String message, Throwable cause) {
+    public ServiceUnavailableException(final String message, final Throwable cause) {
         super(503, message);
         initCause(cause);
     }

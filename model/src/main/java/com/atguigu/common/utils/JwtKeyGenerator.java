@@ -94,7 +94,7 @@ public final class JwtKeyGenerator {
      * @param secret 待验证的密钥
      * @return 验证结果，null表示验证通过，否则返回错误信息
      */
-    public static String validateSecret(String secret) {
+    public static String validateSecret(final String secret) {
         if (secret == null || secret.isEmpty()) {
             return "JWT密钥未配置，请设置环境变量JWT_SECRET";
         }
@@ -126,7 +126,7 @@ public final class JwtKeyGenerator {
      * 
      * @param args 命令行参数
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println("========== JWT密钥生成工具 ==========");
         System.out.println();
         System.out.println("生成HS256算法密钥（256位）:");

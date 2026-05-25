@@ -27,7 +27,7 @@ public class HotProductService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public void recordAccess(Long productId) {
+    public void recordAccess(final Long productId) {
         String key = HOT_PREFIX + productId;
         redisTemplate.opsForValue().increment(key, 1);
         redisTemplate.expire(key, STAT_WINDOW, TimeUnit.SECONDS);

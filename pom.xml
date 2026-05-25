@@ -10,8 +10,8 @@
     </parent>
     <packaging>pom</packaging>
     <modules>
-        <module>services</module>
         <module>model</module>
+        <module>services</module>
         <module>gateway</module>
     </modules>
     <groupId>com.example</groupId>

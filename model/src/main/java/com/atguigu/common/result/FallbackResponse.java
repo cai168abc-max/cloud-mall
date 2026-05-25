@@ -72,7 +72,7 @@ public class FallbackResponse<T> implements Serializable {
     /**
      * 创建缓存降级响应
      */
-    public static <T> FallbackResponse<T> fromCache(T data, String serviceName) {
+    public static <T> FallbackResponse<T> fromCache(final T data, final String serviceName) {
         FallbackResponse<T> response = new FallbackResponse<>();
         response.setCode(200);
         response.setMessage("服务降级：返回缓存数据");
@@ -100,7 +100,7 @@ public class FallbackResponse<T> implements Serializable {
     /**
      * 创建错误降级响应
      */
-    public static <T> FallbackResponse<T> fromError(Integer code, String message, String serviceName, String reason) {
+    public static <T> FallbackResponse<T> fromError(final Integer code, final String message, final String serviceName, final String reason) {
         FallbackResponse<T> response = new FallbackResponse<>();
         response.setCode(code);
         response.setMessage(message);

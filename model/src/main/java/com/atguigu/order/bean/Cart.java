@@ -38,7 +38,7 @@ public class Cart {
         }
     }
     
-    public boolean removeItem(Long productId) {
+    public boolean removeItem(final Long productId) {
         return this.items.removeIf(item -> Objects.equals(item.getProductId(), productId));
     }
     
@@ -68,7 +68,7 @@ public class Cart {
         return false;
     }
     
-    public void updateAllChecked(Boolean checked) {
+    public void updateAllChecked(final Boolean checked) {
         this.items.forEach(item -> item.setChecked(checked));
     }
     

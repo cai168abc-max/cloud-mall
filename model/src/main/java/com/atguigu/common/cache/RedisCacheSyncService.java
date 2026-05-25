@@ -77,9 +77,9 @@ public class RedisCacheSyncService implements MessageListener {
     private final MultiLevelCacheService multiLevelCacheService;
 
     public RedisCacheSyncService(
-            RedisTemplate<String, Object> redisTemplate,
-            RedisMessageListenerContainer redisMessageListenerContainer,
-            @Lazy MultiLevelCacheService multiLevelCacheService) {
+            final RedisTemplate<String, Object> redisTemplate,
+            final RedisMessageListenerContainer redisMessageListenerContainer,
+            @Lazy final MultiLevelCacheService multiLevelCacheService) {
         this.redisTemplate = redisTemplate;
         this.redisMessageListenerContainer = redisMessageListenerContainer;
         this.multiLevelCacheService = multiLevelCacheService;
@@ -219,7 +219,7 @@ public class RedisCacheSyncService implements MessageListener {
     /**
      * 处理数据库行数据变更
      */
-    private void processRowData(CanalEntry.Entry entry) {
+    private void processRowData(final CanalEntry.Entry entry) {
         try {
             CanalEntry.RowChange rowChange = CanalEntry.RowChange.parseFrom(entry.getStoreValue());
             String tableName = entry.getHeader().getTableName();
@@ -263,7 +263,7 @@ public class RedisCacheSyncService implements MessageListener {
     /**
      * 处理删除事件
      */
-    private void handleDelete(String tableName, CanalEntry.RowData rowData) {
+    private void handleDelete(final String tableName, final CanalEntry.RowData rowData) {
         String key = extractPrimaryKey(rowData);
         if (key != null) {
             // 统一使用业务对象名作为前缀，格式：{业务对象}:{id}
@@ -285,7 +285,7 @@ public class RedisCacheSyncService implements MessageListener {
      * @param tableName 数据库表名
      * @return 业务对象名
      */
-    private String mapTableNameToBusinessName(String tableName) {
+    private String mapTableNameToBusinessName(final String tableName) {
         String businessName = TABLE_NAME_MAPPING.get(tableName);
         if (businessName != null) {
             return businessName;
@@ -302,7 +302,7 @@ public class RedisCacheSyncService implements MessageListener {
     /**
      * 提取主键值
      */
-    private String extractPrimaryKey(CanalEntry.RowData rowData) {
+    private String extractPrimaryKey(final CanalEntry.RowData rowData) {
         for (CanalEntry.Column column : rowData.getBeforeColumnsList()) {
             if (column.getIsKey()) {
                 return column.getValue();
@@ -338,7 +338,7 @@ public class RedisCacheSyncService implements MessageListener {
      *
      * @param key 缓存键
      */
-    public void publishInvalidation(String key) {
+    public void publishInvalidation(final String key) {
         redisTemplate.convertAndSend(CACHE_INVALIDATE_TOPIC, key);
         log.info("发布缓存失效通知: {}", key);
     }
@@ -348,7 +348,7 @@ public class RedisCacheSyncService implements MessageListener {
      *
      * @param productId 商品ID
      */
-    public void publishProductInvalidation(Long productId) {
+    public void publishProductInvalidation(final Long productId) {
         String key = "product:" + productId;
         publishInvalidation(key);
     }

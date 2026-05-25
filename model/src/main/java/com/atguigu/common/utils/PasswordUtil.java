@@ -16,7 +16,7 @@ public final class PasswordUtil {
         return encoder.encode(rawPassword);
     }
 
-    public static boolean matches(String rawPassword, String hashedPassword) {
+    public static boolean matches(final String rawPassword, final String hashedPassword) {
         if (rawPassword == null) {
             throw new IllegalArgumentException("Raw password cannot be null");
         }

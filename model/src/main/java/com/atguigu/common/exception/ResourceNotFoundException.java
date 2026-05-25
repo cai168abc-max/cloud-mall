@@ -47,7 +47,7 @@ public class ResourceNotFoundException extends BusinessException {
      * @param resourceId 资源ID
      * @param message 自定义消息
      */
-    public ResourceNotFoundException(String resourceType, Object resourceId, String message) {
+    public ResourceNotFoundException(final String resourceType, final Object resourceId, final String message) {
         super(404, message);
         this.resourceType = resourceType;
         this.resourceId = resourceId;

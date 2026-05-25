@@ -94,7 +94,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识，不能为null或空
      * @return 锁获取结果，包含成功/失败状态和失败原因
      */
-    public IdempotencyResult tryLock(String key) {
+    public IdempotencyResult tryLock(final String key) {
         return tryLock(key, DEFAULT_EXPIRE_SECONDS);
     }
 
@@ -209,7 +209,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识，不能为null或空
      * @return 释放结果
      */
-    public ReleaseResult releaseLock(String key) {
+    public ReleaseResult releaseLock(final String key) {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
 
@@ -322,7 +322,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识
      * @return 剩余过期时间（毫秒），-1表示锁不存在，-2表示锁存在但没有过期时间
      */
-    public long getRemainingTimeToLive(String key) {
+    public long getRemainingTimeToLive(final String key) {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
         try {
@@ -408,7 +408,7 @@ public class IdempotencyService {
         private final FailureReason failureReason;
         private final String message;
 
-        private IdempotencyResult(boolean success, FailureReason failureReason, String message) {
+        private IdempotencyResult(final boolean success, final FailureReason failureReason, final String message) {
             this.success = success;
             this.failureReason = failureReason;
             this.message = message;
@@ -422,7 +422,7 @@ public class IdempotencyService {
             return new IdempotencyResult(false, reason, reason.getDescription());
         }
 
-        public static IdempotencyResult failure(FailureReason reason, String message) {
+        public static IdempotencyResult failure(final FailureReason reason, final String message) {
             return new IdempotencyResult(false, reason, message);
         }
 
@@ -458,7 +458,7 @@ public class IdempotencyService {
         private final ReleaseStatus status;
         private final String message;
 
-        private ReleaseResult(boolean success, ReleaseStatus status, String message) {
+        private ReleaseResult(final boolean success, final ReleaseStatus status, final String message) {
             this.success = success;
             this.status = status;
             this.message = message;
@@ -476,7 +476,7 @@ public class IdempotencyService {
             return new ReleaseResult(false, ReleaseStatus.EXPIRED, "锁已过期");
         }
 
-        public static ReleaseResult error(String message) {
+        public static ReleaseResult error(final String message) {
             return new ReleaseResult(false, ReleaseStatus.ERROR, message);
         }
 

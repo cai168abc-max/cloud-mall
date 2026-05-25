@@ -108,7 +108,7 @@ public final class CacheKeyConstants {
      * 商品信息Key
      * 格式：product:info:{productId}
      */
-    public static String productInfo(Long productId) {
+    public static String productInfo(final Long productId) {
         return MODULE_PRODUCT + SEPARATOR + TYPE_INFO + SEPARATOR + productId;
     }
 
@@ -134,7 +134,7 @@ public final class CacheKeyConstants {
      * 用户信息Key
      * 格式：user:info:{userId}
      */
-    public static String userInfo(Long userId) {
+    public static String userInfo(final Long userId) {
         return MODULE_USER + SEPARATOR + TYPE_INFO + SEPARATOR + userId;
     }
 
@@ -142,7 +142,7 @@ public final class CacheKeyConstants {
      * 用户会话Key
      * 格式：user:session:{sessionId}
      */
-    public static String userSession(String sessionId) {
+    public static String userSession(final String sessionId) {
         return MODULE_USER + SEPARATOR + TYPE_SESSION + SEPARATOR + sessionId;
     }
 

@@ -42,7 +42,7 @@ public final class HmacSignatureUtil {
      * @param timestamp 时间戳
      * @return Base64编码的签名
      */
-    public static String generateSignature(String secret, String path, long timestamp) {
+    public static String generateSignature(final String secret, final String path, final long timestamp) {
         try {
             String data = path + "|" + timestamp;
             Mac mac = Mac.getInstance(HMAC_SHA256);
@@ -107,7 +107,7 @@ public final class HmacSignatureUtil {
      * @param token 内部请求标识（格式：timestamp:signature）
      * @return 验证结果
      */
-    public static boolean verifyInternalRequestToken(String secret, String path, String token) {
+    public static boolean verifyInternalRequestToken(final String secret, final String path, final String token) {
         if (token == null || token.isEmpty()) {
             return false;
         }

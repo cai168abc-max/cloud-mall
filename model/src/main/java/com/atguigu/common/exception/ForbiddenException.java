@@ -26,7 +26,7 @@ public class ForbiddenException extends BusinessException {
      * 默认构造函数
      * @param message 异常信息
      */
-    public ForbiddenException(String message) {
+    public ForbiddenException(final String message) {
         super(403, message);
     }
     
@@ -35,7 +35,7 @@ public class ForbiddenException extends BusinessException {
      * @param resource 资源名称
      * @param action 操作类型（如：read, write, delete）
      */
-    public ForbiddenException(String resource, String action) {
+    public ForbiddenException(final String resource, final String action) {
         super(403, String.format("无权访问资源: %s，操作: %s", resource, action));
         this.resource = resource;
         this.action = action;

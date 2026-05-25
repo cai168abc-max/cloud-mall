@@ -19,7 +19,7 @@ public class ValidationException extends BusinessException {
      * 默认构造函数，错误码为400
      * @param message 异常信息
      */
-    public ValidationException(String message) {
+    public ValidationException(final String message) {
         super(400, message);
     }
     
@@ -28,7 +28,7 @@ public class ValidationException extends BusinessException {
      * @param message 异常信息
      * @param validationErrors 校验错误列表
      */
-    public ValidationException(String message, List<String> validationErrors) {
+    public ValidationException(final String message, final List<String> validationErrors) {
         super(400, message);
         this.validationErrors = validationErrors != null ? new ArrayList<>(validationErrors) : null;
     }

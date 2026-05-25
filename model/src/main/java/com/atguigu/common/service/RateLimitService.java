@@ -27,7 +27,7 @@ public class RateLimitService {
         return Boolean.TRUE.equals(redisTemplate.hasKey(lockKey));
     }
 
-    public void recordLoginFailure(String account) {
+    public void recordLoginFailure(final String account) {
         String failKey = LOGIN_FAIL_KEY_PREFIX + account;
         Long failCount = redisTemplate.opsForValue().increment(failKey);
         
@@ -43,7 +43,7 @@ public class RateLimitService {
         }
     }
 
-    public void clearLoginFailure(String account) {
+    public void clearLoginFailure(final String account) {
         String failKey = LOGIN_FAIL_KEY_PREFIX + account;
         redisTemplate.delete(failKey);
     }
@@ -62,7 +62,7 @@ public class RateLimitService {
      * @param windowSeconds 时间窗口（秒）
      * @return true-允许通过，false-被限流
      */
-    public boolean tryAcquire(String key, int permits, int windowSeconds) {
+    public boolean tryAcquire(final String key, final int permits, final int windowSeconds) {
         String rateLimitKey = "rate:limit:" + key;
         
         Long currentCount = redisTemplate.opsForValue().increment(rateLimitKey);
@@ -84,7 +84,7 @@ public class RateLimitService {
      * 
      * @param key 限流key
      */
-    public void resetRateLimit(String key) {
+    public void resetRateLimit(final String key) {
         String rateLimitKey = "rate:limit:" + key;
         redisTemplate.delete(rateLimitKey);
     }

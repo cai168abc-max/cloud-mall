@@ -65,14 +65,14 @@ public class R {
         return r;
     }
 
-    public static R error(String msg) {
+    public static R error(final String msg) {
         R r = new R();
         r.setCode(500);
         r.setMsg(msg);
         return r;
     }
 
-    public static R error(Integer code, String msg) {
+    public static R error(final Integer code, final String msg) {
         R r = new R();
         r.setCode(code);
         r.setMsg(msg);
@@ -88,11 +88,11 @@ public class R {
         return r;
     }
 
-    public static R badRequest(String msg) {
+    public static R badRequest(final String msg) {
         return error(400, msg);
     }
 
-    public static R unauthorized(String msg) {
+    public static R unauthorized(final String msg) {
         return error(401, msg);
     }
 
@@ -100,23 +100,23 @@ public class R {
         return error(403, msg);
     }
 
-    public static R notFound(String msg) {
+    public static R notFound(final String msg) {
         return error(404, msg);
     }
 
-    public static R methodNotAllowed(String msg) {
+    public static R methodNotAllowed(final String msg) {
         return error(405, msg);
     }
 
-    public static R conflict(String msg) {
+    public static R conflict(final String msg) {
         return error(409, msg);
     }
 
-    public static R unprocessableEntity(String msg) {
+    public static R unprocessableEntity(final String msg) {
         return error(422, msg);
     }
 
-    public static R tooManyRequests(String msg) {
+    public static R tooManyRequests(final String msg) {
         return error(429, msg);
     }
 
@@ -124,7 +124,7 @@ public class R {
         return error(500, msg);
     }
 
-    public static R serviceUnavailable(String msg) {
+    public static R serviceUnavailable(final String msg) {
         return error(503, msg);
     }
 }

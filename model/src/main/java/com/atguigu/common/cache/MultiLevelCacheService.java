@@ -113,7 +113,7 @@ public class MultiLevelCacheService {
      * @param productId 商品ID
      * @param product   商品对象
      */
-    public void setProduct(Long productId, Object product) {
+    public void setProduct(final Long productId, final Object product) {
         String cacheKey = REDIS_KEY_PREFIX + productId;
 
         // 写入Redis缓存
@@ -154,7 +154,7 @@ public class MultiLevelCacheService {
      *
      * @param key 缓存键
      */
-    public void invalidateLocalCache(String key) {
+    public void invalidateLocalCache(final String key) {
         localCache.invalidate(key);
         log.info("失效本地缓存: key={}", key);
     }
@@ -209,7 +209,7 @@ public class MultiLevelCacheService {
      * @param key   缓存键
      * @param value 缓存值
      */
-    public void set(String key, Object value) {
+    public void set(final String key, final Object value) {
         redisTemplate.opsForValue().set(key, value, REDIS_EXPIRE, TimeUnit.SECONDS);
         localCache.put(key, value);
         log.debug("设置缓存: key={}", key);
@@ -234,7 +234,7 @@ public class MultiLevelCacheService {
      *
      * @param key 缓存键
      */
-    public void delete(String key) {
+    public void delete(final String key) {
         redisTemplate.delete(key);
         localCache.invalidate(key);
 

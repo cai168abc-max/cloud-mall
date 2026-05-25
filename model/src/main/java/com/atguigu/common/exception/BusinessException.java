@@ -20,7 +20,7 @@ public class BusinessException extends RuntimeException {
      * 默认构造函数，错误码为400
      * @param message 异常信息
      */
-    public BusinessException(String message) {
+    public BusinessException(final String message) {
         super(message);
         this.code = 400;
     }
@@ -30,7 +30,7 @@ public class BusinessException extends RuntimeException {
      * @param code 错误码
      * @param message 异常信息
      */
-    public BusinessException(int code, String message) {
+    public BusinessException(final int code, final String message) {
         super(message);
         this.code = code;
     }

@@ -108,7 +108,7 @@ public class CacheService {
         }
     }
 
-    public void setCache(String key, Object value) {
+    public void setCache(final String key, final Object value) {
         long expireTime = getRandomExpireTime();
         redisTemplate.opsForValue().set(key, value, expireTime, TimeUnit.SECONDS);
     }
@@ -117,7 +117,7 @@ public class CacheService {
         return redisTemplate.opsForValue().get(key);
     }
 
-    public void setNullCache(String key) {
+    public void setNullCache(final String key) {
         redisTemplate.opsForValue().set(key, NULL_VALUE, NULL_CACHE_TTL, TimeUnit.SECONDS);
     }
 
@@ -146,7 +146,7 @@ public class CacheService {
      * @param key 缓存键
      * @param delayMillis 延迟时间（毫秒）
      */
-    public void deleteWithDoubleRemoval(String key, long delayMillis) {
+    public void deleteWithDoubleRemoval(final String key, final long delayMillis) {
         // 第一次删除
         delete(key);
         log.info("缓存双删策略：第一次删除缓存，key={}", key);
@@ -254,12 +254,12 @@ public class CacheService {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
         private final String namePrefix;
 
-        NamedThreadFactory(String namePrefix) {
+        NamedThreadFactory(final String namePrefix) {
             this.namePrefix = namePrefix + "-";
         }
 
         @Override
-        public Thread newThread(Runnable r) {
+        public Thread newThread(final Runnable r) {
             Thread t = new Thread(r, namePrefix + threadNumber.getAndIncrement());
             t.setDaemon(true);
             return t;

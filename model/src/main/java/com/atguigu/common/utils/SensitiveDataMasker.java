@@ -18,7 +18,7 @@ public class SensitiveDataMasker {
      * @param phone 手机号
      * @return 脱敏后的手机号
      */
-    public static String maskPhone(String phone) {
+    public static String maskPhone(final String phone) {
         if (phone == null || phone.length() < 11) {
             return phone;
         }
@@ -51,7 +51,7 @@ public class SensitiveDataMasker {
      * @param phoneOrEmail 手机号或邮箱地址
      * @return 脱敏后的字符串
      */
-    public static String maskPhoneOrEmail(String phoneOrEmail) {
+    public static String maskPhoneOrEmail(final String phoneOrEmail) {
         if (phoneOrEmail == null) {
             return null;
         }
@@ -70,7 +70,7 @@ public class SensitiveDataMasker {
      * @param code 验证码
      * @return 脱敏后的验证码
      */
-    public static String maskCode(String code) {
+    public static String maskCode(final String code) {
         if (code == null || code.length() < 2) {
             return code;
         }
@@ -106,7 +106,7 @@ public class SensitiveDataMasker {
      * @param idCard 身份证号
      * @return 脱敏后的身份证号
      */
-    public static String maskIdCard(String idCard) {
+    public static String maskIdCard(final String idCard) {
         if (idCard == null) {
             return null;
         }
@@ -127,7 +127,7 @@ public class SensitiveDataMasker {
      * @param bankCard 银行卡号
      * @return 脱敏后的银行卡号
      */
-    public static String maskBankCard(String bankCard) {
+    public static String maskBankCard(final String bankCard) {
         if (bankCard == null || bankCard.length() < 16 || bankCard.length() > 19) {
             return bankCard;
         }
@@ -172,7 +172,7 @@ public class SensitiveDataMasker {
      * @param text 原始文本
      * @return 脱敏后的文本
      */
-    public static String maskSensitiveInfo(String text) {
+    public static String maskSensitiveInfo(final String text) {
         if (text == null) {
             return null;
         }

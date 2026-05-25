@@ -23,7 +23,7 @@ public final class UserContext {
      * 设置当前线程的用户信息
      * @param user 用户信息对象
      */
-    public static void set(UserInfo user) {
+    public static void set(final UserInfo user) {
         HOLDER.set(user);
     }
 
