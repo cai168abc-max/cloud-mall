@@ -566,10 +566,10 @@ deploy_docker_compose() {
         
         if [ "$weight" -eq 0 ]; then
             log_info "  # 回滚到旧版本"
-            log_info "  docker-compose up -d --scale ${service}=${total_instances} ${service}-old"
+            log_info "  docker compose up -d --scale ${service}=${total_instances}"
         elif [ "$weight" -eq 100 ]; then
             log_info "  # 全量发布新版本"
-            log_info "  docker-compose up -d --scale ${service}=${total_instances} ${service}"
+            log_info "  docker compose up -d --scale ${service}=${total_instances}"
         else
             local instances
             instances=$(calculate_instances "$total_instances" "$weight")
@@ -577,7 +577,7 @@ deploy_docker_compose() {
             local new_instances=$(echo "$instances" | awk '{print $2}')
             
             log_info "  # 灰度发布：同时运行新旧版本"
-            log_info "  docker-compose -f docker-compose.yml -f docker-compose-canary.yml up -d \\"
+            log_info "  docker compose -f docker-compose.yml -f docker-compose-canary.yml up -d \\"
             log_info "    --scale ${service}=${old_instances} \\"
             log_info "    --scale ${service}-canary=${new_instances}"
         fi
@@ -589,15 +589,13 @@ deploy_docker_compose() {
     # 实际部署逻辑
     if [ "$weight" -eq 0 ]; then
         log_info "回滚 ${service} 到旧版本..."
-        # docker-compose -f docker-compose.yml up -d --scale ${service}=${total_instances} ${service}-old
-        log_warn "实际部署命令已注释，请取消注释以启用"
+        docker compose -f docker-compose.yml up -d --scale ${service}=${total_instances}
         return 0
     fi
     
     if [ "$weight" -eq 100 ]; then
         log_info "全量发布 ${service}..."
-        # docker-compose -f docker-compose.yml up -d --scale ${service}=${total_instances} ${service}
-        log_warn "实际部署命令已注释，请取消注释以启用"
+        docker compose -f docker-compose.yml up -d --scale ${service}=${total_instances}
         return 0
     fi
     
@@ -608,10 +606,9 @@ deploy_docker_compose() {
     local old_instances=$(echo "$instances" | awk '{print $1}')
     local new_instances=$(echo "$instances" | awk '{print $2}')
     
-    # docker-compose -f docker-compose.yml -f docker-compose-canary.yml up -d \
-    #     --scale ${service}=${old_instances} \
-    #     --scale ${service}-canary=${new_instances}
-    log_warn "实际部署命令已注释，请取消注释以启用"
+    docker compose -f docker-compose.yml -f docker-compose-canary.yml up -d \
+        --scale ${service}=${old_instances} \
+        --scale ${service}-canary=${new_instances}
     
     return 0
 }
@@ -692,16 +689,16 @@ detect_platform() {
         fi
     fi
     
-    # 检测Docker Compose
-    if command -v docker-compose &> /dev/null; then
-        log_debug "检测到Docker Compose环境"
+    # 检测Docker Compose V2 (推荐)
+    if docker compose version &> /dev/null 2>&1; then
+        log_debug "检测到Docker Compose V2环境"
         echo "docker-compose"
         return 0
     fi
     
-    # 检测Docker Compose V2
-    if docker compose version &> /dev/null 2>&1; then
-        log_debug "检测到Docker Compose V2环境"
+    # 检测Docker Compose V1 (兼容旧版本)
+    if command -v docker-compose &> /dev/null; then
+        log_debug "检测到Docker Compose V1环境"
         echo "docker-compose"
         return 0
     fi

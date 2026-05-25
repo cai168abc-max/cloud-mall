@@ -271,6 +271,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Compose
+        run: |
+          echo "Installing Docker Compose..."
+          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+
       - name: Deploy to development environment
         run: |
           echo "=========================================="
@@ -281,12 +286,12 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker-compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml pull
           
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker-compose -f docker-compose.yml up -d --remove-orphans
+          docker compose -f docker-compose.yml up -d --remove-orphans
           
           echo "Development deployment completed"
 
@@ -318,6 +323,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Compose
+        run: |
+          echo "Installing Docker Compose..."
+          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+
       - name: Deploy to staging environment
         run: |
           echo "=========================================="
@@ -328,12 +338,12 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker-compose -f docker-compose.staging.yml pull
+          docker compose -f docker-compose.staging.yml pull
           
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker-compose -f docker-compose.staging.yml up -d --remove-orphans
+          docker compose -f docker-compose.staging.yml up -d --remove-orphans
           
           echo "Staging deployment completed"
 
@@ -364,6 +374,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          echo "Installing Docker Compose..."
+          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
 
       - name: Make deploy script executable
         run: chmod +x scripts/deploy/canary-deploy.sh

@@ -1,0 +1,140 @@
+# CloudTry Docker Compose Configuration for Canary Deployment
+# 用于灰度发布，与主 docker-compose.yml 配合使用
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Canary 版本服务
+  # ==========================================
+  
+  # Gateway Canary
+  gateway-canary:
+    image: ${DOCKER_USERNAME}/cloudtry-gateway:latest
+    container_name: cloudtry-gateway-canary
+    environment:
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - JWT_SECRET=${JWT_SECRET}
+      - INTERNAL_SECRET=${INTERNAL_SECRET}
+      - SPRING_PROFILES_ACTIVE=canary
+      - CANARY_WEIGHT=0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - cloudtry-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Service-Order Canary
+  service-order-canary:
+    image: ${DOCKER_USERNAME}/cloudtry-service-order:latest
+    container_name: cloudtry-service-order-canary
+    environment:
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - JWT_SECRET=${JWT_SECRET}
+      - INTERNAL_SECRET=${INTERNAL_SECRET}
+      - SPRING_PROFILES_ACTIVE=canary
+      - CANARY_WEIGHT=0
+      - DB_URL=${DB_URL:-jdbc:mysql://mysql:3306/cloudtry_order?useSSL=false&serverTimezone=Asia/Shanghai}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root123}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - cloudtry-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Service-Product Canary
+  service-product-canary:
+    image: ${DOCKER_USERNAME}/cloudtry-service-product:latest
+    container_name: cloudtry-service-product-canary
+    environment:
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - JWT_SECRET=${JWT_SECRET}
+      - INTERNAL_SECRET=${INTERNAL_SECRET}
+      - SPRING_PROFILES_ACTIVE=canary
+      - CANARY_WEIGHT=0
+      - DB_URL=${DB_URL:-jdbc:mysql://mysql:3306/cloudtry_product?useSSL=false&serverTimezone=Asia/Shanghai}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root123}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - cloudtry-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Service-User Canary
+  service-user-canary:
+    image: ${DOCKER_USERNAME}/cloudtry-service-user:latest
+    container_name: cloudtry-service-user-canary
+    environment:
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - JWT_SECRET=${JWT_SECRET}
+      - INTERNAL_SECRET=${INTERNAL_SECRET}
+      - SPRING_PROFILES_ACTIVE=canary
+      - CANARY_WEIGHT=0
+      - DB_URL=${DB_URL:-jdbc:mysql://mysql:3306/cloudtry_user?useSSL=false&serverTimezone=Asia/Shanghai}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root123}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - cloudtry-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+# ==========================================
+# 网络配置
+# ==========================================
+networks:
+  cloudtry-network:
+    external: true
+
+# ==========================================
+# 卷配置
+# ==========================================
+volumes:
+  mysql_data:
+    external: true
+  redis_data:
+    external: true
+  nacos_data:
+    external: true
