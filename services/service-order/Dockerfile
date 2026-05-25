@@ -6,7 +6,8 @@ RUN apk add --no-cache curl
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY services/service-order/target/*.jar app.jar
+ARG JAR_FILE=services/service-order/target/*.jar
+COPY ${JAR_FILE} app.jar
 
 RUN chown -R appuser:appgroup /app
 

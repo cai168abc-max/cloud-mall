@@ -32,6 +32,8 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   MAVEN_OPTS: '-Xmx2048m -XX:+UseG1GC'
   DOCKER_REGISTRY: 'docker.io'
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  INTERNAL_SECRET: ${{ secrets.INTERNAL_SECRET }}
 
 jobs:
   # ==================== CI Stage ====================
@@ -172,6 +174,11 @@ jobs:
           name: build-artifacts
           path: .
 
+      - name: Verify downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find . -name "*.jar" -type f
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -193,48 +200,56 @@ jobs:
         with:
           context: .
           file: gateway/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-gateway:latest
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-gateway:${{ steps.version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            JAR_FILE=gateway/target/*.jar
 
       - name: Build and push service-order
         uses: docker/build-push-action@v5
         with:
           context: .
           file: services/service-order/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-order:latest
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-order:${{ steps.version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            JAR_FILE=services/service-order/target/*.jar
 
       - name: Build and push service-product
         uses: docker/build-push-action@v5
         with:
           context: .
           file: services/service-product/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-product:latest
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-product:${{ steps.version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            JAR_FILE=services/service-product/target/*.jar
 
       - name: Build and push service-user
         uses: docker/build-push-action@v5
         with:
           context: .
           file: services/service-user/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-user:latest
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-user:${{ steps.version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            JAR_FILE=services/service-user/target/*.jar
 
       - name: Docker images summary
         run: |
@@ -263,9 +278,15 @@ jobs:
           echo "Version: ${{ needs.docker-build.outputs.version }}"
           echo "=========================================="
           
-          # 实际部署命令，根据实际环境配置
-          # docker-compose -f docker-compose.dev.yml pull
-          # docker-compose -f docker-compose.dev.yml up -d
+          JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
+          docker-compose -f docker-compose.yml pull
+          
+          JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
+          docker-compose -f docker-compose.yml up -d --remove-orphans
           
           echo "Development deployment completed"
 
@@ -274,8 +295,7 @@ jobs:
           echo "Waiting for services to start..."
           sleep 30
           
-          # 健康检查
-          # curl -f http://localhost:8000/actuator/health || exit 1
+          curl -f http://localhost:80/actuator/health || exit 1
           
           echo "Health check passed"
 
@@ -305,9 +325,15 @@ jobs:
           echo "Version: ${{ needs.docker-build.outputs.version }}"
           echo "=========================================="
           
-          # 实际部署命令
-          # docker-compose -f docker-compose.staging.yml pull
-          # docker-compose -f docker-compose.staging.yml up -d
+          JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
+          docker-compose -f docker-compose.staging.yml pull
+          
+          JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
+          docker-compose -f docker-compose.staging.yml up -d --remove-orphans
           
           echo "Staging deployment completed"
 
@@ -316,8 +342,7 @@ jobs:
           echo "Waiting for services to start..."
           sleep 30
           
-          # 健康检查
-          # curl -f http://staging.cloudtry.example.com/actuator/health || exit 1
+          curl -f http://staging.cloudtry.example.com/actuator/health || exit 1
           
           echo "Health check passed"
 
@@ -352,7 +377,6 @@ jobs:
           echo "Version: ${{ needs.docker-build.outputs.version }}"
           echo "=========================================="
           
-          # 执行灰度发布脚本 - 10%流量
           ./scripts/deploy/canary-deploy.sh 10 || echo "::warning::Canary script execution failed, using fallback deployment"
           
           echo "Canary deployment (10%) initiated"
@@ -364,15 +388,13 @@ jobs:
           echo "Duration: 5 minutes"
           echo "=========================================="
           
-          # 监控5分钟
           sleep 300
           
-          # 检查监控指标
-          # ERROR_RATE=$(curl -s http://prometheus/api/v1/query?query=error_rate | jq -r '.data.result[0].value[1]')
-          # if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
-          #   echo "::error::Error rate too high: ${ERROR_RATE}"
-          #   exit 1
-          # fi
+          ERROR_RATE=$(curl -s http://prometheus/api/v1/query?query=error_rate | jq -r '.data.result[0].value[1]')
+          if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
+            echo "::error::Error rate too high: ${ERROR_RATE}"
+            exit 1
+          fi
           
           echo "Canary metrics check passed"
 
@@ -384,7 +406,6 @@ jobs:
           echo "Traffic: 50%"
           echo "=========================================="
           
-          # 执行灰度发布脚本 - 50%流量
           ./scripts/deploy/canary-deploy.sh 50 || echo "::warning::Canary script execution failed"
           
           echo "Canary deployment (50%) initiated"
@@ -402,7 +423,6 @@ jobs:
           echo "Traffic: 100%"
           echo "=========================================="
           
-          # 执行灰度发布脚本 - 100%流量
           ./scripts/deploy/canary-deploy.sh 100 || echo "::warning::Canary script execution failed"
           
           echo "Full production deployment completed"
@@ -412,8 +432,7 @@ jobs:
           echo "Performing final health check..."
           sleep 30
           
-          # 健康检查
-          # curl -f http://cloudtry.example.com/actuator/health || exit 1
+          curl -f http://cloudtry.example.com/actuator/health || exit 1
           
           echo "Final health check passed"
 
@@ -441,11 +460,6 @@ jobs:
           echo "Deployment Successful!"
           echo "=========================================="
           echo "All stages completed successfully"
-          
-          # 发送成功通知（邮件、钉钉、企业微信等）
-          # curl -X POST -H 'Content-type: application/json' \
-          #   --data '{"text":"Deployment Successful"}' \
-          #   ${{ secrets.WEBHOOK_URL }}
 
       - name: Send notification on failure
         if: failure()
@@ -454,11 +468,6 @@ jobs:
           echo "Deployment Failed!"
           echo "=========================================="
           echo "One or more stages failed"
-          
-          # 发送失败通知
-          # curl -X POST -H 'Content-type: application/json' \
-          #   --data '{"text":"Deployment Failed"}' \
-          #   ${{ secrets.WEBHOOK_URL }}
 
       - name: Send notification on cancellation
         if: cancelled()

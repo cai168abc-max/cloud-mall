@@ -9,15 +9,17 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,19 +28,17 @@ import java.util.regex.Pattern;
 
 /**
  * WebFlux版本的XSS攻击防护过滤器
- * 
  * 功能说明：
  * 1. 拦截所有HTTP请求
  * 2. 对请求参数和请求体进行XSS过滤
  * 3. 防止脚本注入攻击
  * 4. 支持配置化排除URL
- * 
  * 安全特性：
  * - URL路径规范化，防止路径遍历绕过
  * - Content-Type检查，避免过滤文件上传
  * - HTTP方法区分，OPTIONS预检请求直接放行
  * - 完善的异常处理和日志记录
- * 
+ * - 全面的Null安全注解
  * 注意：Gateway使用WebFlux，Servlet XSS过滤器不生效
  */
 @Component
@@ -73,7 +73,7 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     private static final Pattern[] XSS_PATTERNS = {
             Pattern.compile("<script[^>]*>.*?</script>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL),
             Pattern.compile("javascript:", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("on\\s*=", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("on\\w*\\s*=", Pattern.CASE_INSENSITIVE), // 修复：匹配onclick、onload等所有事件
             Pattern.compile("<iframe[^>]*>.*?</iframe>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL),
             Pattern.compile("<object[^>]*>.*?</object>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL),
             Pattern.compile("<embed[^>]*>", Pattern.CASE_INSENSITIVE),
@@ -91,8 +91,27 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     // 合并后的排除URL集合
     private Set<String> excludeUrls;
 
+    /**
+     * 初始化排除URL集合（线程安全）
+     */
+    @PostConstruct
+    public void init() {
+        excludeUrls = new HashSet<>(DEFAULT_EXCLUDE_URLS);
+        if (configuredExcludeUrls != null && !configuredExcludeUrls.trim().isEmpty()) {
+            String[] customUrls = configuredExcludeUrls.split(",");
+            for (String excludeUrl : customUrls) {
+                String trimmed = excludeUrl.trim();
+                if (!trimmed.isEmpty()) {
+                    excludeUrls.add(trimmed);
+                }
+            }
+        }
+        log.info("XSS过滤器初始化完成，排除URL数量: {}", excludeUrls.size());
+    }
+
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    @NonNull
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
         // 检查是否启用
         if (!enabled) {
             return chain.filter(exchange);
@@ -136,7 +155,7 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
             return filterQueryParams(exchange, chain);
 
         } catch (Exception e) {
-            log.error("XSS过滤处理异常, URI: {}, Method: {}, 错误: {}", 
+            log.error("XSS过滤处理异常, URI: {}, Method: {}, 错误: {}",
                     requestURI, method, e.getMessage(), e);
             return chain.filter(exchange);
         }
@@ -145,48 +164,54 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     /**
      * 过滤请求体
      */
-    private Mono<Void> filterRequestBody(ServerWebExchange exchange, GatewayFilterChain chain) {
+    @NonNull
+    private Mono<Void> filterRequestBody(@NonNull ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        
-        return DataBufferUtils.join(request.getBody())
+
+        return DataBufferUtils.join(request.getBody()) // 使用DataBufferUtils.join更高效地合并DataBuffer
+                .switchIfEmpty(Mono.defer(() -> chain.filter(exchange).then(Mono.empty()))) // 处理空请求体的情况
                 .flatMap(dataBuffer -> {
-                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(bytes);
-                    DataBufferUtils.release(dataBuffer);
-                    
-                    String body = new String(bytes, StandardCharsets.UTF_8);
-                    String filteredBody = stripXss(body);
-                    
-                    byte[] filteredBytes = filteredBody.getBytes(StandardCharsets.UTF_8);
-                    DataBuffer newBuffer = new DefaultDataBufferFactory().wrap(filteredBytes);
-                    
-                    ServerHttpRequest newRequest = new ServerHttpRequestDecorator(request) {
-                        @Override
-                        public Flux<DataBuffer> getBody() {
-                            return Flux.just(newBuffer);
-                        }
-                        
-                        @Override
-                        public org.springframework.http.HttpHeaders getHeaders() {
-                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                            headers.putAll(super.getHeaders());
-                            headers.setContentLength(filteredBytes.length);
-                            return headers;
-                        }
-                    };
-                    
-                    return chain.filter(exchange.mutate().request(newRequest).build());
-                })
-                .switchIfEmpty(chain.filter(exchange));
+                    try {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        String body = new String(bytes, StandardCharsets.UTF_8);
+                        String filteredBody = stripXss(body);
+
+                        byte[] filteredBytes = (filteredBody != null ? filteredBody : "").getBytes(StandardCharsets.UTF_8);
+                        DataBuffer newBuffer = new DefaultDataBufferFactory().wrap(filteredBytes);
+
+                        ServerHttpRequestDecorator newRequest = new ServerHttpRequestDecorator(request) {
+                            @Override
+                            @NonNull
+                            public Flux<DataBuffer> getBody() {
+                                return Flux.just(newBuffer);
+                            }
+
+                            @Override
+                            @NonNull
+                            public org.springframework.http.HttpHeaders getHeaders() {
+                                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                                headers.putAll(super.getHeaders());
+                                headers.setContentLength(filteredBytes.length);
+                                return headers;
+                            }
+                        };
+
+                        return chain.filter(exchange.mutate().request(newRequest).build());
+                    } finally {
+                        DataBufferUtils.release(dataBuffer); // 确保DataBuffer被释放，避免内存泄漏
+                    }
+                });
     }
 
     /**
      * 过滤查询参数
      */
-    private Mono<Void> filterQueryParams(ServerWebExchange exchange, GatewayFilterChain chain) {
+    @NonNull
+    private Mono<Void> filterQueryParams(@NonNull ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String query = request.getURI().getQuery();
-        
+
         if (query != null && !query.isEmpty()) {
             String filteredQuery = stripXss(query);
             if (!query.equals(filteredQuery)) {
@@ -196,38 +221,40 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
                 return chain.filter(exchange.mutate().request(newRequest).build());
             }
         }
-        
+
         return chain.filter(exchange);
     }
 
     /**
      * XSS过滤
      */
-    private String stripXss(String value) {
+    @Nullable
+    private String stripXss(@Nullable String value) {
         if (value == null || value.isEmpty()) {
             return value;
         }
-        
+
         String result = value;
         for (Pattern pattern : XSS_PATTERNS) {
             result = pattern.matcher(result).replaceAll("");
         }
-        
+
         // HTML实体编码
         result = htmlEncode(result);
-        
+
         return result;
     }
 
     /**
      * HTML实体编码
      */
-    private String htmlEncode(String value) {
+    @Nullable
+    private String htmlEncode(@Nullable String value) {
         if (value == null) {
             return null;
         }
         return value
-                .replace("&", "&amp;")
+                .replace("&", "&amp;") // 必须第一个编码，否则会导致双重编码
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
@@ -237,14 +264,15 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     /**
      * 规范化URL路径
      */
-    private String normalizeUrl(String url) {
+    @NonNull
+    private String normalizeUrl(@Nullable String url) {
         if (url == null || url.isEmpty()) {
             return "/";
         }
 
         String decoded = url;
         try {
-            decoded = java.net.URLDecoder.decode(url, "UTF-8");
+            decoded = java.net.URLDecoder.decode(url, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.warn("URL解码失败，使用原始URL: {}", url);
         }
@@ -261,23 +289,9 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     /**
      * 检查URL是否在排除列表中
      */
-    private boolean isExcludedUrl(String url) {
+    private boolean isExcludedUrl(@Nullable String url) {
         if (url == null || url.isEmpty()) {
             return false;
-        }
-
-        // 延迟初始化排除URL集合
-        if (excludeUrls == null) {
-            excludeUrls = new HashSet<>(DEFAULT_EXCLUDE_URLS);
-            if (configuredExcludeUrls != null && !configuredExcludeUrls.trim().isEmpty()) {
-                String[] customUrls = configuredExcludeUrls.split(",");
-                for (String excludeUrl : customUrls) {
-                    String trimmed = excludeUrl.trim();
-                    if (!trimmed.isEmpty()) {
-                        excludeUrls.add(trimmed);
-                    }
-                }
-            }
         }
 
         for (String excludeUrl : excludeUrls) {
@@ -291,7 +305,7 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
     /**
      * 检查Content-Type是否需要跳过过滤
      */
-    private boolean shouldSkipContentType(MediaType contentType) {
+    private boolean shouldSkipContentType(@Nullable MediaType contentType) {
         if (contentType == null) {
             return false;
         }
