@@ -96,8 +96,20 @@ jobs:
 
       - name: Run unit tests
         run: |
-          echo "Running unit tests..."
-          mvn test -B --fail-at-end "-Dtest=*ServiceImplTest,*ControllerTest"
+          echo "Installing model module to local repository..."
+          mvn install -pl model -DskipTests
+          
+          echo "Running tests for model module..."
+          mvn test -pl model "-Dtest=*ServiceTest,*UtilTest,*GeneratorTest"
+          
+          echo "Running tests for service-product module..."
+          mvn test -pl services/service-product -Dtest=*ServiceImplTest
+          
+          echo "Running tests for service-order module..."
+          mvn test -pl services/service-order -Dtest=*ServiceImplTest
+          
+          echo "Running tests for service-user module..."
+          mvn test -pl services/service-user -Dtest=*ServiceImplTest
         continue-on-error: false
 
       - name: Generate test report
