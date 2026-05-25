@@ -7,16 +7,22 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * 物流信息实体类
  */
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -114,4 +120,12 @@ public class LogisticsInfo {
      */
     @TableField(exist = false)
     private List<LogisticsTrace> traceList;
+    
+    public List<LogisticsTrace> getTraceList() {
+        return traceList != null ? Collections.unmodifiableList(traceList) : null;
+    }
+    
+    public void setTraceList(List<LogisticsTrace> traceList) {
+        this.traceList = traceList != null ? new ArrayList<>(traceList) : null;
+    }
 }

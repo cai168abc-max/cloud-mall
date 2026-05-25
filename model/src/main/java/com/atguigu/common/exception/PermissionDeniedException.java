@@ -1,7 +1,8 @@
 package com.atguigu.common.exception;
 
 import com.atguigu.common.enums.RequireMode;
-import lombok.Getter;
+
+import java.util.Arrays;
 
 /**
  * 权限拒绝异常
@@ -10,7 +11,6 @@ import lombok.Getter;
  * - ForbiddenException: 用于通用的权限不足场景（如资源访问被拒绝）
  * - PermissionDeniedException: 专门用于@RequirePermission注解的权限验证失败场景
  */
-@Getter
 public class PermissionDeniedException extends BusinessException {
     
     /**
@@ -27,6 +27,18 @@ public class PermissionDeniedException extends BusinessException {
      * 权限验证模式
      */
     private RequireMode mode;
+    
+    public String[] getUserPermissions() {
+        return userPermissions != null ? userPermissions.clone() : null;
+    }
+    
+    public String[] getRequiredPermissions() {
+        return requiredPermissions != null ? requiredPermissions.clone() : null;
+    }
+    
+    public RequireMode getMode() {
+        return mode;
+    }
     
     /**
      * 默认构造函数
@@ -46,8 +58,8 @@ public class PermissionDeniedException extends BusinessException {
     public PermissionDeniedException(String[] requiredPermissions, String[] userPermissions, 
                                      RequireMode mode, String message) {
         super(403, message);
-        this.requiredPermissions = requiredPermissions;
-        this.userPermissions = userPermissions;
+        this.requiredPermissions = requiredPermissions != null ? requiredPermissions.clone() : null;
+        this.userPermissions = userPermissions != null ? userPermissions.clone() : null;
         this.mode = mode;
     }
     

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Experimental Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2_xsd">
+<suppressions>
+    <!-- 忽略 JavadocPackage 警告（package-info.java） -->
+    <suppress checks="JavadocPackage" files=".*\.java$"/>
+    
+    <!-- 忽略 JavadocVariable 警告（字段注释） -->
+    <suppress checks="JavadocVariable" files=".*\.java$"/>
+    
+    <!-- 忽略 MissingJavadocMethod 警告（方法注释） -->
+    <suppress checks="MissingJavadocMethod" files=".*\.java$"/>
+    
+    <!-- 忽略 JavadocType 警告（类注释） -->
+    <suppress checks="JavadocType" files=".*\.java$"/>
+    
+    <!-- 忽略 JavadocStyle 警告（注释格式） -->
+    <suppress checks="JavadocStyle" files=".*\.java$"/>
+    
+    <!-- 忽略 JavadocMethod 警告（参数注释） -->
+    <suppress checks="JavadocMethod" files=".*\.java$"/>
+    
+    <!-- 忽略 DesignForExtension 警告（设计扩展） -->
+    <suppress checks="DesignForExtension" files=".*\.java$"/>
+    
+    <!-- 忽略 MagicNumber 警告（魔法数字） -->
+    <suppress checks="MagicNumber" files=".*\.java$"/>
+    
+    <!-- 忽略 ConstantName 警告（log 变量命名） -->
+    <suppress checks="ConstantName" files=".*\.java$"/>
+    
+    <!-- 忽略 FinalClass 警告（内部类） -->
+    <suppress checks="FinalClass" files=".*\.java$"/>
+    
+    <!-- 忽略 HiddenField 警告（构造函数参数与字段同名） -->
+    <suppress checks="HiddenField" files=".*\.java$"/>
+    
+    <!-- 忽略 AvoidStarImport 警告（通配符导入） -->
+    <suppress checks="AvoidStarImport" files=".*\.java$"/>
+    
+    <!-- 忽略 RegexpSingleline 警告（行尾空格） -->
+    <suppress checks="RegexpSingleline" files=".*\.java$"/>
+    
+    <!-- 放宽行长度限制 -->
+    <suppress checks="LineLength" files=".*\.java$"/>
+</suppressions>

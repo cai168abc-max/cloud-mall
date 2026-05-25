@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -51,7 +52,7 @@ public class HotProductService {
                     .scan(options)) {
 
                 while (cursor.hasNext()) {
-                    String key = new String(cursor.next());
+                    String key = new String(cursor.next(), StandardCharsets.UTF_8);
                     processHotKey(key, hotIds);
                 }
             }

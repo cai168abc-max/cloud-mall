@@ -6,16 +6,22 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -59,4 +65,12 @@ public class Order {
 
     @TableField(exist = false)
     private List<Product> productList;
+    
+    public List<Product> getProductList() {
+        return productList != null ? Collections.unmodifiableList(productList) : null;
+    }
+    
+    public void setProductList(List<Product> productList) {
+        this.productList = productList != null ? new ArrayList<>(productList) : null;
+    }
 }
