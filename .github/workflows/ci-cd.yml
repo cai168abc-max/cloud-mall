@@ -100,16 +100,16 @@ jobs:
           mvn install -pl model -DskipTests
           
           echo "Running tests for model module..."
-          mvn test -pl model "-Dtest=*ServiceTest,*UtilTest,*GeneratorTest"
+          mvn test -pl model "-Dtest=*ServiceTest,*UtilTest,*GeneratorTest" "-Dsurefire.useFile=true"
           
           echo "Running tests for service-product module..."
-          mvn test -pl services/service-product -Dtest=*ServiceImplTest
+          mvn test -pl services/service-product "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true"
           
           echo "Running tests for service-order module..."
-          mvn test -pl services/service-order -Dtest=*ServiceImplTest
+          mvn test -pl services/service-order "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true"
           
           echo "Running tests for service-user module..."
-          mvn test -pl services/service-user -Dtest=*ServiceImplTest
+          mvn test -pl services/service-user "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true"
         continue-on-error: false
 
       - name: Generate test report

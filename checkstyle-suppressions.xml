@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Experimental Configuration 1.2//EN"
-        "https://checkstyle.org/dtds/suppressions_1_2_xsd">
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 <suppressions>
     <!-- 忽略 JavadocPackage 警告（package-info.java） -->
     <suppress checks="JavadocPackage" files=".*\.java$"/>

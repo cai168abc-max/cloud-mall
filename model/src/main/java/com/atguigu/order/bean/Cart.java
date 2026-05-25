@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 @Setter
@@ -31,8 +32,48 @@ public class Cart {
         return Collections.unmodifiableList(items);
     }
     
-    public List<CartItem> getItemsInternal() {
-        return items;
+    public void addItem(CartItem item) {
+        if (item != null) {
+            this.items.add(item);
+        }
+    }
+    
+    public boolean removeItem(Long productId) {
+        return this.items.removeIf(item -> Objects.equals(item.getProductId(), productId));
+    }
+    
+    public void clearItems() {
+        this.items.clear();
+    }
+    
+    public boolean updateItemQuantity(Long productId, Integer quantity) {
+        Optional<CartItem> itemOpt = this.items.stream()
+                .filter(item -> Objects.equals(item.getProductId(), productId))
+                .findFirst();
+        if (itemOpt.isPresent()) {
+            itemOpt.get().setQuantity(quantity);
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean updateItemChecked(Long productId, Boolean checked) {
+        Optional<CartItem> itemOpt = this.items.stream()
+                .filter(item -> Objects.equals(item.getProductId(), productId))
+                .findFirst();
+        if (itemOpt.isPresent()) {
+            itemOpt.get().setChecked(checked);
+            return true;
+        }
+        return false;
+    }
+    
+    public void updateAllChecked(Boolean checked) {
+        this.items.forEach(item -> item.setChecked(checked));
+    }
+    
+    public boolean isItemsEmpty() {
+        return this.items.isEmpty();
     }
     
     public void calculateTotal() {

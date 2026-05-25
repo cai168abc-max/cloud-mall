@@ -75,7 +75,7 @@ public class CartServiceImpl implements CartService {
 
             Cart cart = getCartInternal(userId);
 
-            Optional<CartItem> existingItemOpt = cart.getItemsInternal().stream()
+            Optional<CartItem> existingItemOpt = cart.getItems().stream()
                     .filter(item -> Objects.equals(item.getProductId(), productId))
                     .findFirst();
 
@@ -90,7 +90,7 @@ public class CartServiceImpl implements CartService {
                 newItem.setQuantity(quantity);
                 newItem.setCategoryId(product.getCategoryId());
                 newItem.setChecked(true);
-                cart.getItemsInternal().add(newItem);
+                cart.addItem(newItem);
             }
 
             cart.calculateTotal();
@@ -118,10 +118,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItemsInternal().isEmpty()) {
+            if (cart == null || cart.isItemsEmpty()) {
                 return cart;
             }
-            cart.getItemsInternal().removeIf(item -> Objects.equals(item.getProductId(), productId));
+            cart.removeItem(productId);
             cart.calculateTotal();
             saveCartToRedis(cart);
             return cart;
@@ -148,19 +148,14 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItemsInternal().isEmpty()) {
+            if (cart == null || cart.isItemsEmpty()) {
                 return cart;
             }
-            Optional<CartItem> itemOpt = cart.getItemsInternal().stream()
-                    .filter(item -> Objects.equals(item.getProductId(), productId))
-                    .findFirst();
-            if (itemOpt.isPresent()) {
+            if (cart.updateItemQuantity(productId, quantity)) {
                 Product product = getProductFromCache(productId);
                 if (product != null && product.getNum() < quantity) {
                     throw new IllegalArgumentException("商品库存不足，当前库存：" + product.getNum());
                 }
-                CartItem item = itemOpt.get();
-                item.setQuantity(quantity);
                 cart.calculateTotal();
                 saveCartToRedis(cart);
             }
@@ -185,15 +180,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItemsInternal().isEmpty()) {
+            if (cart == null || cart.isItemsEmpty()) {
                 return cart;
             }
-            Optional<CartItem> itemOpt = cart.getItemsInternal().stream()
-                    .filter(item -> Objects.equals(item.getProductId(), productId))
-                    .findFirst();
-            if (itemOpt.isPresent()) {
-                CartItem item = itemOpt.get();
-                item.setChecked(checked);
+            if (cart.updateItemChecked(productId, checked)) {
                 cart.calculateTotal();
                 saveCartToRedis(cart);
             }
@@ -218,10 +208,10 @@ public class CartServiceImpl implements CartService {
                 throw new IllegalStateException("系统繁忙，请稍后重试");
             }
             Cart cart = getCartInternal(userId);
-            if (cart == null || cart.getItemsInternal().isEmpty()) {
+            if (cart == null || cart.isItemsEmpty()) {
                 return cart;
             }
-            cart.getItemsInternal().forEach(item -> item.setChecked(checked));
+            cart.updateAllChecked(checked);
             cart.calculateTotal();
             saveCartToRedis(cart);
             return cart;
@@ -247,7 +237,6 @@ public class CartServiceImpl implements CartService {
             redisTemplate.delete(CART_KEY_PREFIX + userId);
             Cart cart = new Cart();
             cart.setUserId(userId);
-            cart.setItems(new ArrayList<>());
             cart.calculateTotal();
             return cart;
         } catch (InterruptedException e) {
