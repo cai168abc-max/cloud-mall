@@ -44,7 +44,7 @@ public class PermissionDeniedException extends BusinessException {
      * 默认构造函数
      * @param message 异常信息
      */
-    public PermissionDeniedException(String message) {
+    public PermissionDeniedException(final String message) {
         super(403, message);
     }
     
@@ -55,8 +55,8 @@ public class PermissionDeniedException extends BusinessException {
      * @param mode 验证模式
      * @param message 错误消息
      */
-    public PermissionDeniedException(String[] requiredPermissions, String[] userPermissions, 
-                                     RequireMode mode, String message) {
+    public PermissionDeniedException(final String[] requiredPermissions, final String[] userPermissions, 
+                                     final RequireMode mode, final String message) {
         super(403, message);
         this.requiredPermissions = requiredPermissions != null ? requiredPermissions.clone() : null;
         this.userPermissions = userPermissions != null ? userPermissions.clone() : null;
@@ -68,7 +68,7 @@ public class PermissionDeniedException extends BusinessException {
      * @param requiredPermission 需要的权限
      * @param message 错误消息
      */
-    public PermissionDeniedException(String requiredPermission, String message) {
+    public PermissionDeniedException(final String requiredPermission, final String message) {
         super(403, message);
         this.requiredPermissions = new String[]{requiredPermission};
     }

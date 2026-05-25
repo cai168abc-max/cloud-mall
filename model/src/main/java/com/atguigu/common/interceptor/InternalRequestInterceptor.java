@@ -37,11 +37,11 @@ public class InternalRequestInterceptor implements HandlerInterceptor {
     private String internalSecret;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull Object handler) throws Exception {
-        String internalHeader = request.getHeader(INTERNAL_REQUEST_HEADER);
-        String path = request.getRequestURI();
+    public boolean preHandle(final HttpServletRequest request, @NonNull final HttpServletResponse response,
+            @NonNull final Object handler) throws Exception {
+        final String internalHeader = request.getHeader(INTERNAL_REQUEST_HEADER);
+        final String path = request.getRequestURI();
         
-        // 使用HMAC签名验证内部请求标识
         if (!HmacSignatureUtil.verifyInternalRequestToken(internalSecret, path, internalHeader)) {
             log.warn("拒绝未授权的直接访问请求: URI={}, RemoteAddr={}, X-Internal-Request={}", 
                     path, 

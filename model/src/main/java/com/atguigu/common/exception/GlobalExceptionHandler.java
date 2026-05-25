@@ -47,15 +47,18 @@ public class GlobalExceptionHandler {
     /**
      * 脱敏异常堆栈信息
      */
-    private String maskStackTrace(Throwable e) {
+    private String maskStackTrace(final Throwable e) {
         if (e == null) {
             return null;
         }
         String stackTrace = getStackTraceString(e);
-        return SensitiveDataMasker.maskSensitiveInfo(stackTrace);
+        return stackTrace != null ? SensitiveDataMasker.maskSensitiveInfo(stackTrace) : null;
     }
 
-    private String getStackTraceString(Throwable e) {
+    private String getStackTraceString(final Throwable e) {
+        if (e == null) {
+            return null;
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(e.toString()).append("\n");
         for (StackTraceElement element : e.getStackTrace()) {
@@ -72,7 +75,7 @@ public class GlobalExceptionHandler {
      * 处理参数校验异常
      */
     @ExceptionHandler(ValidationException.class)
-    public R handleValidationException(ValidationException e) {
+    public R handleValidationException(final ValidationException e) {
         log.warn("[traceId={}] 参数校验异常: {}", getTraceId(), e.getMessage());
         return R.badRequest(e.getMessage());
     }
@@ -81,7 +84,7 @@ public class GlobalExceptionHandler {
      * 处理资源不存在异常
      */
     @ExceptionHandler(ResourceNotFoundException.class)
-    public R handleResourceNotFoundException(ResourceNotFoundException e) {
+    public R handleResourceNotFoundException(final ResourceNotFoundException e) {
         log.warn("[traceId={}] 资源不存在: resourceType={}, resourceId={}", 
                 getTraceId(), e.getResourceType(), e.getResourceId());
         return R.notFound(e.getMessage());
@@ -91,7 +94,7 @@ public class GlobalExceptionHandler {
      * 处理权限不足异常
      */
     @ExceptionHandler(ForbiddenException.class)
-    public R handleForbiddenException(ForbiddenException e) {
+    public R handleForbiddenException(final ForbiddenException e) {
         log.warn("[traceId={}] 权限不足: resource={}, action={}", 
                 getTraceId(), e.getResource(), e.getAction());
         return R.forbidden(e.getMessage());
@@ -101,7 +104,7 @@ public class GlobalExceptionHandler {
      * 处理权限拒绝异常
      */
     @ExceptionHandler(PermissionDeniedException.class)
-    public R handlePermissionDeniedException(PermissionDeniedException e) {
+    public R handlePermissionDeniedException(final PermissionDeniedException e) {
         log.warn("[traceId={}] 权限验证失败: {}", getTraceId(), e.getPermissionDetail());
         return R.forbidden(e.getMessage());
     }
@@ -111,7 +114,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ServiceUnavailableException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public R handleServiceUnavailableException(ServiceUnavailableException e) {
+    public R handleServiceUnavailableException(final ServiceUnavailableException e) {
         log.error("[traceId={}] 服务不可用: {}", getTraceId(), e.getMessage());
         return R.serviceUnavailable(e.getMessage());
     }
@@ -120,7 +123,7 @@ public class GlobalExceptionHandler {
      * 处理Feign调用异常
      */
     @ExceptionHandler(FeignException.class)
-    public R handleFeignException(FeignException e) {
+    public R handleFeignException(final FeignException e) {
         int status = e.status();
         String message;
         
@@ -149,11 +152,10 @@ public class GlobalExceptionHandler {
      * 处理业务异常
      */
     @ExceptionHandler(BusinessException.class)
-    public R handleBusinessException(BusinessException e) {
+    public R handleBusinessException(final BusinessException e) {
         int code = e.getCode();
         String message = e.getMessage();
         
-        // 根据错误码记录不同级别的日志
         if (code >= 500) {
             log.error("[traceId={}] 业务异常: code={}, message={}", getTraceId(), code, message);
         } else {
@@ -167,10 +169,11 @@ public class GlobalExceptionHandler {
      * 处理参数校验异常
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public R handleValidException(MethodArgumentNotValidException e) {
-        String msg = e.getBindingResult().getFieldError() != null
-                ? e.getBindingResult().getFieldError().getDefaultMessage()
-                : "参数校验失败";
+    public R handleValidException(final MethodArgumentNotValidException e) {
+        String msg = "参数校验失败";
+        if (e != null && e.getBindingResult() != null && e.getBindingResult().getFieldError() != null) {
+            msg = e.getBindingResult().getFieldError().getDefaultMessage();
+        }
         log.warn("[traceId={}] 参数校验失败: {}", getTraceId(), msg);
         return R.badRequest(msg);
     }
@@ -179,10 +182,13 @@ public class GlobalExceptionHandler {
      * 处理约束违规异常
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public R handleConstraintViolationException(ConstraintViolationException e) {
-        String msg = e.getConstraintViolations().stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining(", "));
+    public R handleConstraintViolationException(final ConstraintViolationException e) {
+        String msg = "参数校验失败";
+        if (e != null && e.getConstraintViolations() != null) {
+            msg = e.getConstraintViolations().stream()
+                    .map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", "));
+        }
         log.warn("[traceId={}] 参数校验失败: {}", getTraceId(), msg);
         return R.badRequest(msg);
     }
@@ -191,7 +197,7 @@ public class GlobalExceptionHandler {
      * 处理非法参数异常
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public R handleIllegalArgumentException(IllegalArgumentException e) {
+    public R handleIllegalArgumentException(final IllegalArgumentException e) {
         log.warn("[traceId={}] 参数错误: {}", getTraceId(), e.getMessage());
         return R.badRequest(e.getMessage());
     }
@@ -200,7 +206,7 @@ public class GlobalExceptionHandler {
      * 处理非法状态异常
      */
     @ExceptionHandler(IllegalStateException.class)
-    public R handleIllegalStateException(IllegalStateException e) {
+    public R handleIllegalStateException(final IllegalStateException e) {
         log.warn("[traceId={}] 业务状态错误: {}", getTraceId(), e.getMessage());
         return R.error(400, e.getMessage());
     }
@@ -209,7 +215,7 @@ public class GlobalExceptionHandler {
      * 处理空指针异常
      */
     @ExceptionHandler(NullPointerException.class)
-    public R handleNullPointerException(NullPointerException e) {
+    public R handleNullPointerException(final NullPointerException e) {
         log.error("[traceId={}] 空指针异常", getTraceId(), e);
         return R.internalServerError("系统繁忙，请稍后重试");
     }
@@ -218,9 +224,8 @@ public class GlobalExceptionHandler {
      * 处理所有其他异常
      */
     @ExceptionHandler(Throwable.class)
-    public R handleException(Throwable e) {
+    public R handleException(final Throwable e) {
         log.error("[traceId={}] 系统异常: {}", getTraceId(), e.getMessage(), e);
-        // 非生产环境返回脱敏后的异常信息
         if (!"prod".equals(activeProfile)) {
             return R.error(500, "系统异常，请稍后重试", maskStackTrace(e));
         }

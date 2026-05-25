@@ -14,11 +14,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class RedisPubSubConfig {
 
     @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory) {
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            final RedisConnectionFactory connectionFactory) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         
-        // 使用ThreadPoolTaskExecutor，支持Spring生命周期管理
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(4);
         taskExecutor.setMaxPoolSize(4);

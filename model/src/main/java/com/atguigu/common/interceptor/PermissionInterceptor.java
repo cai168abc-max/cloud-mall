@@ -62,27 +62,24 @@ public class PermissionInterceptor {
      * @param annotation 权限注解
      * @throws PermissionDeniedException 权限不足时抛出异常
      */
-    public void checkPermission(RequirePermission annotation) throws PermissionDeniedException {
+    public void checkPermission(final RequirePermission annotation) throws PermissionDeniedException {
         if (annotation == null) {
             return;
         }
 
-        String[] requiredPermissions = annotation.value();
+        final String[] requiredPermissions = annotation.value();
         if (requiredPermissions == null || requiredPermissions.length == 0) {
             return;
         }
 
-        UserInfo user = UserContext.get();
+        final UserInfo user = UserContext.get();
         if (user == null) {
             log.warn("权限验证失败: 用户未登录");
             throw new PermissionDeniedException("请先登录");
         }
 
-        // 获取用户权限集合
-        Set<String> userPermissions = getUserPermissions(user);
-        
-        // 执行权限验证
-        boolean hasPermission = checkPermissions(requiredPermissions, userPermissions, annotation.mode());
+        final Set<String> userPermissions = getUserPermissions(user);
+        final boolean hasPermission = checkPermissions(requiredPermissions, userPermissions, annotation.mode());
         
         if (!hasPermission) {
             log.warn("权限验证失败: 用户={}, 需要权限={}, 用户权限={}, 模式={}",
@@ -98,13 +95,8 @@ public class PermissionInterceptor {
         log.debug("权限验证通过: 用户={}, 权限={}", user.getId(), Arrays.toString(requiredPermissions));
     }
 
-    /**
-     * 根据用户角色获取权限集合
-     * @param user 用户信息
-     * @return 权限集合
-     */
-    private Set<String> getUserPermissions(UserInfo user) {
-        UserRole role = user.getRole();
+    private Set<String> getUserPermissions(final UserInfo user) {
+        final UserRole role = user.getRole();
         if (role == null) {
             return new HashSet<>();
         }
@@ -116,30 +108,21 @@ public class PermissionInterceptor {
         };
     }
 
-    /**
-     * 检查权限
-     * @param requiredPermissions 需要的权限
-     * @param userPermissions 用户拥有的权限
-     * @param mode 验证模式
-     * @return 是否有权限
-     */
-    private boolean checkPermissions(String[] requiredPermissions, Set<String> userPermissions, RequireMode mode) {
-        // 管理员拥有所有权限
+    private boolean checkPermissions(final String[] requiredPermissions, 
+            final Set<String> userPermissions, final RequireMode mode) {
         if (userPermissions.contains("*")) {
             return true;
         }
 
         if (mode == RequireMode.ALL) {
-            // 必须满足所有权限
-            for (String permission : requiredPermissions) {
+            for (final String permission : requiredPermissions) {
                 if (!hasPermission(userPermissions, permission)) {
                     return false;
                 }
             }
             return true;
         } else {
-            // 满足任一权限即可
-            for (String permission : requiredPermissions) {
+            for (final String permission : requiredPermissions) {
                 if (hasPermission(userPermissions, permission)) {
                     return true;
                 }
@@ -148,23 +131,14 @@ public class PermissionInterceptor {
         }
     }
 
-    /**
-     * 检查单个权限
-     * 支持通配符匹配，如 product:* 可以匹配 product:read, product:write 等
-     * @param userPermissions 用户权限集合
-     * @param requiredPermission 需要的权限
-     * @return 是否有权限
-     */
-    private boolean hasPermission(Set<String> userPermissions, String requiredPermission) {
-        // 精确匹配
+    private boolean hasPermission(final Set<String> userPermissions, final String requiredPermission) {
         if (userPermissions.contains(requiredPermission)) {
             return true;
         }
 
-        // 通配符匹配
-        String[] parts = requiredPermission.split(":");
+        final String[] parts = requiredPermission.split(":");
         if (parts.length == 2) {
-            String wildcardPermission = parts[0] + ":*";
+            final String wildcardPermission = parts[0] + ":*";
             return userPermissions.contains(wildcardPermission);
         }
 

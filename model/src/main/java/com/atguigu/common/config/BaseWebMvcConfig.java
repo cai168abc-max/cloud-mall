@@ -34,12 +34,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public abstract class BaseWebMvcConfig implements WebMvcConfigurer {
     
-    protected final InternalRequestInterceptor internalRequestInterceptor;
+    private final InternalRequestInterceptor internalRequestInterceptor;
     
     /**
      * 公共排除路径，这些路径不需要经过拦截器
      */
-    protected static final String[] COMMON_EXCLUDE_PATHS = {
+    private static final String[] COMMON_EXCLUDE_PATHS = {
             "/actuator/**",
             "/health",
             "/metrics",

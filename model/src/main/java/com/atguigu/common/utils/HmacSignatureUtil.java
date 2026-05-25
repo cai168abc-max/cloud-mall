@@ -22,7 +22,10 @@ import java.util.Base64;
  * - 包含时间戳，防止重放攻击
  * - 签名内容包含请求路径，防止签名被复用
  */
-public class HmacSignatureUtil {
+public final class HmacSignatureUtil {
+
+    private HmacSignatureUtil() {
+    }
 
     private static final Logger log = LoggerFactory.getLogger(HmacSignatureUtil.class);
 

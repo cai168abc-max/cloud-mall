@@ -12,7 +12,11 @@ import com.atguigu.common.bean.UserInfo;
  * 3. CompletableFuture 等异步编程场景
  * 注意：对于使用 ExecutorService 的场景，需要使用 TtlExecutors.getTtlExecutorService() 包装
  */
-public class UserContext {
+public final class UserContext {
+
+    private UserContext() {
+    }
+
     private static final TransmittableThreadLocal<UserInfo> HOLDER = new TransmittableThreadLocal<>();
 
     /**

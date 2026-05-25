@@ -31,19 +31,20 @@ public class UserContextInterceptor implements HandlerInterceptor {
     private static final Logger log = LoggerFactory.getLogger(UserContextInterceptor.class);
 
     @Override
-    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull Object handler) {
-        String idStr = request.getHeader("X-User-Id");
-        String name = request.getHeader("X-User-Name");
-        String roleStr = request.getHeader("X-User-Role");
+    public boolean preHandle(final HttpServletRequest request, @NonNull final HttpServletResponse response,
+            @NonNull final Object handler) {
+        final String idStr = request.getHeader("X-User-Id");
+        final String name = request.getHeader("X-User-Name");
+        final String roleStr = request.getHeader("X-User-Role");
         
         if (idStr != null && roleStr != null) {
             try {
-                UserInfo user = new UserInfo();
+                final UserInfo user = new UserInfo();
                 user.setId(Long.parseLong(idStr));
                 user.setNickName(name != null ? name : ("user-" + idStr));
                 user.setRole(UserRole.valueOf(roleStr));
                 UserContext.set(user);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 log.warn("解析用户头信息失败: id={}, role={}", idStr, roleStr, e);
             }
         }
@@ -51,7 +52,9 @@ public class UserContextInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(@NonNull HttpServletRequest request,@NonNull HttpServletResponse response,@NonNull Object handler, Exception ex) {
+    public void afterCompletion(@NonNull final HttpServletRequest request,
+            @NonNull final HttpServletResponse response, @NonNull final Object handler,
+            final Exception ex) {
         UserContext.clear();
     }
 }
