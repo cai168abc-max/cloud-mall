@@ -2,7 +2,7 @@ package com.atguigu.common.exception;
 
 import com.atguigu.common.enums.RequireMode;
 
-import java.util.Arrays;
+
 
 /**
  * 权限拒绝异常

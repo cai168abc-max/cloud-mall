@@ -23,7 +23,10 @@ import java.util.Base64;
  * @author Backend Architect
  * @since 1.0.0
  */
-public class JwtKeyGenerator {
+public final class JwtKeyGenerator {
+
+    private JwtKeyGenerator() {
+    }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
