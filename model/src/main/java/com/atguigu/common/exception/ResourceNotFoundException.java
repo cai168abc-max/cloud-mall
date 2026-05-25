@@ -26,7 +26,7 @@ public class ResourceNotFoundException extends BusinessException {
      * 默认构造函数
      * @param message 异常信息
      */
-    public ResourceNotFoundException(String message) {
+    public ResourceNotFoundException(final String message) {
         super(404, message);
     }
     
@@ -35,7 +35,7 @@ public class ResourceNotFoundException extends BusinessException {
      * @param resourceType 资源类型（如：User, Product, Order）
      * @param resourceId 资源ID
      */
-    public ResourceNotFoundException(String resourceType, Object resourceId) {
+    public ResourceNotFoundException(final String resourceType, final Object resourceId) {
         super(404, String.format("%s不存在: %s", resourceType, resourceId));
         this.resourceType = resourceType;
         this.resourceId = resourceId;

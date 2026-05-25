@@ -116,7 +116,7 @@ public final class CacheKeyConstants {
      * 商品库存Key
      * 格式：product:stock:{productId}
      */
-    public static String productStock(Long productId) {
+    public static String productStock(final Long productId) {
         return MODULE_PRODUCT + SEPARATOR + TYPE_STOCK + SEPARATOR + productId;
     }
 

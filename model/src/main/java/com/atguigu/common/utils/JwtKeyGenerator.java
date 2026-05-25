@@ -47,7 +47,7 @@ public final class JwtKeyGenerator {
      * @return Base64编码的密钥字符串
      * @throws IllegalArgumentException 如果密钥长度小于最小要求
      */
-    public static String generateSecret(int bitLength) {
+    public static String generateSecret(final int bitLength) {
         if (bitLength < MIN_KEY_LENGTH) {
             throw new IllegalArgumentException(
                 "密钥长度不足，至少需要" + MIN_KEY_LENGTH + "位，当前请求: " + bitLength + "位"
@@ -117,7 +117,7 @@ public final class JwtKeyGenerator {
      * @param secret 待检查的密钥
      * @return true表示密钥有效，false表示无效
      */
-    public static boolean isValidSecret(String secret) {
+    public static boolean isValidSecret(final String secret) {
         return validateSecret(secret) == null;
     }
 

@@ -83,7 +83,7 @@ public class MultiLevelCacheService {
      * @param productId 商品ID
      * @return 商品对象，如果不存在返回null
      */
-    public Object getProduct(Long productId) {
+    public Object getProduct(final Long productId) {
         String cacheKey = REDIS_KEY_PREFIX + productId;
 
         // 1. 先查本地缓存
@@ -131,7 +131,7 @@ public class MultiLevelCacheService {
      *
      * @param productId 商品ID
      */
-    public void invalidate(Long productId) {
+    public void invalidate(final Long productId) {
         String cacheKey = REDIS_KEY_PREFIX + productId;
 
         // 清除Redis缓存
@@ -185,7 +185,7 @@ public class MultiLevelCacheService {
      * @param key 缓存键
      * @return 缓存值
      */
-    public Object get(String key) {
+    public Object get(final String key) {
         // 先查本地缓存
         Object value = localCache.getIfPresent(key);
         if (value != null) {
@@ -223,7 +223,7 @@ public class MultiLevelCacheService {
      * @param timeout 过期时间
      * @param unit    时间单位
      */
-    public void set(String key, Object value, long timeout, TimeUnit unit) {
+    public void set(final String key, final Object value, final long timeout, final TimeUnit unit) {
         redisTemplate.opsForValue().set(key, value, timeout, unit);
         localCache.put(key, value);
         log.debug("设置缓存: key={}, timeout={} {}", key, timeout, unit);

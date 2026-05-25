@@ -97,7 +97,7 @@ public class XssFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
         
         // 检查是否启用
@@ -207,7 +207,7 @@ public class XssFilter implements Filter {
      * @param url 规范化后的URL
      * @return true表示需要排除
      */
-    private boolean isExcludedUrl(String url) {
+    private boolean isExcludedUrl(final String url) {
         if (url == null || url.isEmpty()) {
             return false;
         }

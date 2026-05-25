@@ -62,11 +62,11 @@ public class Order {
     @TableField(exist = false)
     private List<Product> productList;
     
-    public Order(Long id, Long userId, Long merchantId, String nickName, String address,
-                 BigDecimal totalPrice, BigDecimal discountAmount, BigDecimal payAmount,
-                 Long couponId, OrderStatus status, LocalDateTime payTime, LocalDateTime shipTime,
-                 LocalDateTime completeTime, Integer reviewed, LocalDateTime createTime,
-                 LocalDateTime updateTime, List<Product> productList) {
+    public Order(final Long id, final Long userId, final Long merchantId, final String nickName, final String address,
+                 final BigDecimal totalPrice, final BigDecimal discountAmount, final BigDecimal payAmount,
+                 final Long couponId, final OrderStatus status, final LocalDateTime payTime, final LocalDateTime shipTime,
+                 final LocalDateTime completeTime, final Integer reviewed, final LocalDateTime createTime,
+                 final LocalDateTime updateTime, final List<Product> productList) {
         this.id = id;
         this.userId = userId;
         this.merchantId = merchantId;
@@ -117,87 +117,87 @@ public class Order {
         private LocalDateTime updateTime;
         private List<Product> productList;
         
-        public OrderBuilder id(Long id) {
+        public OrderBuilder id(final Long id) {
             this.id = id;
             return this;
         }
         
-        public OrderBuilder userId(Long userId) {
+        public OrderBuilder userId(final Long userId) {
             this.userId = userId;
             return this;
         }
         
-        public OrderBuilder merchantId(Long merchantId) {
+        public OrderBuilder merchantId(final Long merchantId) {
             this.merchantId = merchantId;
             return this;
         }
         
-        public OrderBuilder nickName(String nickName) {
+        public OrderBuilder nickName(final String nickName) {
             this.nickName = nickName;
             return this;
         }
         
-        public OrderBuilder address(String address) {
+        public OrderBuilder address(final String address) {
             this.address = address;
             return this;
         }
         
-        public OrderBuilder totalPrice(BigDecimal totalPrice) {
+        public OrderBuilder totalPrice(final BigDecimal totalPrice) {
             this.totalPrice = totalPrice;
             return this;
         }
         
-        public OrderBuilder discountAmount(BigDecimal discountAmount) {
+        public OrderBuilder discountAmount(final BigDecimal discountAmount) {
             this.discountAmount = discountAmount;
             return this;
         }
         
-        public OrderBuilder payAmount(BigDecimal payAmount) {
+        public OrderBuilder payAmount(final BigDecimal payAmount) {
             this.payAmount = payAmount;
             return this;
         }
         
-        public OrderBuilder couponId(Long couponId) {
+        public OrderBuilder couponId(final Long couponId) {
             this.couponId = couponId;
             return this;
         }
         
-        public OrderBuilder status(OrderStatus status) {
+        public OrderBuilder status(final OrderStatus status) {
             this.status = status;
             return this;
         }
         
-        public OrderBuilder payTime(LocalDateTime payTime) {
+        public OrderBuilder payTime(final LocalDateTime payTime) {
             this.payTime = payTime;
             return this;
         }
         
-        public OrderBuilder shipTime(LocalDateTime shipTime) {
+        public OrderBuilder shipTime(final LocalDateTime shipTime) {
             this.shipTime = shipTime;
             return this;
         }
         
-        public OrderBuilder completeTime(LocalDateTime completeTime) {
+        public OrderBuilder completeTime(final LocalDateTime completeTime) {
             this.completeTime = completeTime;
             return this;
         }
         
-        public OrderBuilder reviewed(Integer reviewed) {
+        public OrderBuilder reviewed(final Integer reviewed) {
             this.reviewed = reviewed;
             return this;
         }
         
-        public OrderBuilder createTime(LocalDateTime createTime) {
+        public OrderBuilder createTime(final LocalDateTime createTime) {
             this.createTime = createTime;
             return this;
         }
         
-        public OrderBuilder updateTime(LocalDateTime updateTime) {
+        public OrderBuilder updateTime(final LocalDateTime updateTime) {
             this.updateTime = updateTime;
             return this;
         }
         
-        public OrderBuilder productList(List<Product> productList) {
+        public OrderBuilder productList(final List<Product> productList) {
             this.productList = productList != null ? new ArrayList<>(productList) : null;
             return this;
         }

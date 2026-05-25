@@ -44,13 +44,13 @@ public class R {
         return r;
     }
 
-    public static R ok(Object data) {
+    public static R ok(final Object data) {
         R r = ok();
         r.setData(data);
         return r;
     }
 
-    public static R ok(String msg, Object data) {
+    public static R ok(final String msg, final Object data) {
         R r = new R();
         r.setCode(200);
         r.setMsg(msg);
@@ -79,7 +79,7 @@ public class R {
         return r;
     }
 
-    public static R error(Integer code, String msg, String errorDetails) {
+    public static R error(final Integer code, final String msg, final String errorDetails) {
         R r = error(code, msg);
         // 生产环境不返回详细错误信息
         if (!productionMode) {
@@ -96,7 +96,7 @@ public class R {
         return error(401, msg);
     }
 
-    public static R forbidden(String msg) {
+    public static R forbidden(final String msg) {
         return error(403, msg);
     }
 
@@ -120,7 +120,7 @@ public class R {
         return error(429, msg);
     }
 
-    public static R internalServerError(String msg) {
+    public static R internalServerError(final String msg) {
         return error(500, msg);
     }
 

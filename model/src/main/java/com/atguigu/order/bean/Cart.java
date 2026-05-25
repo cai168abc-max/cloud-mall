@@ -24,7 +24,7 @@ public class Cart {
         this.items = new ArrayList<>();
     }
     
-    public void setItems(List<CartItem> items) {
+    public void setItems(final List<CartItem> items) {
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
     }
     
@@ -32,7 +32,7 @@ public class Cart {
         return Collections.unmodifiableList(items);
     }
     
-    public void addItem(CartItem item) {
+    public void addItem(final CartItem item) {
         if (item != null) {
             this.items.add(item);
         }
@@ -46,7 +46,7 @@ public class Cart {
         this.items.clear();
     }
     
-    public boolean updateItemQuantity(Long productId, Integer quantity) {
+    public boolean updateItemQuantity(final Long productId, final Integer quantity) {
         Optional<CartItem> itemOpt = this.items.stream()
                 .filter(item -> Objects.equals(item.getProductId(), productId))
                 .findFirst();
@@ -57,7 +57,7 @@ public class Cart {
         return false;
     }
     
-    public boolean updateItemChecked(Long productId, Boolean checked) {
+    public boolean updateItemChecked(final Long productId, final Boolean checked) {
         Optional<CartItem> itemOpt = this.items.stream()
                 .filter(item -> Objects.equals(item.getProductId(), productId))
                 .findFirst();

@@ -117,12 +117,12 @@ public class LogisticsInfo {
     @TableField(exist = false)
     private List<LogisticsTrace> traceList;
     
-    public LogisticsInfo(Long id, Long orderId, Long userId, Long merchantId, String trackingNo,
-                         String carrier, LogisticsStatus status, String senderName, String senderPhone,
-                         String senderAddress, String receiverName, String receiverPhone,
-                         String receiverAddress, LocalDateTime estimatedArrivalTime,
-                         LocalDateTime actualArrivalTime, LocalDateTime createTime,
-                         LocalDateTime updateTime, List<LogisticsTrace> traceList) {
+    public LogisticsInfo(final Long id, final Long orderId, final Long userId, final Long merchantId, final String trackingNo,
+                     final String carrier, final LogisticsStatus status, final String senderName, final String senderPhone,
+                     final String senderAddress, final String receiverName, final String receiverPhone,
+                     final String receiverAddress, final LocalDateTime estimatedArrivalTime,
+                     final LocalDateTime actualArrivalTime, final LocalDateTime createTime,
+                     final LocalDateTime updateTime, final List<LogisticsTrace> traceList) {
         this.id = id;
         this.orderId = orderId;
         this.userId = userId;
@@ -175,92 +175,92 @@ public class LogisticsInfo {
         private LocalDateTime updateTime;
         private List<LogisticsTrace> traceList;
         
-        public LogisticsInfoBuilder id(Long id) {
+        public LogisticsInfoBuilder id(final Long id) {
             this.id = id;
             return this;
         }
         
-        public LogisticsInfoBuilder orderId(Long orderId) {
+        public LogisticsInfoBuilder orderId(final Long orderId) {
             this.orderId = orderId;
             return this;
         }
         
-        public LogisticsInfoBuilder userId(Long userId) {
+        public LogisticsInfoBuilder userId(final Long userId) {
             this.userId = userId;
             return this;
         }
         
-        public LogisticsInfoBuilder merchantId(Long merchantId) {
+        public LogisticsInfoBuilder merchantId(final Long merchantId) {
             this.merchantId = merchantId;
             return this;
         }
         
-        public LogisticsInfoBuilder trackingNo(String trackingNo) {
+        public LogisticsInfoBuilder trackingNo(final String trackingNo) {
             this.trackingNo = trackingNo;
             return this;
         }
         
-        public LogisticsInfoBuilder carrier(String carrier) {
+        public LogisticsInfoBuilder carrier(final String carrier) {
             this.carrier = carrier;
             return this;
         }
         
-        public LogisticsInfoBuilder status(LogisticsStatus status) {
+        public LogisticsInfoBuilder status(final LogisticsStatus status) {
             this.status = status;
             return this;
         }
         
-        public LogisticsInfoBuilder senderName(String senderName) {
+        public LogisticsInfoBuilder senderName(final String senderName) {
             this.senderName = senderName;
             return this;
         }
         
-        public LogisticsInfoBuilder senderPhone(String senderPhone) {
+        public LogisticsInfoBuilder senderPhone(final String senderPhone) {
             this.senderPhone = senderPhone;
             return this;
         }
         
-        public LogisticsInfoBuilder senderAddress(String senderAddress) {
+        public LogisticsInfoBuilder senderAddress(final String senderAddress) {
             this.senderAddress = senderAddress;
             return this;
         }
         
-        public LogisticsInfoBuilder receiverName(String receiverName) {
+        public LogisticsInfoBuilder receiverName(final String receiverName) {
             this.receiverName = receiverName;
             return this;
         }
         
-        public LogisticsInfoBuilder receiverPhone(String receiverPhone) {
+        public LogisticsInfoBuilder receiverPhone(final String receiverPhone) {
             this.receiverPhone = receiverPhone;
             return this;
         }
         
-        public LogisticsInfoBuilder receiverAddress(String receiverAddress) {
+        public LogisticsInfoBuilder receiverAddress(final String receiverAddress) {
             this.receiverAddress = receiverAddress;
             return this;
         }
         
-        public LogisticsInfoBuilder estimatedArrivalTime(LocalDateTime estimatedArrivalTime) {
+        public LogisticsInfoBuilder estimatedArrivalTime(final LocalDateTime estimatedArrivalTime) {
             this.estimatedArrivalTime = estimatedArrivalTime;
             return this;
         }
         
-        public LogisticsInfoBuilder actualArrivalTime(LocalDateTime actualArrivalTime) {
+        public LogisticsInfoBuilder actualArrivalTime(final LocalDateTime actualArrivalTime) {
             this.actualArrivalTime = actualArrivalTime;
             return this;
         }
         
-        public LogisticsInfoBuilder createTime(LocalDateTime createTime) {
+        public LogisticsInfoBuilder createTime(final LocalDateTime createTime) {
             this.createTime = createTime;
             return this;
         }
         
-        public LogisticsInfoBuilder updateTime(LocalDateTime updateTime) {
+        public LogisticsInfoBuilder updateTime(final LocalDateTime updateTime) {
             this.updateTime = updateTime;
             return this;
         }
         
-        public LogisticsInfoBuilder traceList(List<LogisticsTrace> traceList) {
+        public LogisticsInfoBuilder traceList(final List<LogisticsTrace> traceList) {
             this.traceList = traceList != null ? new ArrayList<>(traceList) : null;
             return this;
         }

@@ -86,7 +86,7 @@ public class FallbackResponse<T> implements Serializable {
     /**
      * 创建默认值降级响应
      */
-    public static <T> FallbackResponse<T> fromDefault(T data, String serviceName, String reason) {
+    public static <T> FallbackResponse<T> fromDefault(final T data, final String serviceName, final String reason) {
         FallbackResponse<T> response = new FallbackResponse<>();
         response.setCode(200);
         response.setMessage("服务降级：返回默认数据");

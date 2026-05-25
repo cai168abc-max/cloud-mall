@@ -74,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
     @SentinelResource(value = "createOrder", blockHandler = "createOrderFallBack")
     @Override
     @GlobalTransactional(name = "create-order", timeoutMills = 30000, rollbackFor = Exception.class)
-    public Order createOrder(Long productId, Long userId) {
+    public Order createOrder(final Long productId, final Long userId) {
         String idempotencyKey = "order:create:" + productId + ":" + userId;
         var lockResult = idempotencyService.tryLock(idempotencyKey, 300);
         if (lockResult.isFailure()) {
@@ -98,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @GlobalTransactional(name = "create-order-with-coupon", timeoutMills = 30000, rollbackFor = Exception.class)
-    public Order createOrderWithCoupon(Long productId, Long userId, Long couponId) {
+    public Order createOrderWithCoupon(final Long productId, final Long userId, final Long couponId) {
         String idempotencyKey = "order:create:" + productId + ":" + userId + ":" + couponId;
         var lockResult = idempotencyService.tryLock(idempotencyKey, 300);
         if (lockResult.isFailure()) {
@@ -115,7 +115,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private Order doCreateOrder(Long productId, Long userId, Long couponId) {
+    private Order doCreateOrder(final Long productId, final Long userId, final Long couponId) {
         // 1. 验证商品并扣减库存
         Product product = validateProductAndDecreaseStock(productId);
         

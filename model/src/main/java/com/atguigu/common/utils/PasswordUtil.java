@@ -9,7 +9,7 @@ public final class PasswordUtil {
 
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public static String hashPassword(String rawPassword) {
+    public static String hashPassword(final String rawPassword) {
         if (rawPassword == null) {
             throw new IllegalArgumentException("Raw password cannot be null");
         }

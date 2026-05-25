@@ -92,7 +92,7 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserAccount register(String phoneOrEmail, String password) {
+    public UserAccount register(final String phoneOrEmail, final String password) {
         UserAccount existing = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
         if (existing != null) {
             throw new IllegalArgumentException("该手机号/邮箱已注册");
@@ -115,7 +115,7 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserAccount registerMerchant(String phoneOrEmail, String password, String merchantName) {
+    public UserAccount registerMerchant(final String phoneOrEmail, final String password, final String merchantName) {
         UserAccount existing = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
         if (existing != null) {
             throw new IllegalArgumentException("该手机号/邮箱已注册");
@@ -163,7 +163,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public String login(String phoneOrEmail, String password) {
+    public String login(final String phoneOrEmail, final String password) {
         if (rateLimitService.isAccountLocked(phoneOrEmail)) {
             long remaining = rateLimitService.getRemainingLockTime(phoneOrEmail);
             throw new IllegalStateException("账号已被锁定，请" + remaining + "秒后重试");
@@ -190,7 +190,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public void sendVerificationCode(String phoneOrEmail) {
+    public void sendVerificationCode(final String phoneOrEmail) {
         UserAccount account = userAccountMapper.selectByPhoneOrEmail(phoneOrEmail);
         if (account == null) {
             throw new IllegalArgumentException("用户不存在");
@@ -220,7 +220,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public void resetPassword(String phoneOrEmail, String newPassword, String verifyCode) {
+    public void resetPassword(final String phoneOrEmail, final String newPassword, final String verifyCode) {
         long startTime = System.currentTimeMillis();
         
         boolean codeValid = validateVerificationCode(phoneOrEmail, verifyCode);

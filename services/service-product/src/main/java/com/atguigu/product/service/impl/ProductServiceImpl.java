@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductById(Long productId) {
+    public Product getProductById(final Long productId) {
         if (productId == null) {
             return null;
         }
@@ -155,7 +155,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Product saveOrUpdate(Product product) {
+    public Product saveOrUpdate(final Product product) {
         if (product.getId() != null) {
             productMapper.updateProduct(product);
             final Long productIdRef = product.getId();
@@ -174,7 +174,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteProduct(Long productId) {
+    public boolean deleteProduct(final Long productId) {
         int deleted = productMapper.deleteById(productId);
         if (deleted > 0) {
             final Long productIdRef = productId;
@@ -227,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean decreaseStock(Long productId, Integer quantity) {
+    public boolean decreaseStock(final Long productId, final Integer quantity) {
         int result = productMapper.decreaseStock(productId, quantity);
         if (result > 0) {
             final Long productIdRef = productId;
@@ -239,7 +239,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean increaseStock(Long productId, Integer quantity) {
+    public boolean increaseStock(final Long productId, final Integer quantity) {
         int result = productMapper.increaseStock(productId, quantity);
         if (result > 0) {
             final Long productIdRef = productId;
@@ -251,7 +251,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean batchIncreaseStock(List<ProductMapper.StockItem> items) {
+    public boolean batchIncreaseStock(final List<ProductMapper.StockItem> items) {
         if (items == null || items.isEmpty()) {
             return true;
         }
@@ -270,7 +270,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updatePrice(Long productId, BigDecimal price) {
+    public boolean updatePrice(final Long productId, final BigDecimal price) {
         int result = productMapper.updatePrice(productId, price);
         if (result > 0) {
             final Long productIdRef = productId;
@@ -281,7 +281,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public boolean updateEnabled(Long productId, Boolean enabled) {
+    public boolean updateEnabled(final Long productId, final Boolean enabled) {
         int result = productMapper.updateEnabled(productId, enabled);
         if (result > 0) {
             final Long productIdRef = productId;

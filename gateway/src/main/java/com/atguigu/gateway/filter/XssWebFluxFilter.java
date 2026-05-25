@@ -111,7 +111,7 @@ public class XssWebFluxFilter implements GlobalFilter, Ordered {
 
     @Override
     @NonNull
-    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
+    public Mono<Void> filter(@NonNull final ServerWebExchange exchange, @NonNull final GatewayFilterChain chain) {
         // 检查是否启用
         if (!enabled) {
             return chain.filter(exchange);

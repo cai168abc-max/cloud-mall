@@ -22,7 +22,7 @@ public class RateLimitService {
     private static final String LOGIN_LOCK_KEY_PREFIX = "rate:login:lock:";
     private static final long LOCK_DURATION_SECONDS = 300;
 
-    public boolean isAccountLocked(String account) {
+    public boolean isAccountLocked(final String account) {
         String lockKey = LOGIN_LOCK_KEY_PREFIX + account;
         return Boolean.TRUE.equals(redisTemplate.hasKey(lockKey));
     }
@@ -48,7 +48,7 @@ public class RateLimitService {
         redisTemplate.delete(failKey);
     }
 
-    public long getRemainingLockTime(String account) {
+    public long getRemainingLockTime(final String account) {
         String lockKey = LOGIN_LOCK_KEY_PREFIX + account;
         Long ttl = redisTemplate.getExpire(lockKey, TimeUnit.SECONDS);
         return ttl != null ? ttl : 0;

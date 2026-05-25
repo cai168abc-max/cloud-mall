@@ -245,7 +245,7 @@ public class RedisCacheSyncService implements MessageListener {
     /**
      * 处理插入或更新事件
      */
-    private void handleInsertOrUpdate(String tableName, CanalEntry.RowData rowData) {
+    private void handleInsertOrUpdate(final String tableName, final CanalEntry.RowData rowData) {
         String key = extractPrimaryKey(rowData);
         if (key != null) {
             // 统一使用业务对象名作为前缀，格式：{业务对象}:{id}
@@ -322,7 +322,7 @@ public class RedisCacheSyncService implements MessageListener {
      * 收到其他实例发布的缓存失效通知时，清除本地缓存
      */
     @Override
-    public void onMessage(org.springframework.data.redis.connection.Message message, byte[] pattern) {
+    public void onMessage(final org.springframework.data.redis.connection.Message message, final byte[] pattern) {
         String key = new String(message.getBody(), StandardCharsets.UTF_8);
         log.info("收到缓存失效通知: {}", key);
 

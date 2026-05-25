@@ -93,7 +93,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
             Pattern.compile("key", Pattern.CASE_INSENSITIVE)
     };
 
-    public XssHttpServletRequestWrapper(HttpServletRequest request) {
+    public XssHttpServletRequestWrapper(final HttpServletRequest request) {
         super(request);
     }
 
@@ -118,7 +118,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
-    public String getParameter(String parameter) {
+    public String getParameter(final String parameter) {
         String value = super.getParameter(parameter);
         
         // 检查是否为需要跳过的参数
@@ -130,7 +130,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
-    public String getHeader(String name) {
+    public String getHeader(final String name) {
         String value = super.getHeader(name);
         // 头部通常不需要过滤，但为了安全起见，过滤可能注入的头
         // 排除一些标准头部
@@ -200,7 +200,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
      * @param value 原始字符串
      * @return 编码后的字符串
      */
-    private String htmlEncode(String value) {
+    private String htmlEncode(final String value) {
         if (value == null || value.isEmpty()) {
             return value;
         }

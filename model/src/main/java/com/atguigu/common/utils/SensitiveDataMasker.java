@@ -33,7 +33,7 @@ public class SensitiveDataMasker {
      * @param email 邮箱地址
      * @return 脱敏后的邮箱地址
      */
-    public static String maskEmail(String email) {
+    public static String maskEmail(final String email) {
         if (email == null || !email.contains("@")) {
             return email;
         }
@@ -94,7 +94,7 @@ public class SensitiveDataMasker {
      * @param password 密码（将被忽略）
      * @return 固定返回******
      */
-    public static String maskPassword(String password) {
+    public static String maskPassword(final String password) {
         return "******";
     }
     
@@ -142,7 +142,7 @@ public class SensitiveDataMasker {
      * @param name 姓名
      * @return 脱敏后的姓名
      */
-    public static String maskName(String name) {
+    public static String maskName(final String name) {
         if (name == null || name.length() < 2) {
             return name;
         }
@@ -157,7 +157,7 @@ public class SensitiveDataMasker {
      * @param address 地址
      * @return 脱敏后的地址
      */
-    public static String maskAddress(String address) {
+    public static String maskAddress(final String address) {
         if (address == null || address.length() <= 6) {
             return address;
         }

@@ -113,7 +113,7 @@ public class CacheService {
         redisTemplate.opsForValue().set(key, value, expireTime, TimeUnit.SECONDS);
     }
 
-    public Object getCache(String key) {
+    public Object getCache(final String key) {
         return redisTemplate.opsForValue().get(key);
     }
 

@@ -74,7 +74,7 @@ public class AdminAuthFilter implements GlobalFilter, Ordered {
 
     @Override
     @NonNull
-    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
+    public Mono<Void> filter(@NonNull final ServerWebExchange exchange, @NonNull final GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String originalPath = request.getURI().getPath();
         String normalizedPath = normalizePath(originalPath);

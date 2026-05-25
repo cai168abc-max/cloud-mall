@@ -57,7 +57,7 @@ public class VipRoutePredicateFactory extends AbstractRoutePredicateFactory<VipR
      */
     @Override
     @NonNull
-    public Predicate<ServerWebExchange> apply(@NonNull Config config) {
+    public Predicate<ServerWebExchange> apply(@NonNull final Config config) {
         // 防御性检查：确保配置参数不为空
         if (!StringUtils.hasText(config.getParam()) || !StringUtils.hasText(config.getValue())) {
             log.warn("VIP路由断言配置参数不完整，param: {}, value: {}", config.getParam(), config.getValue());
@@ -70,7 +70,7 @@ public class VipRoutePredicateFactory extends AbstractRoutePredicateFactory<VipR
         // 直接返回GatewayPredicate实现，避免不安全的类型转换
         return new GatewayPredicate() {
             @Override
-            public boolean test(@NonNull ServerWebExchange exchange) {
+            public boolean test(@NonNull final ServerWebExchange exchange) {
                 ServerHttpRequest request = exchange.getRequest();
                 String actualValue = request.getQueryParams().getFirst(config.getParam());
 

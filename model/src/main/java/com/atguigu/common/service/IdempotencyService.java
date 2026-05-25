@@ -83,7 +83,7 @@ public class IdempotencyService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    public IdempotencyService(StringRedisTemplate stringRedisTemplate) {
+    public IdempotencyService(final StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = Objects.requireNonNull(stringRedisTemplate, "StringRedisTemplate不能为null");
         log.info("IdempotencyService初始化完成");
     }
@@ -158,7 +158,7 @@ public class IdempotencyService {
      * @param expireSeconds 锁过期时间（秒），必须大于0或为-1（看门狗模式）
      * @return 锁获取结果
      */
-    public IdempotencyResult tryLockWithWait(String key, long waitSeconds, long expireSeconds) {
+    public IdempotencyResult tryLockWithWait(final String key, final long waitSeconds, final long expireSeconds) {
         validateKey(key);
         validateExpireSeconds(expireSeconds);
         if (waitSeconds < 0) {
@@ -278,7 +278,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识，不能为null或空
      * @return true-已锁定，false-未锁定
      */
-    public boolean isLocked(String key) {
+    public boolean isLocked(final String key) {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
         try {
@@ -372,7 +372,7 @@ public class IdempotencyService {
     /**
      * 校验key参数
      */
-    private void validateKey(String key) {
+    private void validateKey(final String key) {
         if (key == null || key.trim().isEmpty()) {
             throw new IllegalArgumentException("锁key不能为null或空");
         }
@@ -389,7 +389,7 @@ public class IdempotencyService {
     /**
      * 校验过期时间参数
      */
-    private void validateExpireSeconds(long expireSeconds) {
+    private void validateExpireSeconds(final long expireSeconds) {
         if (expireSeconds != WATCHDOG_MODE && (expireSeconds < MIN_EXPIRE_SECONDS || expireSeconds > MAX_EXPIRE_SECONDS)) {
             throw new IllegalArgumentException(
                 String.format("锁过期时间必须在%d-%d秒之间，或使用-1启用看门狗模式，当前值: %d",
@@ -418,7 +418,7 @@ public class IdempotencyService {
             return new IdempotencyResult(true, null, "锁获取成功");
         }
 
-        public static IdempotencyResult failure(FailureReason reason) {
+        public static IdempotencyResult failure(final FailureReason reason) {
             return new IdempotencyResult(false, reason, reason.getDescription());
         }
 
@@ -442,7 +442,7 @@ public class IdempotencyService {
 
             private final String description;
 
-            FailureReason(String description) {
+            FailureReason(final String description) {
                 this.description = description;
             }
 

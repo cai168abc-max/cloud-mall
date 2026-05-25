@@ -51,7 +51,7 @@
     <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
-        <scope>annotationProcessor</scope>
+        <scope>provided</scope>
     </dependency>
     <!-- 共享领域模型（Product 等），解耦服务间依赖 -->
     <dependency>
