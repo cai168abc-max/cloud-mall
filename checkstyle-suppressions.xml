@@ -43,4 +43,8 @@
     
     <!-- 放宽行长度限制 -->
     <suppress checks="LineLength" files=".*\.java$"/>
+
+    <!-- Builder模式构造函数参数数量豁免 -->
+    <suppress checks="ParameterNumber" files="Order.java"/>
+    <suppress checks="ParameterNumber" files="LogisticsInfo.java"/>
 </suppressions>
