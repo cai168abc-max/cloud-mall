@@ -136,7 +136,7 @@ jobs:
       - name: Build with Maven
         run: |
           echo "Building project with Maven..."
-          mvn clean package -DskipTests -B
+          mvn clean install -DskipTests -B
           echo "Build completed successfully"
 
       - name: List build artifacts
@@ -309,11 +309,29 @@ jobs:
       - name: Health check
         run: |
           echo "Waiting for services to start..."
-          sleep 30
           
-          curl -f http://localhost:80/actuator/health || exit 1
+          MAX_RETRIES=30
+          RETRY_INTERVAL=5
+          HEALTH_URL=http://localhost:80/actuator/health
           
-          echo "Health check passed"
+          echo "Health check target: $HEALTH_URL"
+          echo "Max retries: $MAX_RETRIES, Interval: ${RETRY_INTERVAL}s"
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            
+            if curl -f -s "$HEALTH_URL" > /dev/null 2>&1; then
+              echo "✅ Health check passed on attempt $i"
+              curl -s "$HEALTH_URL" | head -50
+              exit 0
+            fi
+            
+            echo "⚠️  Service not ready yet, retrying in ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+          
+          echo "❌ Health check failed after ${MAX_RETRIES} attempts"
+          exit 1
 
       - name: Deployment summary
         run: |
@@ -371,11 +389,29 @@ jobs:
       - name: Health check
         run: |
           echo "Waiting for services to start..."
-          sleep 30
           
-          curl -f http://localhost:80/actuator/health || exit 1
+          MAX_RETRIES=30
+          RETRY_INTERVAL=5
+          HEALTH_URL=http://localhost:80/actuator/health
           
-          echo "Health check passed"
+          echo "Health check target: $HEALTH_URL"
+          echo "Max retries: $MAX_RETRIES, Interval: ${RETRY_INTERVAL}s"
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            
+            if curl -f -s "$HEALTH_URL" > /dev/null 2>&1; then
+              echo "✅ Health check passed on attempt $i"
+              curl -s "$HEALTH_URL" | head -50
+              exit 0
+            fi
+            
+            echo "⚠️  Service not ready yet, retrying in ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+          
+          echo "❌ Health check failed after ${MAX_RETRIES} attempts"
+          exit 1
 
       - name: Deployment summary
         run: |
