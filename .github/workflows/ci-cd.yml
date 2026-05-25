@@ -273,8 +273,18 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          echo "Installing Docker Compose..."
-          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+          echo "Checking Docker Compose availability..."
+          if docker compose version &>/dev/null; then
+            echo "Docker Compose V2 is already available"
+          else
+            echo "Installing Docker Compose V2..."
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            echo "Docker Compose V2 installed successfully"
+          fi
+          docker compose version
 
       - name: Deploy to development environment
         run: |
@@ -325,8 +335,18 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          echo "Installing Docker Compose..."
-          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+          echo "Checking Docker Compose availability..."
+          if docker compose version &>/dev/null; then
+            echo "Docker Compose V2 is already available"
+          else
+            echo "Installing Docker Compose V2..."
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            echo "Docker Compose V2 installed successfully"
+          fi
+          docker compose version
 
       - name: Deploy to staging environment
         run: |
@@ -377,8 +397,18 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          echo "Installing Docker Compose..."
-          sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+          echo "Checking Docker Compose availability..."
+          if docker compose version &>/dev/null; then
+            echo "Docker Compose V2 is already available"
+          else
+            echo "Installing Docker Compose V2..."
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            echo "Docker Compose V2 installed successfully"
+          fi
+          docker compose version
 
       - name: Make deploy script executable
         run: chmod +x scripts/deploy/canary-deploy.sh
