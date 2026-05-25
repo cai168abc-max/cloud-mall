@@ -36,7 +36,8 @@ public class UserSession {
         this.isActive = true;
     }
 
-    public UserSession(Long userId, String token, String deviceInfo, String ipAddress, UserRole role, String userAgent) {
+    public UserSession(final Long userId, final String token, final String deviceInfo, 
+            final String ipAddress, final UserRole role, final String userAgent) {
         this();
         this.userId = userId;
         this.token = token;

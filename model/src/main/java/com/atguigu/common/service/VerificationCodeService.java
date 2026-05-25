@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class VerificationCodeService {
 
     private static final String CODE_KEY_PREFIX = "verification:code:";
@@ -33,31 +34,31 @@ public class VerificationCodeService {
         return 0
         """;
 
-    public String generateAndStore(String account) {
+    public String generateAndStore(final String account) {
         if (account == null || account.trim().isEmpty()) {
             throw new IllegalArgumentException("账号不能为空");
         }
-        String limitKey = LIMIT_KEY_PREFIX + account;
+        final String limitKey = LIMIT_KEY_PREFIX + account;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(limitKey))) {
             throw new IllegalStateException("操作过于频繁，请稍后再试");
         }
-        String code = generateCode();
-        String key = CODE_KEY_PREFIX + account;
+        final String code = generateCode();
+        final String key = CODE_KEY_PREFIX + account;
         redisTemplate.opsForValue().set(key, code, CODE_EXPIRY);
         redisTemplate.opsForValue().set(limitKey, "1", LIMIT_EXPIRY);
         return code;
     }
 
-    public boolean verify(String account, String code) {
+    public boolean verify(final String account, final String code) {
         if (account == null || account.trim().isEmpty()) {
             return false;
         }
         if (code == null || code.trim().isEmpty()) {
             return false;
         }
-        String attemptsKey = ATTEMPTS_KEY_PREFIX + account;
-        String codeKey = CODE_KEY_PREFIX + account;
-        Object attemptsObj = redisTemplate.opsForValue().get(attemptsKey);
+        final String attemptsKey = ATTEMPTS_KEY_PREFIX + account;
+        final String codeKey = CODE_KEY_PREFIX + account;
+        final Object attemptsObj = redisTemplate.opsForValue().get(attemptsKey);
         int attempts = 0;
         if (attemptsObj != null) {
             attempts = Integer.parseInt(attemptsObj.toString());
@@ -67,27 +68,27 @@ public class VerificationCodeService {
             redisTemplate.delete(attemptsKey);
             return false;
         }
-        DefaultRedisScript<Long> script = new DefaultRedisScript<>(VERIFY_SCRIPT, Long.class);
-        Long result = redisTemplate.execute(script, Collections.singletonList(codeKey), code);
+        final DefaultRedisScript<Long> script = new DefaultRedisScript<>(VERIFY_SCRIPT, Long.class);
+        final Long result = redisTemplate.execute(script, Collections.singletonList(codeKey), code);
         if (result != null && result == 1L) {
             redisTemplate.delete(attemptsKey);
             return true;
         }
-        Long newAttempts = redisTemplate.opsForValue().increment(attemptsKey);
+        final Long newAttempts = redisTemplate.opsForValue().increment(attemptsKey);
         if (newAttempts != null && newAttempts == 1L) {
             redisTemplate.expire(attemptsKey, CODE_EXPIRY);
         }
         return false;
     }
 
-    public void delete(String account) {
-        String key = CODE_KEY_PREFIX + account;
+    public void delete(final String account) {
+        final String key = CODE_KEY_PREFIX + account;
         redisTemplate.delete(key);
     }
 
-    public long getExpireTime(String account) {
-        String key = CODE_KEY_PREFIX + account;
-        Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    public long getExpireTime(final String account) {
+        final String key = CODE_KEY_PREFIX + account;
+        final Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
         return ttl != null ? ttl : 0;
     }
 

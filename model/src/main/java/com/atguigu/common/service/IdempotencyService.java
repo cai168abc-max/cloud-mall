@@ -108,7 +108,7 @@ public class IdempotencyService {
      * @param expireSeconds 锁过期时间（秒），必须大于0或为-1（看门狗模式）
      * @return 锁获取结果，包含成功/失败状态和失败原因
      */
-    public IdempotencyResult tryLock(String key, long expireSeconds) {
+    public IdempotencyResult tryLock(final String key, final long expireSeconds) {
         validateKey(key);
         validateExpireSeconds(expireSeconds);
 
@@ -251,7 +251,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识
      * @return 释放结果
      */
-    public ReleaseResult forceReleaseLock(String key) {
+    public ReleaseResult forceReleaseLock(final String key) {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
 
@@ -295,7 +295,7 @@ public class IdempotencyService {
      * @param key 业务唯一标识，不能为null或空
      * @return true-当前线程持有，false-当前线程未持有
      */
-    public boolean isHeldByCurrentThread(String key) {
+    public boolean isHeldByCurrentThread(final String key) {
         validateKey(key);
         String fullKey = LOCK_PREFIX + key;
 

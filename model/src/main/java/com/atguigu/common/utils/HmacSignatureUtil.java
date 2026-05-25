@@ -65,7 +65,8 @@ public final class HmacSignatureUtil {
      * @param signature 待验证的签名
      * @return 验证结果
      */
-    public static boolean verifySignature(String secret, String path, long timestamp, String signature) {
+    public static boolean verifySignature(final String secret, final String path, 
+            final long timestamp, final String signature) {
         // 检查时间戳是否在有效期内
         long currentTime = Instant.now().toEpochMilli();
         if (Math.abs(currentTime - timestamp) > SIGNATURE_VALIDITY_MS) {
@@ -92,7 +93,7 @@ public final class HmacSignatureUtil {
      * @param path 请求路径
      * @return 完整的内部请求标识
      */
-    public static String generateInternalRequestToken(String secret, String path) {
+    public static String generateInternalRequestToken(final String secret, final String path) {
         long timestamp = Instant.now().toEpochMilli();
         String signature = generateSignature(secret, path, timestamp);
         return timestamp + ":" + signature;

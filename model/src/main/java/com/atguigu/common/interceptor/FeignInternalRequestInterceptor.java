@@ -18,7 +18,7 @@ public class FeignInternalRequestInterceptor implements RequestInterceptor {
     private String internalSecret;
 
     @Override
-    public void apply(RequestTemplate template) {
+    public void apply(final RequestTemplate template) {
         if (internalSecret == null || internalSecret.isBlank()) {
             return;
         }

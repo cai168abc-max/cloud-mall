@@ -31,6 +31,7 @@ import java.util.function.Supplier;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class CacheService {
 
     private static final Logger log = LoggerFactory.getLogger(CacheService.class);
@@ -120,16 +121,16 @@ public class CacheService {
         redisTemplate.opsForValue().set(key, NULL_VALUE, NULL_CACHE_TTL, TimeUnit.SECONDS);
     }
 
-    public boolean isNullCache(String key) {
+    public boolean isNullCache(final String key) {
         Object value = redisTemplate.opsForValue().get(key);
         return NULL_VALUE.equals(value);
     }
 
-    public boolean exists(String key) {
+    public boolean exists(final String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
-    public void delete(String key) {
+    public void delete(final String key) {
         redisTemplate.delete(key);
     }
 
@@ -162,7 +163,7 @@ public class CacheService {
      *
      * @param key 缓存键
      */
-    public void deleteWithDoubleRemoval(String key) {
+    public void deleteWithDoubleRemoval(final String key) {
         deleteWithDoubleRemoval(key, doubleDeleteDelay);
     }
 
@@ -176,7 +177,7 @@ public class CacheService {
      * @return 缓存值或从loader加载的值
      */
     @SuppressWarnings("unchecked")
-    public <T> T getCacheWithMutex(String key, Supplier<T> loader) {
+    public <T> T getCacheWithMutex(final String key, final Supplier<T> loader) {
         // 1. 先尝试从缓存获取
         Object value = getCache(key);
         if (value != null) {
@@ -194,7 +195,7 @@ public class CacheService {
     /**
      * 获取锁并加载数据
      */
-    private <T> T acquireLockAndLoad(String key, String lockKey, Supplier<T> loader) {
+    private <T> T acquireLockAndLoad(final String key, final String lockKey, final Supplier<T> loader) {
         RLock lock = redissonClient.getLock(lockKey);
         long startTime = System.currentTimeMillis();
 

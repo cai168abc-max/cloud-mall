@@ -11,7 +11,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+    public RedisTemplate<String, Object> redisTemplate(final RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();

@@ -78,7 +78,7 @@ public class XssFilter implements Filter {
     private Set<String> excludeUrls;
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(final FilterConfig filterConfig) throws ServletException {
         // 初始化排除URL集合
         excludeUrls = new HashSet<>(DEFAULT_EXCLUDE_URLS);
         
@@ -173,7 +173,7 @@ public class XssFilter implements Filter {
      * @param url 原始URL
      * @return 规范化后的URL
      */
-    private String normalizeUrl(String url) {
+    private String normalizeUrl(final String url) {
         if (url == null || url.isEmpty()) {
             return "/";
         }
@@ -227,7 +227,7 @@ public class XssFilter implements Filter {
      * @param contentType 请求的Content-Type
      * @return true表示需要跳过
      */
-    private boolean shouldSkipContentType(String contentType) {
+    private boolean shouldSkipContentType(final String contentType) {
         if (contentType == null || contentType.isEmpty()) {
             return false;
         }

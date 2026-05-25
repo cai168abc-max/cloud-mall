@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class RateLimitService {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitService.class);

@@ -22,10 +22,11 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("orders")
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class Order {
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -70,7 +71,7 @@ public class Order {
         return productList != null ? Collections.unmodifiableList(productList) : null;
     }
     
-    public void setProductList(List<Product> productList) {
+    public void setProductList(final List<Product> productList) {
         this.productList = productList != null ? new ArrayList<>(productList) : null;
     }
 }

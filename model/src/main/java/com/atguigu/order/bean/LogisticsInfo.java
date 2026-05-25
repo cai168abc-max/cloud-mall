@@ -23,10 +23,11 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("logistics_info")
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class LogisticsInfo {
     
     @TableId(type = IdType.AUTO)
@@ -125,7 +126,7 @@ public class LogisticsInfo {
         return traceList != null ? Collections.unmodifiableList(traceList) : null;
     }
     
-    public void setTraceList(List<LogisticsTrace> traceList) {
+    public void setTraceList(final List<LogisticsTrace> traceList) {
         this.traceList = traceList != null ? new ArrayList<>(traceList) : null;
     }
 }

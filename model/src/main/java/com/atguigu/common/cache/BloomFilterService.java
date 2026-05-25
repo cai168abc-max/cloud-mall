@@ -32,29 +32,29 @@ public class BloomFilterService {
         log.info("布隆过滤器初始化完成");
     }
 
-    public void loadHotProducts(List<Long> productIds) {
-        for (Long productId : productIds) {
+    public void loadHotProducts(final List<Long> productIds) {
+        for (final Long productId : productIds) {
             productBloomFilter.put(productId);
         }
         log.info("热点商品ID加载完成，共{}条", productIds.size());
     }
 
-    public void loadHotUsers(List<Long> userIds) {
-        for (Long userId : userIds) {
+    public void loadHotUsers(final List<Long> userIds) {
+        for (final Long userId : userIds) {
             userBloomFilter.put(userId);
         }
         log.info("热点用户ID加载完成，共{}条", userIds.size());
     }
 
-    public boolean mightContainProduct(Long productId) {
+    public boolean mightContainProduct(final Long productId) {
         return productBloomFilter.mightContain(productId);
     }
 
-    public void addProduct(Long productId) {
+    public void addProduct(final Long productId) {
         productBloomFilter.put(productId);
     }
 
-    public boolean mightContainUser(Long userId) {
+    public boolean mightContainUser(final Long userId) {
         return userBloomFilter.mightContain(userId);
     }
 }

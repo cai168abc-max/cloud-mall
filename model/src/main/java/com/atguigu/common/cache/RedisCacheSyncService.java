@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2. Redis发布订阅同步多实例缓存（多实例场景）
  */
 @Service
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class RedisCacheSyncService implements MessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCacheSyncService.class);

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class MultiLevelCacheService {
 
     private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheService.class);

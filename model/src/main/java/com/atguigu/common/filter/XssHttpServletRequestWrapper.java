@@ -98,7 +98,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
     }
 
     @Override
-    public String[] getParameterValues(String parameter) {
+    public String[] getParameterValues(final String parameter) {
         String[] values = super.getParameterValues(parameter);
         if (values == null) {
             return null;
@@ -149,7 +149,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
      * @param parameterName 参数名
      * @return true表示跳过过滤
      */
-    private boolean shouldSkipParameter(String parameterName) {
+    private boolean shouldSkipParameter(final String parameterName) {
         if (parameterName == null) {
             return false;
         }
@@ -170,7 +170,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
      * @param value 原始字符串
      * @return 过滤后的安全字符串
      */
-    private String stripXSS(String value) {
+    private String stripXSS(final String value) {
         if (value == null) {
             return null;
         }
@@ -244,7 +244,7 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
      * @param index &符号的位置
      * @return true表示是HTML实体
      */
-    private boolean isHtmlEntity(String value, int index) {
+    private boolean isHtmlEntity(final String value, final int index) {
         // 检查是否是 &#x 或 &#X 或 &# 开头（数字实体）
         // 或者是 &字母 开头（命名实体）
         if (index + 1 < value.length()) {

@@ -93,14 +93,18 @@ public class Cart {
     }
     
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Cart cart = (Cart) o;
-        return Objects.equals(userId, cart.userId) && 
-               items.equals(cart.items) &&
-               Objects.equals(totalCount, cart.totalCount) &&
-               Objects.equals(totalAmount, cart.totalAmount);
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Cart cart = (Cart) o;
+        return Objects.equals(userId, cart.userId)
+                && items.equals(cart.items)
+                && Objects.equals(totalCount, cart.totalCount)
+                && Objects.equals(totalAmount, cart.totalAmount);
     }
     
     @Override

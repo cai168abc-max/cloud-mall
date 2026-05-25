@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("EI_EXPOSE_REP2")
 public class HotProductService {
 
     private static final Logger log = LoggerFactory.getLogger(HotProductService.class);
@@ -66,7 +67,7 @@ public class HotProductService {
     /**
      * 处理单个热点key
      */
-    private void processHotKey(String key, Set<Long> hotIds) {
+    private void processHotKey(final String key, final Set<Long> hotIds) {
         try {
             Object countObj = redisTemplate.opsForValue().get(key);
             if (countObj != null) {
@@ -85,7 +86,7 @@ public class HotProductService {
         }
     }
 
-    public Long getAccessCount(Long productId) {
+    public Long getAccessCount(final Long productId) {
         String key = HOT_PREFIX + productId;
         Object countObj = redisTemplate.opsForValue().get(key);
         if (countObj == null) {

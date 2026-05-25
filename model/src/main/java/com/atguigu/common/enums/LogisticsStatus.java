@@ -29,7 +29,7 @@ public enum LogisticsStatus {
     
     private final String description;
     
-    LogisticsStatus(String description) {
+    LogisticsStatus(final String description) {
         this.description = description;
     }
 

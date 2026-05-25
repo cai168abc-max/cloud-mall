@@ -135,40 +135,55 @@ jobs:
           echo "Model module installation completed"
           
           echo "=== Running tests for model module ==="
-          mvn test -pl model "-Dtest=*Test"
+          mvn test -pl model "-Dtest=*Test" "-Dsurefire.useFile=true" "-Dsurefire.reportsDirectory=target/surefire-reports"
           
           echo "=== Installing remaining modules ==="
           mvn install -DskipTests -q
           
           echo "=== Running tests for service-product module ==="
-          mvn test -pl services/service-product "-Dtest=*ServiceImplTest"
+          mvn test -pl services/service-product "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true" "-Dsurefire.reportsDirectory=target/surefire-reports"
           
           echo "=== Running tests for service-order module ==="
-          mvn test -pl services/service-order "-Dtest=*ServiceImplTest"
+          mvn test -pl services/service-order "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true" "-Dsurefire.reportsDirectory=target/surefire-reports"
           
           echo "=== Running tests for service-user module ==="
-          mvn test -pl services/service-user "-Dtest=*ServiceImplTest"
+          mvn test -pl services/service-user "-Dtest=*ServiceImplTest" "-Dsurefire.useFile=true" "-Dsurefire.reportsDirectory=target/surefire-reports"
           
           echo "=== Listing all test report files ==="
           find . -name "TEST-*.xml" -type f | head -30
           echo "=== Total test report files ==="
           find . -name "TEST-*.xml" -type f | wc -l
+          echo "=== Debug: PWD ==="
+          pwd
+          echo "=== Debug: ls -la ==="
+          ls -la
         continue-on-error: false
 
       - name: Debug - Check test report files
         if: always()
         run: |
           echo "=== Debug: Checking test report files ==="
-          find . -name "TEST-*.xml" -type f 2>/dev/null | head -30
+          find . -name "TEST-*.xml" -type f | head -50
+          echo "=== Total test report files ==="
+          find . -name "TEST-*.xml" -type f | wc -l
           echo "=== Debug: Checking surefire-reports directories ==="
-          ls -la */target/surefire-reports/ 2>/dev/null || echo "No surefire-reports directories found"
+          find . -type d -name "surefire-reports" | head -20
+          echo "=== Debug: Listing model/target/surefire-reports ==="
+          ls -la model/target/surefire-reports/ 2>/dev/null || echo "Model surefire-reports not found"
+          echo "=== Debug: PWD ==="
+          pwd
+          echo "=== Debug: GitHub Workspace ==="
+          echo $GITHUB_WORKSPACE
           
       - name: Generate test report
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Unit Tests Report
-          path: '**/target/surefire-reports/TEST-*.xml'
+          path: |
+            **/target/surefire-reports/TEST-*.xml
+            **/surefire-reports/TEST-*.xml
+            target/surefire-reports/TEST-*.xml
           reporter: java-junit
           fail-on-error: false
           list-tests: failed

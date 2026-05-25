@@ -52,7 +52,7 @@ public abstract class BaseWebMvcConfig implements WebMvcConfigurer {
     };
     
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(final InterceptorRegistry registry) {
         // 内部请求验证拦截器（优先级最高，防止绕过Gateway）
         registry.addInterceptor(internalRequestInterceptor)
                 .addPathPatterns("/**")
