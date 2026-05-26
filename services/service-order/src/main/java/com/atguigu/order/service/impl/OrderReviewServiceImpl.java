@@ -174,7 +174,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public IPage<OrderReview> listReviewsByProductId(Long productId, int pageNum, int pageSize) {
+    public IPage<OrderReview> listReviewsByProductId(final Long productId, final int pageNum, final int pageSize) {
         Page<OrderReview> page = new Page<>(pageNum, pageSize);
         return orderReviewMapper.selectByProductId(page, productId);
     }
@@ -314,7 +314,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateReviewStatus(Long reviewId, Integer status, Long operator) {
+    public boolean updateReviewStatus(final Long reviewId, final Integer status, final Long operator) {
         OrderReview review = orderReviewMapper.selectById(reviewId);
         if (review == null) {
             throw new BusinessException("评价不存在");

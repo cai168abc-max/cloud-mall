@@ -251,7 +251,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order getOrderById(Long orderId) {
+    public Order getOrderById(final Long orderId) {
         return orderMapper.selectById(orderId);
     }
 
@@ -635,7 +635,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Deprecated
-    public List<Order> listOrdersByMerchantId(Long merchantId) {
+    public List<Order> listOrdersByMerchantId(final Long merchantId) {
         // 兼容旧接口，默认返回第一页10条数据
         return listOrdersByMerchantId(merchantId, 1, 10).getRecords();
     }
@@ -714,7 +714,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional(rollbackFor = Exception.class, timeout = 60,
                    propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
-    public void doBatchUpdateStatusToPaid(List<Long> validOrderIds) {
+    public void doBatchUpdateStatusToPaid(final List<Long> validOrderIds) {
         orderMapper.batchUpdateStatusToPaid(validOrderIds, OrderStatus.PAID.name());
     }
 

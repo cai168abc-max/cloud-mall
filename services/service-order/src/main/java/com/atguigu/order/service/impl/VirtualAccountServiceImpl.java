@@ -103,7 +103,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog recharge(final Long userId, final BigDecimal amount, String transactionNo) {
+    public VirtualAccountLog recharge(final Long userId, final BigDecimal amount, final String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -113,16 +113,16 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         }
 
         // 生成或使用交易流水号
-        if (transactionNo == null || transactionNo.isEmpty()) {
-            transactionNo = generateTransactionNo("RECHARGE", userId);
-        }
+        String actualTransactionNo = (transactionNo == null || transactionNo.isEmpty()) 
+            ? generateTransactionNo("RECHARGE", userId) 
+            : transactionNo;
 
         // 幂等性检查
-        if (!checkIdempotency(transactionNo)) {
+        if (!checkIdempotency(actualTransactionNo)) {
             // 查询已存在的流水记录
-            VirtualAccountLog existLog = logMapper.selectByTransactionNo(transactionNo);
+            VirtualAccountLog existLog = logMapper.selectByTransactionNo(actualTransactionNo);
             if (existLog != null) {
-                log.info("充值请求重复, transactionNo={}, 已返回历史记录", transactionNo);
+                log.info("充值请求重复, transactionNo={}, 已返回历史记录", actualTransactionNo);
                 return existLog;
             }
             throw new BusinessException("重复请求，请勿重复提交");
@@ -135,12 +135,12 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         try {
             boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
             if (!locked) {
-                deleteIdempotencyKey(transactionNo);
+                deleteIdempotencyKey(actualTransactionNo);
                 throw new BusinessException("系统繁忙，请稍后重试");
             }
 
             try {
-                VirtualAccountLog result = doRecharge(userId, amount, transactionNo);
+                VirtualAccountLog result = doRecharge(userId, amount, actualTransactionNo);
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
@@ -158,10 +158,10 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw new BusinessException("系统异常，请稍后重试");
         } catch (Exception e) {
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw e;
         }
     }
@@ -282,7 +282,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog pay(final Long userId, final BigDecimal amount, final Long orderId, String transactionNo) {
+    public VirtualAccountLog pay(final Long userId, final BigDecimal amount, final Long orderId, final String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -295,15 +295,15 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         }
 
         // 生成或使用交易流水号
-        if (transactionNo == null || transactionNo.isEmpty()) {
-            transactionNo = generateTransactionNo("PAY", orderId);
-        }
+        String actualTransactionNo = (transactionNo == null || transactionNo.isEmpty()) 
+            ? generateTransactionNo("PAY", orderId) 
+            : transactionNo;
 
         // 幂等性检查
-        if (!checkIdempotency(transactionNo)) {
-            VirtualAccountLog existLog = logMapper.selectByTransactionNo(transactionNo);
+        if (!checkIdempotency(actualTransactionNo)) {
+            VirtualAccountLog existLog = logMapper.selectByTransactionNo(actualTransactionNo);
             if (existLog != null) {
-                log.info("支付请求重复, transactionNo={}, 已返回历史记录", transactionNo);
+                log.info("支付请求重复, transactionNo={}, 已返回历史记录", actualTransactionNo);
                 return existLog;
             }
             throw new BusinessException("重复请求，请勿重复提交");
@@ -316,12 +316,12 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         try {
             boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
             if (!locked) {
-                deleteIdempotencyKey(transactionNo);
+                deleteIdempotencyKey(actualTransactionNo);
                 throw new BusinessException("系统繁忙，请稍后重试");
             }
 
             try {
-                VirtualAccountLog result = doPay(userId, amount, orderId, transactionNo);
+                VirtualAccountLog result = doPay(userId, amount, orderId, actualTransactionNo);
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
@@ -339,10 +339,10 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw new BusinessException("系统异常，请稍后重试");
         } catch (Exception e) {
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw e;
         }
     }
@@ -433,7 +433,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog refund(final Long userId, final BigDecimal amount, final Long orderId, String transactionNo) {
+    public VirtualAccountLog refund(final Long userId, final BigDecimal amount, final Long orderId, final String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -446,15 +446,15 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         }
 
         // 生成或使用交易流水号
-        if (transactionNo == null || transactionNo.isEmpty()) {
-            transactionNo = generateTransactionNo("REFUND", orderId);
-        }
+        String actualTransactionNo = (transactionNo == null || transactionNo.isEmpty()) 
+            ? generateTransactionNo("REFUND", orderId) 
+            : transactionNo;
 
         // 幂等性检查
-        if (!checkIdempotency(transactionNo)) {
-            VirtualAccountLog existLog = logMapper.selectByTransactionNo(transactionNo);
+        if (!checkIdempotency(actualTransactionNo)) {
+            VirtualAccountLog existLog = logMapper.selectByTransactionNo(actualTransactionNo);
             if (existLog != null) {
-                log.info("退款请求重复, transactionNo={}, 已返回历史记录", transactionNo);
+                log.info("退款请求重复, transactionNo={}, 已返回历史记录", actualTransactionNo);
                 return existLog;
             }
             throw new BusinessException("重复请求，请勿重复提交");
@@ -467,12 +467,12 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
         try {
             boolean locked = lock.tryLock(LOCK_WAIT_SECONDS, LOCK_LEASE_SECONDS, TimeUnit.SECONDS);
             if (!locked) {
-                deleteIdempotencyKey(transactionNo);
+                deleteIdempotencyKey(actualTransactionNo);
                 throw new BusinessException("系统繁忙，请稍后重试");
             }
 
             try {
-                VirtualAccountLog result = doRefund(userId, amount, orderId, transactionNo);
+                VirtualAccountLog result = doRefund(userId, amount, orderId, actualTransactionNo);
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
@@ -490,10 +490,10 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw new BusinessException("系统异常，请稍后重试");
         } catch (Exception e) {
-            deleteIdempotencyKey(transactionNo);
+            deleteIdempotencyKey(actualTransactionNo);
             throw e;
         }
     }
@@ -739,7 +739,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 删除幂等性标记
      */
-    private void deleteIdempotencyKey(String transactionNo) {
+    private void deleteIdempotencyKey(final String transactionNo) {
         String key = IDEMPOTENCY_KEY_PREFIX + transactionNo;
         try {
             redisTemplate.delete(key);

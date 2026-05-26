@@ -89,7 +89,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
             maxDelay = 5000
         )
     )
-    public int decreaseStock(Long productId, Integer quantity) {
+    public int decreaseStock(final Long productId, final Integer quantity) {
         log.debug("调用商品服务扣减库存, productId={}, quantity={}", productId, quantity);
         return productFeign.decreaseStock(productId, quantity);
     }

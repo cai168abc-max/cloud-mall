@@ -39,22 +39,29 @@ services:
     container_name: cloudtry-gateway-staging
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:-nacos}
       - JWT_SECRET=${JWT_SECRET}
       - INTERNAL_SECRET=${INTERNAL_SECRET}
       - SPRING_DATA_REDIS_HOST=${REDIS_HOST:-redis}
       - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
       - SPRING_PROFILES_ACTIVE=staging
+      # Nacos客户端连接配置 - 防止启动时连接失败
+      - SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL=5000
+      - SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT=15000
+      - SPRING_CLOUD_NACOS_CONFIG_TIMEOUT=30000
+      - SPRING_CLOUD_NACOS_CONFIG_RETRY=3
+      - SPRING_CLOUD_NACOS_CONFIG_RETRY_DELAY=1000
+      - SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE=30s
     ports:
-      - "80:8080"
+      - "80:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 120s
-    depends_on:
-      redis:
-        condition: service_healthy
+      retries: 15
+      start_period: 180s
     restart: unless-stopped
     networks:
       - cloudtry-network
