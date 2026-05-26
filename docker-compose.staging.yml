@@ -5,6 +5,31 @@ version: '3.8'
 
 services:
   # ==========================================
+  # 基础设施服务
+  # ==========================================
+  
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: cloudtry-redis-staging
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudtry-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # ==========================================
   # 应用服务
   # ==========================================
   
@@ -27,6 +52,9 @@ services:
       timeout: 10s
       retries: 10
       start_period: 120s
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - cloudtry-network

@@ -58,8 +58,8 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Update("UPDATE `orders` SET status = #{status}, complete_time = NOW(), update_time = NOW() WHERE id = #{id}")
     int updateStatusToCompleted(@Param("id") Long id, @Param("status") String status);
 
-    @Insert("INSERT INTO `orders` (user_id, merchant_id, nick_name, address, total_price, discount_amount, pay_amount, status, coupon_id, create_time, update_time) " +
-            "VALUES (#{userId}, #{merchantId}, #{nickName}, #{address}, #{totalPrice}, #{discountAmount}, #{payAmount}, #{status}, #{couponId}, NOW(), NOW())")
+    @Insert("INSERT INTO `orders` (user_id, merchant_id, nick_name, address, total_price, discount_amount, pay_amount, status, coupon_id, create_time, update_time) "
+            + "VALUES (#{userId}, #{merchantId}, #{nickName}, #{address}, #{totalPrice}, #{discountAmount}, #{payAmount}, #{status}, #{couponId}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertOrder(Order order);
 
@@ -113,11 +113,12 @@ public interface OrderMapper extends BaseMapper<Order> {
      * @return 更新记录数
      */
     @Update("<script>" +
-            "UPDATE `orders` SET status = #{status}, pay_time = NOW(), update_time = NOW() WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+            "UPDATE `orders` SET status = #{status}, pay_time = NOW(), update_time = NOW() WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
+
     int batchUpdateStatusToPaid(@Param("ids") List<Long> ids, @Param("status") String status);
 
     /**
