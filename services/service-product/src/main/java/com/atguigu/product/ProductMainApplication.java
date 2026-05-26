@@ -19,7 +19,7 @@ public class ProductMainApplication {
         // utility class - do not instantiate
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SpringApplication.run(ProductMainApplication.class, args);
     }
 }

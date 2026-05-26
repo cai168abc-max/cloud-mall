@@ -356,6 +356,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Verify artifacts and place JARs
+        run: |
+          echo "Downloaded artifacts:"
+          find . -name "*.jar" -type f
+          echo "Creating target directories for Docker builds..."
+          mkdir -p gateway/target services/service-order/target services/service-product/target services/service-user/target
+          echo "Placing JAR files in correct locations..."
+          find . -name "gateway*.jar" -not -path "*/gateway/target/*" -exec cp {} gateway/target/ \;
+          find . -name "service-order*.jar" -not -path "*/services/service-order/target/*" -exec cp {} services/service-order/target/ \;
+          find . -name "service-product*.jar" -not -path "*/services/service-product/target/*" -exec cp {} services/service-product/target/ \;
+          find . -name "service-user*.jar" -not -path "*/services/service-user/target/*" -exec cp {} services/service-user/target/ \;
+          echo "Verifying JAR placement:"
+          find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar"
+
       - name: Set up Docker Compose
         run: |
           echo "Checking Docker Compose availability..."
@@ -381,20 +400,17 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker compose -f docker-compose.yml pull
-          
-          JWT_SECRET=${{ secrets.JWT_SECRET }} \
-          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
-          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker compose -f docker-compose.yml up -d --remove-orphans
+          docker compose -f docker-compose.yml up -d --build --remove-orphans
           
           echo "Development deployment completed"
 
       - name: Health check
         run: |
           echo "Waiting for services to start..."
+          echo "Initial wait for containers to begin startup..."
+          sleep 30
           
-          MAX_RETRIES=30
+          MAX_RETRIES=60
           RETRY_INTERVAL=5
           HEALTH_URL=http://localhost:80/actuator/health
           
@@ -411,10 +427,21 @@ jobs:
             fi
             
             echo "⚠️  Service not ready yet, retrying in ${RETRY_INTERVAL}s..."
+            # Show docker compose status every 10 attempts
+            if [ $((i % 10)) -eq 0 ]; then
+              echo "--- Docker Compose PS ---"
+              docker compose -f docker-compose.yml ps
+              echo "--- Gateway logs (last 20 lines) ---"
+              docker compose -f docker-compose.yml logs --tail=20 gateway 2>/dev/null || echo "Gateway container not yet available"
+            fi
             sleep $RETRY_INTERVAL
           done
           
           echo "❌ Health check failed after ${MAX_RETRIES} attempts"
+          echo "=== Final Docker Compose PS ==="
+          docker compose -f docker-compose.yml ps
+          echo "=== Gateway logs ==="
+          docker compose -f docker-compose.yml logs gateway 2>/dev/null || echo "No gateway logs"
           exit 1
 
       - name: Deployment summary
@@ -435,6 +462,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Verify artifacts and place JARs
+        run: |
+          echo "Downloaded artifacts:"
+          find . -name "*.jar" -type f
+          echo "Creating target directories for Docker builds..."
+          mkdir -p gateway/target services/service-order/target services/service-product/target services/service-user/target
+          echo "Placing JAR files in correct locations..."
+          find . -name "gateway*.jar" -not -path "*/gateway/target/*" -exec cp {} gateway/target/ \;
+          find . -name "service-order*.jar" -not -path "*/services/service-order/target/*" -exec cp {} services/service-order/target/ \;
+          find . -name "service-product*.jar" -not -path "*/services/service-product/target/*" -exec cp {} services/service-product/target/ \;
+          find . -name "service-user*.jar" -not -path "*/services/service-user/target/*" -exec cp {} services/service-user/target/ \;
+          echo "Verifying JAR placement:"
+          find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar"
 
       - name: Set up Docker Compose
         run: |
@@ -461,20 +507,17 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }} \
           INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker compose -f docker-compose.staging.yml pull
-          
-          JWT_SECRET=${{ secrets.JWT_SECRET }} \
-          INTERNAL_SECRET=${{ secrets.INTERNAL_SECRET }} \
-          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-          docker compose -f docker-compose.staging.yml up -d --remove-orphans
+          docker compose -f docker-compose.staging.yml up -d --build --remove-orphans
           
           echo "Staging deployment completed"
 
       - name: Health check
         run: |
           echo "Waiting for services to start..."
+          echo "Initial wait for containers to begin startup..."
+          sleep 30
           
-          MAX_RETRIES=30
+          MAX_RETRIES=60
           RETRY_INTERVAL=5
           HEALTH_URL=http://localhost:80/actuator/health
           
@@ -491,10 +534,21 @@ jobs:
             fi
             
             echo "⚠️  Service not ready yet, retrying in ${RETRY_INTERVAL}s..."
+            # Show docker compose status every 10 attempts
+            if [ $((i % 10)) -eq 0 ]; then
+              echo "--- Docker Compose PS ---"
+              docker compose -f docker-compose.staging.yml ps
+              echo "--- Gateway logs (last 20 lines) ---"
+              docker compose -f docker-compose.staging.yml logs --tail=20 gateway 2>/dev/null || echo "Gateway container not yet available"
+            fi
             sleep $RETRY_INTERVAL
           done
           
           echo "❌ Health check failed after ${MAX_RETRIES} attempts"
+          echo "=== Final Docker Compose PS ==="
+          docker compose -f docker-compose.staging.yml ps
+          echo "=== Gateway logs ==="
+          docker compose -f docker-compose.staging.yml logs gateway 2>/dev/null || echo "No gateway logs"
           exit 1
 
       - name: Deployment summary

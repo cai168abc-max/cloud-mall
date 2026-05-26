@@ -37,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final BloomFilterService bloomFilterService;
 
-    private void executeAfterCommit(Runnable action) {
+    private void executeAfterCommit(final Runnable action) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
