@@ -238,7 +238,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     }
 
     @Override
-    public BigDecimal getBalance(Long userId) {
+    public BigDecimal getBalance(final Long userId) {
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
         }
@@ -282,7 +282,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog pay(Long userId, BigDecimal amount, Long orderId, String transactionNo) {
+    public VirtualAccountLog pay(final Long userId, final BigDecimal amount, final Long orderId, String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -712,7 +712,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
      * 生成交易流水号
      * 格式：类型 + 用户ID/订单ID + 时间戳 + 随机数
      */
-    private String generateTransactionNo(String type, Long id) {
+    private String generateTransactionNo(final String type, final Long id) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
         int random = RANDOM.nextInt(10000);
         return String.format("%s_%d_%s_%04d", type, id, timestamp, random);

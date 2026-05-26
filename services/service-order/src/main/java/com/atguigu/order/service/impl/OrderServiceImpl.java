@@ -93,7 +93,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    public Order createOrderFallBack(Long productId, Long userId, BlockException e) {
+    public Order createOrderFallBack(final Long productId, final Long userId, final BlockException e) {
         log.warn("订单创建被限流: productId={}, userId={}, exception={}", productId, userId, e.getClass().getSimpleName());
         throw new BusinessException(429, "系统繁忙，订单创建请求被限流，请稍后重试");
     }
@@ -266,7 +266,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public IPage<Order> listOrdersByUserId(Long userId, int pageNum, int pageSize) {
+    public IPage<Order> listOrdersByUserId(final Long userId, final int pageNum, final int pageSize) {
         Page<Order> page = new Page<>(pageNum, pageSize);
         return orderMapper.selectByUserId(page, userId);
     }
@@ -403,7 +403,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @GlobalTransactional(name = "cancel-order", timeoutMills = 30000, rollbackFor = Exception.class)
-    public Order cancelOrder(Long orderId, Long userId) {
+    public Order cancelOrder(final Long orderId, final Long userId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -1032,10 +1032,8 @@ public class OrderServiceImpl implements OrderService {
                                                               final List<Map<String, Object>> failedItems) {
         // 按商品分组，合并相同商品的购买数量
         Map<Long, Integer> productQuantityMap = new HashMap<>();
-        Map<Long, CartItem> productItemMap = new HashMap<>();
         for (CartItem item : checkedItems) {
             productQuantityMap.merge(item.getProductId(), item.getQuantity(), Integer::sum);
-            productItemMap.putIfAbsent(item.getProductId(), item);
         }
 
         // 批量获取商品信息（性能优化：减少N+1调用）

@@ -50,7 +50,7 @@ public class CartServiceImpl implements CartService {
     private static final String CART_LOCK_PREFIX = "cart:lock:";
 
     @Override
-    public Cart addItemToCart(Long userId, Long productId, Integer quantity) {
+    public Cart addItemToCart(final Long userId, final Long productId, final Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new IllegalArgumentException("商品数量必须大于0");
         }
@@ -173,7 +173,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart updateItemChecked(Long userId, Long productId, Boolean checked) {
+    public Cart updateItemChecked(final Long userId, final Long productId, final Boolean checked) {
         String lockKey = CART_LOCK_PREFIX + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -201,7 +201,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart updateAllItemsChecked(Long userId, Boolean checked) {
+    public Cart updateAllItemsChecked(final Long userId, final Boolean checked) {
         String lockKey = CART_LOCK_PREFIX + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -252,7 +252,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart getCart(Long userId) {
+    public Cart getCart(final Long userId) {
         return getCartInternal(userId);
     }
 
@@ -280,7 +280,7 @@ public class CartServiceImpl implements CartService {
      * 从Redis获取购物车，如果不存在则创建新的
      */
     @SuppressWarnings("unchecked")
-    private Cart getCartInternal(Long userId) {
+    private Cart getCartInternal(final Long userId) {
         String key = CART_KEY_PREFIX + userId;
         Object value = redisTemplate.opsForValue().get(key);
         

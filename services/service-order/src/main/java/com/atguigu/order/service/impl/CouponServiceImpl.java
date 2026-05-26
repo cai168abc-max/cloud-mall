@@ -28,7 +28,7 @@ public class CouponServiceImpl implements CouponService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final CouponMapper couponMapper;
 
-    private void executeAfterCommit(Runnable action) {
+    private void executeAfterCommit(final Runnable action) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -161,7 +161,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Coupon updateCoupon(Coupon coupon) {
+    public Coupon updateCoupon(final Coupon coupon) {
         couponMapper.updateById(coupon);
         final Long couponIdRef = coupon.getId();
         executeAfterCommit(() -> {

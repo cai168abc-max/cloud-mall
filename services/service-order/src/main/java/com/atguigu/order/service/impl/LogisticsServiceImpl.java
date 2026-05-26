@@ -136,8 +136,8 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 执行发货逻辑（分布式锁保护）
      */
-    private LogisticsInfo doShipOrder(Order order, String trackingNo, String carrier,
-                                      String senderName, String senderPhone, String senderAddress) {
+    private LogisticsInfo doShipOrder(final Order order, final String trackingNo, final String carrier,
+                                      final String senderName, final String senderPhone, final String senderAddress) {
         // 双重检查：再次确认订单状态
         Order freshOrder = orderMapper.selectById(order.getId());
         if (freshOrder.getStatus() != OrderStatus.PAID) {
@@ -258,7 +258,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 发送发货通知MQ消息
      */
-    private void sendShipNotification(Order order, LogisticsInfo logisticsInfo) {
+    private void sendShipNotification(final Order order, final LogisticsInfo logisticsInfo) {
         try {
             OrderNotifyMessage message = OrderNotifyMessage.builder()
                     .orderId(order.getId())
@@ -298,7 +298,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     }
 
     @Override
-    public LogisticsInfo getLogisticsByOrderId(Long orderId) {
+    public LogisticsInfo getLogisticsByOrderId(final Long orderId) {
         // 1. 先查Redis缓存
         String cacheKey = CacheKeyConstants.logisticsInfo(orderId);
         String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
@@ -353,7 +353,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     }
 
     @Override
-    public List<LogisticsInfo> listLogisticsByUserId(Long userId) {
+    public List<LogisticsInfo> listLogisticsByUserId(final Long userId) {
         List<LogisticsInfo> logisticsList = logisticsInfoMapper.selectByUserId(userId);
         // 为每个物流信息加载轨迹
         logisticsList.forEach(logistics -> {

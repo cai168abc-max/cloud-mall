@@ -73,7 +73,7 @@ public class ProductFeignFallback implements ProductFeign {
     }
 
     @Override
-    public int decreaseStock(Long productId, Integer quantity) {
+    public int decreaseStock(final Long productId, final Integer quantity) {
         log.error("ProductFeign降级触发 - 库存扣减失败, productId={}, quantity={}", productId, quantity);
         // 库存操作必须抛出异常，避免数据不一致
         throw new BusinessException(503, "商品服务暂时不可用，库存扣减失败");

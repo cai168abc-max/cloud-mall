@@ -35,8 +35,8 @@ public class UserFeignServiceImpl implements UserFeignService {
     private final UserFeign userFeign;
     private final RedisTemplate<String, Object> redisTemplate;
     
-    public UserFeignServiceImpl(UserFeign userFeign, 
-                                RedisTemplate<String, Object> redisTemplate) {
+    public UserFeignServiceImpl(final UserFeign userFeign, 
+                                final RedisTemplate<String, Object> redisTemplate) {
         this.userFeign = userFeign;
         this.redisTemplate = redisTemplate;
     }

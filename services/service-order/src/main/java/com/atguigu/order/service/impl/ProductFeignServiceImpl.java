@@ -37,8 +37,8 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     private final ProductFeign productFeign;
     private final RedisTemplate<String, Object> redisTemplate;
     
-    public ProductFeignServiceImpl(ProductFeign productFeign, 
-                                   RedisTemplate<String, Object> redisTemplate) {
+    public ProductFeignServiceImpl(final ProductFeign productFeign, 
+                                   final RedisTemplate<String, Object> redisTemplate) {
         this.productFeign = productFeign;
         this.redisTemplate = redisTemplate;
     }
@@ -133,7 +133,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
             maxDelay = 5000
         )
     )
-    public int batchIncreaseStock(List<Map<String, Object>> stockItems) {
+    public int batchIncreaseStock(final List<Map<String, Object>> stockItems) {
         log.debug("调用商品服务批量增加库存, itemsCount={}", stockItems != null ? stockItems.size() : 0);
         return productFeign.batchIncreaseStock(stockItems);
     }
@@ -155,7 +155,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
             maxDelay = 5000
         )
     )
-    public int batchDecreaseStock(List<Map<String, Object>> stockItems) {
+    public int batchDecreaseStock(final List<Map<String, Object>> stockItems) {
         log.debug("调用商品服务批量扣减库存, itemsCount={}", stockItems != null ? stockItems.size() : 0);
         return productFeign.batchDecreaseStock(stockItems);
     }

@@ -168,7 +168,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public IPage<OrderReview> listReviewsByUserId(Long userId, int pageNum, int pageSize) {
+    public IPage<OrderReview> listReviewsByUserId(final Long userId, final int pageNum, final int pageSize) {
         Page<OrderReview> page = new Page<>(pageNum, pageSize);
         return orderReviewMapper.selectByUserId(page, userId);
     }
@@ -212,7 +212,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public Long getProductReviewCount(Long productId) {
+    public Long getProductReviewCount(final Long productId) {
         String cacheKey = CacheKeyConstants.productReviewCount(productId);
 
         // 从缓存获取
@@ -385,7 +385,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     /**
      * 发送评价消息
      */
-    private void sendReviewMessage(OrderReview review, String action) {
+    private void sendReviewMessage(final OrderReview review, final String action) {
         try {
             ReviewMessage message = ReviewMessage.builder()
                     .reviewId(review.getId())
@@ -405,7 +405,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
                 }
 
                 @Override
-                public void onException(Throwable e) {
+                public void onException(final Throwable e) {
                     log.error("评价消息发送失败: reviewId={}, action={}", review.getId(), action, e);
                 }
             });

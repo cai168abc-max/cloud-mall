@@ -676,7 +676,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public IPage<AfterSaleTicket> listTicketsByMerchantId(Long merchantId, int pageNum, int pageSize) {
+    public IPage<AfterSaleTicket> listTicketsByMerchantId(final Long merchantId, final int pageNum, final int pageSize) {
         if (merchantId == null) {
             return new Page<>(pageNum, pageSize);
         }

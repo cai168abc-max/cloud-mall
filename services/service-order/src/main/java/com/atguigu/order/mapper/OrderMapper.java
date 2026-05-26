@@ -160,12 +160,12 @@ public interface OrderMapper extends BaseMapper<Order> {
      * @param status 目标状态
      * @return 更新记录数
      */
-    @Update("<script>" +
-            "UPDATE `orders` SET status = #{status}, update_time = NOW() WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Update("<script>"
+            + "UPDATE `orders` SET status = #{status}, update_time = NOW() WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") String status);
 
     /**
