@@ -15,12 +15,12 @@ public interface ProductAuditLogMapper extends BaseMapper<ProductAuditLog> {
     /**
      * 批量插入审核日志
      */
-    @Insert("<script>" +
-            "INSERT INTO product_audit_log (product_id, merchant_id, auditor_id, before_status, after_status, reason, create_time) VALUES " +
-            "<foreach item='log' collection='logs' separator=','>" +
-            "(#{log.productId}, #{log.merchantId}, #{log.auditorId}, #{log.beforeStatus}, #{log.afterStatus}, #{log.reason}, NOW())" +
-            "</foreach>" +
-            "</script>")
+    @Insert("<script>"
+            + "INSERT INTO product_audit_log (product_id, merchant_id, auditor_id, before_status, after_status, reason, create_time) VALUES "
+            + "<foreach item='log' collection='logs' separator=','>"
+            + "(#{log.productId}, #{log.merchantId}, #{log.auditorId}, #{log.beforeStatus}, #{log.afterStatus}, #{log.reason}, NOW())"
+            + "</foreach>"
+            + "</script>")
     int batchInsert(@Param("logs") List<ProductAuditLog> logs);
 
     /**

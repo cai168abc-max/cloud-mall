@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * 虚拟账户服务实现类
  * 
@@ -62,6 +64,8 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     // 乐观锁重试次数
     private static final int OPTIMISTIC_LOCK_RETRY_TIMES = 2;
+
+    private static final Random RANDOM = new Random();
 
     @Override
     public VirtualAccount getOrCreateAccount(Long userId) {
@@ -712,7 +716,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
      */
     private String generateTransactionNo(String type, Long id) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-        int random = new Random().nextInt(10000);
+        int random = RANDOM.nextInt(10000);
         return String.format("%s_%d_%s_%04d", type, id, timestamp, random);
     }
 

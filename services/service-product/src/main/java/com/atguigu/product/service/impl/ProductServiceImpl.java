@@ -19,6 +19,9 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -94,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> batchGetProducts(List<Long> ids) {
+    public List<Product> batchGetProducts(final List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
@@ -149,7 +152,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> listByMerchant(Long merchantId) {
+    public List<Product> listByMerchant(final Long merchantId) {
         return productMapper.selectByMerchantId(merchantId);
     }
 
@@ -184,7 +187,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> searchProducts(String keyword, String category, String sortBy, boolean ascending) {
+    public List<Product> searchProducts(final String keyword, final String category, final String sortBy, final boolean ascending) {
         Long categoryId = null;
         if (category != null && !category.isEmpty()) {
             try {
@@ -291,13 +294,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public IPage<Product> listProductsByPage(int pageNum, int pageSize) {
+    public IPage<Product> listProductsByPage(final int pageNum, final int pageSize) {
         Page<Product> page = new Page<>(pageNum, pageSize);
         return productMapper.selectPageAll(page);
     }
 
     @Override
-    public IPage<Product> listProductsByMerchant(Long merchantId, int pageNum, int pageSize) {
+    public IPage<Product> listProductsByMerchant(final Long merchantId, final int pageNum, final int pageSize) {
         Page<Product> page = new Page<>(pageNum, pageSize);
         return productMapper.selectPageByMerchantId(page, merchantId);
     }
@@ -308,22 +311,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> listHotProducts(int limit) {
+    public List<Product> listHotProducts(final int limit) {
         return productMapper.selectHotProducts(limit);
     }
 
     @Override
-    public List<Product> listByCategory(Long categoryId) {
+    public List<Product> listByCategory(final Long categoryId) {
         return productMapper.selectByCategoryId(categoryId);
     }
 
     @Override
-    public List<Product> listByKeyword(String keyword) {
+    public List<Product> listByKeyword(final String keyword) {
         return productMapper.selectByKeyword(keyword);
     }
 
     @Override
-    public List<Product> listByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
+    public List<Product> listByPriceRange(final BigDecimal minPrice, final BigDecimal maxPrice) {
         return productMapper.selectByPriceRange(minPrice, maxPrice);
     }
 }

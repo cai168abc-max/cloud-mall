@@ -14,6 +14,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan(basePackages = {"com.atguigu.product", "com.atguigu.common"})
 @SpringBootApplication
 public class ProductMainApplication {
+
+    private ProductMainApplication() {
+        // utility class - do not instantiate
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(ProductMainApplication.class, args);
     }

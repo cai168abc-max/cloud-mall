@@ -186,7 +186,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
         return count == 0;
     }
 
-    public InventoryAlertLog doCreateAlertLog(Product product, InventoryAlertConfig config) {
+    public InventoryAlertLog doCreateAlertLog(final Product product, final InventoryAlertConfig config) {
         if (product == null || config == null) {
             return null;
         }
@@ -213,7 +213,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
         }
     }
 
-    private void sendAlertMessage(InventoryAlertLog alertLog) {
+    private void sendAlertMessage(final InventoryAlertLog alertLog) {
         if (alertLog == null) {
             return;
         }
@@ -230,13 +230,13 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
 
             rocketMQTemplate.asyncSend(ALERT_TOPIC, message, new org.apache.rocketmq.client.producer.SendCallback() {
                 @Override
-                public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                     log.info("预警消息发送成功，alertLogId={}, productId={}", 
                             alertLog.getId(), alertLog.getProductId());
                 }
 
                 @Override
-                public void onException(Throwable e) {
+                public void onException(final Throwable e) {
                     log.error("预警消息发送失败，alertLogId={}, productId={}", 
                             alertLog.getId(), alertLog.getProductId(), e);
                     try {
@@ -329,7 +329,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public boolean updateConfigStatus(Long id, Integer status) {
+    public boolean updateConfigStatus(final Long id, final Integer status) {
         if (id == null || status == null) {
             return false;
         }

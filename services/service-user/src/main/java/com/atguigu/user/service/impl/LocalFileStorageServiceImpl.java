@@ -101,7 +101,10 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
             Path physicalPath = Paths.get(properties.getPath(), relativePath);
 
             // 5. 创建目录
-            createDirectoryIfNeeded(physicalPath.getParent());
+            Path parent = physicalPath.getParent();
+            if (parent != null) {
+                createDirectoryIfNeeded(parent);
+            }
 
             // 6. 保存文件
             saveFile(file, physicalPath);
@@ -314,7 +317,11 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
 
         try {
             // 使用临时文件 + 原子移动，防止文件损坏
-            Path tempPath = Paths.get(targetPath.getParent().toString(), targetPath.getFileName() + ".tmp");
+            Path parentDir = targetPath.getParent();
+            if (parentDir == null) {
+                throw new IOException("无法获取目标路径的父目录: " + targetPath);
+            }
+            Path tempPath = Paths.get(parentDir.toString(), targetPath.getFileName() + ".tmp");
             file.transferTo(tempPath.toFile());
 
             // 原子性移动
@@ -323,8 +330,11 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
         } catch (IOException e) {
             log.error("文件保存失败: {}", targetPath, e);
             // 清理可能残留的临时文件
-            Path tempPath = Paths.get(targetPath.getParent().toString(), targetPath.getFileName() + ".tmp");
-            Files.deleteIfExists(tempPath);
+            Path parentDir = targetPath.getParent();
+            if (parentDir != null) {
+                Path tempPath = Paths.get(parentDir.toString(), targetPath.getFileName() + ".tmp");
+                Files.deleteIfExists(tempPath);
+            }
             throw e;
         }
     }
@@ -333,7 +343,8 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
      * 检查磁盘空间
      */
     private void checkDiskSpace(Path targetPath) {
-        File parentDir = targetPath.getParent().toFile();
+        Path parent = targetPath.getParent();
+        File parentDir = parent != null ? parent.toFile() : new File(properties.getPath());
         if (!parentDir.exists()) {
             parentDir = new File(properties.getPath());
         }

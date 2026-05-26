@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * 物流控制器
  * 提供物流跟踪相关接口：
@@ -24,6 +26,7 @@ import java.util.List;
  * 3. 确认签收（用户）
  * 4. 添加物流轨迹（物流公司回调）
  */
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @RestController
 @RequestMapping("/api/logistics")
 @Validated

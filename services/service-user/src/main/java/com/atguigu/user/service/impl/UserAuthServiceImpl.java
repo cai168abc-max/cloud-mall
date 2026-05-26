@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Service
 @RequiredArgsConstructor
@@ -252,6 +251,8 @@ public class UserAuthServiceImpl implements UserAuthService {
         userAccountMapper.updatePassword(accountId, hash, null);
     }
     
+    private static final Random RANDOM = new Random();
+
     /**
      * 添加随机延迟，防止时序攻击
      * @param minMs 最小延迟毫秒数
@@ -259,7 +260,7 @@ public class UserAuthServiceImpl implements UserAuthService {
      */
     private void addRandomDelay(int minMs, int maxMs) {
         try {
-            int delay = minMs + new Random().nextInt(maxMs - minMs);
+            int delay = minMs + RANDOM.nextInt(maxMs - minMs);
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

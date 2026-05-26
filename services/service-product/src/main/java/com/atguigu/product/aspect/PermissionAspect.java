@@ -40,9 +40,9 @@ public class PermissionAspect {
     /**
      * 拦截所有带有@RequirePermission注解的方法
      */
-    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) || " +
-            "@within(com.atguigu.common.annotation.RequirePermission)")
-    public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) || "
+            + "@within(com.atguigu.common.annotation.RequirePermission)")
+    public Object checkPermission(final ProceedingJoinPoint joinPoint) throws Throwable {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
         
@@ -72,7 +72,7 @@ public class PermissionAspect {
      * @param joinPoint 切点
      * @return 权限注解，可能为null
      */
-    private RequirePermission getPermissionAnnotation(ProceedingJoinPoint joinPoint) {
+    private RequirePermission getPermissionAnnotation(final ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         

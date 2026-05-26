@@ -30,7 +30,7 @@ public class InventoryAlertController {
 
     @Operation(summary = "创建或更新预警配置", description = "为商品创建或更新库存预警配置")
     @PostMapping("/config")
-    public R saveOrUpdateConfig(@RequestBody InventoryAlertConfig config) {
+    public R saveOrUpdateConfig(@RequestBody final InventoryAlertConfig config) {
         UserInfo userInfo = UserContext.get();
         if (userInfo == null) {
             return R.error(401, "请先登录");
@@ -66,7 +66,7 @@ public class InventoryAlertController {
     @Operation(summary = "查询商品预警配置", description = "根据商品ID查询预警配置")
     @GetMapping("/config/{productId}")
     public R getConfig(
-            @Parameter(description = "商品ID") @PathVariable Long productId) {
+            @Parameter(description = "商品ID") @PathVariable final Long productId) {
         if (productId == null || productId <= 0) {
             return R.badRequest("商品ID无效");
         }
@@ -98,8 +98,8 @@ public class InventoryAlertController {
     @Operation(summary = "更新预警配置状态", description = "启用或禁用预警配置")
     @PutMapping("/config/{id}/status")
     public R updateConfigStatus(
-            @Parameter(description = "配置ID") @PathVariable Long id,
-            @Parameter(description = "状态：1启用 0禁用") @RequestParam Integer status) {
+            @Parameter(description = "配置ID") @PathVariable final Long id,
+            @Parameter(description = "状态：1启用 0禁用") @RequestParam final Integer status) {
         UserInfo userInfo = UserContext.get();
         if (userInfo == null) {
             return R.error(401, "请先登录");
@@ -132,8 +132,8 @@ public class InventoryAlertController {
     @Operation(summary = "查询商品预警记录", description = "查询商品的库存预警历史记录")
     @GetMapping("/log/{productId}")
     public R listAlertLogs(
-            @Parameter(description = "商品ID") @PathVariable Long productId,
-            @Parameter(description = "限制数量") @RequestParam(defaultValue = "20") int limit) {
+            @Parameter(description = "商品ID") @PathVariable final Long productId,
+            @Parameter(description = "限制数量") @RequestParam(defaultValue = "20") final int limit) {
         if (productId == null || productId <= 0) {
             return R.badRequest("商品ID无效");
         }
@@ -153,7 +153,7 @@ public class InventoryAlertController {
     @Operation(summary = "手动触发预警", description = "手动触发商品库存预警（兜底方案）")
     @PostMapping("/trigger/{productId}")
     public R triggerAlert(
-            @Parameter(description = "商品ID") @PathVariable Long productId) {
+            @Parameter(description = "商品ID") @PathVariable final Long productId) {
         UserInfo userInfo = UserContext.get();
         if (userInfo == null) {
             return R.error(401, "请先登录");
@@ -184,7 +184,7 @@ public class InventoryAlertController {
     @Operation(summary = "检查是否可以发送预警", description = "检查商品今日是否还可以发送预警")
     @GetMapping("/can-send/{productId}")
     public R canSendAlert(
-            @Parameter(description = "商品ID") @PathVariable Long productId) {
+            @Parameter(description = "商品ID") @PathVariable final Long productId) {
         if (productId == null || productId <= 0) {
             return R.badRequest("商品ID无效");
         }

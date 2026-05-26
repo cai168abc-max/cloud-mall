@@ -4,6 +4,7 @@ import com.atguigu.product.bean.ProductAuditLog;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public interface ProductAuditService {
         private String message;
         private Long productId;
 
-        public AuditResult(boolean success, String message, Long productId) {
+        public AuditResult(final boolean success, final String message, final Long productId) {
             this.success = success;
             this.message = message;
             this.productId = productId;
@@ -41,11 +42,19 @@ public interface ProductAuditService {
         private int failCount;
         private Map<Long, String> failedProducts;
 
-        public BatchAuditResult(int totalCount, int successCount, int failCount, Map<Long, String> failedProducts) {
+        public BatchAuditResult(final int totalCount, final int successCount, final int failCount, final Map<Long, String> failedProducts) {
             this.totalCount = totalCount;
             this.successCount = successCount;
             this.failCount = failCount;
-            this.failedProducts = failedProducts;
+            this.failedProducts = new HashMap<>(failedProducts);
+        }
+
+        public void setFailedProducts(final Map<Long, String> failedProducts) {
+            this.failedProducts = new HashMap<>(failedProducts);
+        }
+
+        public Map<Long, String> getFailedProducts() {
+            return new HashMap<>(failedProducts);
         }
 
     }

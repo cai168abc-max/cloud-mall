@@ -246,12 +246,12 @@ public class ProductAuditServiceImpl implements ProductAuditService {
                         .build();
                 rocketMQTemplate.asyncSend(AUDIT_TOPIC, message, new org.apache.rocketmq.client.producer.SendCallback() {
                     @Override
-                    public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                    public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                         log.info("批量审核消息发送成功，successCount={}", finalSuccessCount);
                     }
 
                     @Override
-                    public void onException(Throwable e) {
+                    public void onException(final Throwable e) {
                         log.error("批量审核消息发送失败，successCount={}", finalSuccessCount, e);
                     }
                 });
@@ -286,12 +286,12 @@ public class ProductAuditServiceImpl implements ProductAuditService {
 
             rocketMQTemplate.asyncSend(AUDIT_TOPIC, message, new org.apache.rocketmq.client.producer.SendCallback() {
                 @Override
-                public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                     log.info("审核消息发送成功，productId={}", product.getId());
                 }
 
                 @Override
-                public void onException(Throwable e) {
+                public void onException(final Throwable e) {
                     log.error("审核消息发送失败，productId={}", product.getId(), e);
                     // MQ不可用时的兜底：记录日志，后续可通过定时任务补偿
                 }

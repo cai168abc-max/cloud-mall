@@ -40,7 +40,7 @@ public class InventoryAlertConsumer implements RocketMQListener<InventoryAlertMe
     private final InventoryAlertService inventoryAlertService;
 
     @Override
-    public void onMessage(InventoryAlertMessage message) {
+    public void onMessage(final InventoryAlertMessage message) {
         log.info("收到库存预警消息: alertLogId={}, productId={}, merchantId={}, stock={}, threshold={}",
                 message.getAlertLogId(), message.getProductId(), message.getMerchantId(),
                 message.getStock(), message.getThreshold());

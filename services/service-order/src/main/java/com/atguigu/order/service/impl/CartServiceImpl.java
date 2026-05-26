@@ -259,9 +259,6 @@ public class CartServiceImpl implements CartService {
     @Override
     public List<CartItem> getCheckedItems(Long userId) {
         Cart cart = getCartInternal(userId);
-        if (cart == null) {
-            return new ArrayList<>();
-        }
 
         // 返回选中的商品项
         return cart.getItems().stream()
@@ -272,9 +269,6 @@ public class CartServiceImpl implements CartService {
     @Override
     public Integer getCartItemCount(Long userId) {
         Cart cart = getCartInternal(userId);
-        if (cart == null) {
-            return 0;
-        }
 
         // 返回购物车中所有商品的总数量
         return cart.getItems().stream()

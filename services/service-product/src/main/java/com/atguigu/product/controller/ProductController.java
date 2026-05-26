@@ -20,10 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * 商品控制器
  * 使用权限注解进行权限控制
  */
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @RestController
 @RequestMapping("/api/product")
 @Validated

@@ -750,7 +750,7 @@ public class OrderServiceImpl implements OrderService {
                     return result;
                 }
                 
-                int updated = orderMapper.batchUpdateStatusToShipped(validOrderIds, OrderStatus.SHIPPED.name());
+                orderMapper.batchUpdateStatusToShipped(validOrderIds, OrderStatus.SHIPPED.name());
                 
                 for (Order order : orders) {
                     if (order.getMerchantId().equals(merchantId)) {
@@ -811,7 +811,7 @@ public class OrderServiceImpl implements OrderService {
                     return result;
                 }
                 
-                int updated = orderMapper.batchUpdateStatusToCompleted(validOrderIds, OrderStatus.COMPLETED.name());
+                orderMapper.batchUpdateStatusToCompleted(validOrderIds, OrderStatus.COMPLETED.name());
                 
                 for (Order order : orders) {
                     if (order.getUserId().equals(userId)) {
@@ -888,7 +888,7 @@ public class OrderServiceImpl implements OrderService {
                         .map(Order::getId)
                         .collect(Collectors.toList());
                 
-                int updated = orderMapper.batchUpdateStatus(validOrderIds, OrderStatus.CANCELED.name());
+                orderMapper.batchUpdateStatus(validOrderIds, OrderStatus.CANCELED.name());
                 
                 for (Order order : userOrders) {
                     order.setStatus(OrderStatus.CANCELED);
@@ -929,6 +929,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @GlobalTransactional(name = "create-orders-from-cart", rollbackFor = Exception.class)
+    @SuppressFBWarnings("UC_USELESS_OBJECT")
     public Map<String, Object> createOrdersFromCart(Long userId) {
         Map<String, Object> result = new HashMap<>();
         List<Order> successOrders = new ArrayList<>();

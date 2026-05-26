@@ -23,8 +23,8 @@ public interface CategoryMapper extends BaseMapper<Category> {
     @Select("SELECT * FROM category ORDER BY create_time DESC")
     IPage<Category> selectPageAll(Page<Category> page);
 
-    @Insert("INSERT INTO category (parent_id, name, level, enabled, create_time, update_time) " +
-            "VALUES (#{parentId}, #{name}, #{level}, #{enabled}, NOW(), NOW())")
+    @Insert("INSERT INTO category (parent_id, name, level, enabled, create_time, update_time) "
+            + "VALUES (#{parentId}, #{name}, #{level}, #{enabled}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertCategory(Category category);
 
@@ -40,11 +40,11 @@ public interface CategoryMapper extends BaseMapper<Category> {
     @Select("SELECT COUNT(*) FROM category WHERE parent_id = #{parentId}")
     long countByParentId(@Param("parentId") Long parentId);
 
-    @Select("<script>" +
-            "SELECT id, parent_id, name, level, enabled, create_time, update_time FROM category WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT id, parent_id, name, level, enabled, create_time, update_time FROM category WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     List<Category> batchSelectByIds(@Param("ids") List<Long> ids);
 }

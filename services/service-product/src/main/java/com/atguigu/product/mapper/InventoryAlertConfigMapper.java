@@ -27,10 +27,10 @@ public interface InventoryAlertConfigMapper extends BaseMapper<InventoryAlertCon
     /**
      * 插入或更新预警配置
      */
-    @Insert("INSERT INTO inventory_alert_config (product_id, threshold, alert_interval, status, create_time, update_time) " +
-            "VALUES (#{productId}, #{threshold}, #{alertInterval}, #{status}, NOW(), NOW()) " +
-            "ON DUPLICATE KEY UPDATE threshold = #{threshold}, alert_interval = #{alertInterval}, " +
-            "status = #{status}, update_time = NOW()")
+    @Insert("INSERT INTO inventory_alert_config (product_id, threshold, alert_interval, status, create_time, update_time) "
+            + "VALUES (#{productId}, #{threshold}, #{alertInterval}, #{status}, NOW(), NOW()) "
+            + "ON DUPLICATE KEY UPDATE threshold = #{threshold}, alert_interval = #{alertInterval}, "
+            + "status = #{status}, update_time = NOW()")
     int insertOrUpdate(InventoryAlertConfig config);
 
     /**

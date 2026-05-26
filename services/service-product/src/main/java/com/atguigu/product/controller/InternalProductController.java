@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * 商品服务内部API控制器
  * 用于服务间调用，不对外暴露
  * 路径使用/internal前缀
  */
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @RestController
 @RequestMapping("/internal/api/product")
 @RequiredArgsConstructor
@@ -26,7 +29,7 @@ public class InternalProductController {
      * 获取商品详情（内部接口）
      */
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable("id") long id) {
+    public Product getProductById(@PathVariable("id") final long id) {
         return productService.getProductById(id);
     }
 
@@ -35,7 +38,7 @@ public class InternalProductController {
      * 性能优化：减少N+1调用问题
      */
     @PostMapping("/batch")
-    public List<Product> batchGetProducts(@RequestBody List<Long> ids) {
+    public List<Product> batchGetProducts(@RequestBody final List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
@@ -46,7 +49,7 @@ public class InternalProductController {
      * 扣减库存（内部接口）
      */
     @PutMapping("/decreaseStock")
-    public int decreaseStock(@RequestParam("productId") Long productId, @RequestParam("quantity") Integer quantity) {
+    public int decreaseStock(@RequestParam("productId") final Long productId, @RequestParam("quantity") final Integer quantity) {
         boolean success = productService.decreaseStock(productId, quantity);
         return success ? 1 : 0;
     }
@@ -55,7 +58,7 @@ public class InternalProductController {
      * 增加库存（内部接口）
      */
     @PutMapping("/increaseStock")
-    public int increaseStock(@RequestParam("productId") Long productId, @RequestParam("quantity") Integer quantity) {
+    public int increaseStock(@RequestParam("productId") final Long productId, @RequestParam("quantity") final Integer quantity) {
         boolean success = productService.increaseStock(productId, quantity);
         return success ? 1 : 0;
     }
@@ -65,7 +68,7 @@ public class InternalProductController {
      * 用于订单取消/退款时的库存回滚
      */
     @PutMapping("/batchIncreaseStock")
-    public int batchIncreaseStock(@RequestBody List<Map<String, Object>> items) {
+    public int batchIncreaseStock(@RequestBody final List<Map<String, Object>> items) {
         if (items == null || items.isEmpty()) {
             return 0;
         }
@@ -86,7 +89,7 @@ public class InternalProductController {
      * 用于购物车批量下单
      */
     @PutMapping("/batchDecreaseStock")
-    public int batchDecreaseStock(@RequestBody List<Map<String, Object>> items) {
+    public int batchDecreaseStock(@RequestBody final List<Map<String, Object>> items) {
         if (items == null || items.isEmpty()) {
             return 0;
         }

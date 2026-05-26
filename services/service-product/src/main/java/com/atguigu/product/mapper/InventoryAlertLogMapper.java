@@ -43,8 +43,8 @@ public interface InventoryAlertLogMapper extends BaseMapper<InventoryAlertLog> {
     @Select("SELECT COUNT(*) FROM inventory_alert_log WHERE product_id = #{productId} AND DATE(create_time) = CURDATE()")
     int countTodayByProductId(@Param("productId") Long productId);
 
-    @Insert("INSERT INTO inventory_alert_log (product_id, merchant_id, stock, threshold, status, create_time) " +
-            "VALUES (#{productId}, #{merchantId}, #{stock}, #{threshold}, #{status}, NOW())")
+    @Insert("INSERT INTO inventory_alert_log (product_id, merchant_id, stock, threshold, status, create_time) "
+            + "VALUES (#{productId}, #{merchantId}, #{stock}, #{threshold}, #{status}, NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertAlertLog(InventoryAlertLog alertLog);
 }

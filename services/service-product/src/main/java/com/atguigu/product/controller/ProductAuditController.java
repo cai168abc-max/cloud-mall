@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,14 @@ public class ProductAuditController {
 
         private String reason;
 
+        public void setProductIds(final List<Long> productIds) {
+            this.productIds = new ArrayList<>(productIds);
+        }
+
+        public List<Long> getProductIds() {
+            return new ArrayList<>(productIds);
+        }
+
     }
 
     /**
@@ -78,7 +87,7 @@ public class ProductAuditController {
      */
     @Operation(summary = "单个商品审核", description = "管理员审核单个商品的上架申请")
     @PostMapping("/single")
-    public R auditProduct(@RequestBody @Validated AuditRequest request) {
+    public R auditProduct(@RequestBody @Validated final AuditRequest request) {
         com.atguigu.common.bean.UserInfo userInfo = UserContext.get();
         Long auditorId = userInfo != null ? userInfo.getId() : null;
         if (auditorId == null) {
@@ -110,7 +119,7 @@ public class ProductAuditController {
      */
     @Operation(summary = "批量商品审核", description = "管理员批量审核商品的上架申请，最多支持100个商品同时审核")
     @PostMapping("/batch")
-    public R batchAuditProducts(@RequestBody @Validated BatchAuditRequest request) {
+    public R batchAuditProducts(@RequestBody @Validated final BatchAuditRequest request) {
         com.atguigu.common.bean.UserInfo userInfo = UserContext.get();
         Long auditorId = userInfo != null ? userInfo.getId() : null;
         if (auditorId == null) {
@@ -153,7 +162,7 @@ public class ProductAuditController {
     @Operation(summary = "查询商品审核历史", description = "查询指定商品的审核历史记录")
     @GetMapping("/history/{productId}")
     public R getAuditHistory(
-            @Parameter(description = "商品ID") @PathVariable Long productId) {
+            @Parameter(description = "商品ID") @PathVariable final Long productId) {
         List<ProductAuditLog> history = productAuditService.getAuditHistory(productId);
         return R.ok(history);
     }
@@ -167,7 +176,7 @@ public class ProductAuditController {
     @Operation(summary = "查询商家审核记录", description = "查询指定商家所有商品的审核记录")
     @GetMapping("/merchant/{merchantId}")
     public R getAuditHistoryByMerchant(
-            @Parameter(description = "商家ID") @PathVariable Long merchantId) {
+            @Parameter(description = "商家ID") @PathVariable final Long merchantId) {
         List<ProductAuditLog> history = productAuditService.getAuditHistoryByMerchant(merchantId);
         return R.ok(history);
     }

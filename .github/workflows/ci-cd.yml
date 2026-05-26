@@ -187,11 +187,7 @@ jobs:
         if: always()
         with:
           name: Unit Tests Report
-          path: |
-            model/target/surefire-reports/TEST-*.xml
-            services/service-product/target/surefire-reports/TEST-*.xml
-            services/service-order/target/surefire-reports/TEST-*.xml
-            services/service-user/target/surefire-reports/TEST-*.xml
+          path: model/target/surefire-reports/TEST-*.xml,services/service-product/target/surefire-reports/TEST-*.xml,services/service-order/target/surefire-reports/TEST-*.xml,services/service-user/target/surefire-reports/TEST-*.xml
           reporter: java-junit
           fail-on-error: false
           list-tests: failed

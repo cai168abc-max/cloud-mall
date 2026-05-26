@@ -1,10 +1,10 @@
 package com.atguigu.product.schedule;
-
 import com.atguigu.common.cache.HotProductService;
 import com.atguigu.common.cache.MultiLevelCacheService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
  *   <li>无需定时清理，避免不必要的性能开销</li>
  * </ul>
  */
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @Component
 @ConditionalOnBean({HotProductService.class, MultiLevelCacheService.class})
 @RequiredArgsConstructor

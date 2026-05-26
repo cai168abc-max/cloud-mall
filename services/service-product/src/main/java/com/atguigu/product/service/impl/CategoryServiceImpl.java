@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -76,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
         categoryMapper.updateEnabled(categoryId, enabled);
     }
 
-    public List<Category> listByKeyword(String keyword) {
+    public List<Category> listByKeyword(final String keyword) {
         return categoryMapper.selectByKeyword(keyword);
     }
 

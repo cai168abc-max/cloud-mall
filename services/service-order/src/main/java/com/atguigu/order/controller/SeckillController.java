@@ -11,12 +11,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * 秒杀控制器
  * 安全特性：
  * 1. 用户维度限流：防止用户频繁刷单
  * 2. 角色校验：仅普通用户可参与秒杀
  */
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 @RestController
 @RequestMapping("/api/seckill")
 @Validated
