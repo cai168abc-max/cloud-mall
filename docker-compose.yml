@@ -1,8 +1,6 @@
 # CloudTry Docker Compose Configuration
 # 用于本地开发和测试环境部署
 
-version: '3.8'
-
 services:
   # ==========================================
   # 基础设施服务
@@ -117,7 +115,7 @@ services:
 
   # Seata Server
   seata:
-    image: seataio/seata-server:2.5.0
+    image: apache/seata-server:2.5.0
     container_name: cloudtry-seata
     ports:
       - "8091:8091"
@@ -125,17 +123,12 @@ services:
     environment:
       SEATA_IP: seata
       SEATA_PORT: 8091
-      SEATA_CONFIG_TYPE: nacos
-      SEATA_CONFIG_NACOS_SERVER_ADDR: nacos:8848
-      SEATA_CONFIG_NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
-      SEATA_CONFIG_NACOS_GROUP: SEATA_GROUP
-      SEATA_REGISTRY_TYPE: nacos
-      SEATA_REGISTRY_NACOS_SERVER_ADDR: nacos:8848
-      SEATA_REGISTRY_NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
-      SEATA_REGISTRY_NACOS_GROUP: SEATA_GROUP
-      SEATA_REGISTRY_NACOS_APPLICATION: seata-server
-      SEATA_REGISTRY_NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
-      SEATA_REGISTRY_NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+      STORE_MODE: file
+    volumes:
+      - ./scripts/seata-application.yml:/seata-server/resources/application.yml:ro
     depends_on:
       nacos:
         condition: service_healthy
@@ -144,6 +137,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     networks:
       - cloudtry-network
 

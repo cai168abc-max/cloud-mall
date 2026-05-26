@@ -1,8 +1,6 @@
 # CloudTry Docker Compose Configuration for Canary Deployment
 # 用于灰度发布，与主 docker-compose.yml 配合使用
 
-version: '3.8'
-
 services:
   # ==========================================
   # Canary 版本服务
@@ -19,7 +17,7 @@ services:
       - SPRING_PROFILES_ACTIVE=canary
       - CANARY_WEIGHT=0
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,7 +46,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -77,7 +75,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,7 +104,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
