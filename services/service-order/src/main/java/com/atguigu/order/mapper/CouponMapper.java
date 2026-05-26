@@ -33,21 +33,21 @@ public interface CouponMapper extends BaseMapper<Coupon> {
     @Update("UPDATE coupon SET status = #{status}, update_time = NOW() WHERE id = #{id}")
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
-    @Insert("INSERT INTO coupon (merchant_id, user_id, name, amount, threshold, stock, status, valid_from, valid_to, create_time, update_time) " +
-            "VALUES (#{merchantId}, #{userId}, #{name}, #{amount}, #{threshold}, #{stock}, #{status}, #{validFrom}, #{validTo}, NOW(), NOW())")
+    @Insert("INSERT INTO coupon (merchant_id, user_id, name, amount, threshold, stock, status, valid_from, valid_to, create_time, update_time) "
+            + "VALUES (#{merchantId}, #{userId}, #{name}, #{amount}, #{threshold}, #{stock}, #{status}, #{validFrom}, #{validTo}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertCoupon(Coupon coupon);
 
     @Delete("DELETE FROM coupon WHERE id = #{id}")
     int deleteById(@Param("id") Long id);
 
-    @Select("<script>" +
-            "SELECT id, merchant_id, user_id, name, amount, threshold, stock, status, valid_from, valid_to, create_time, update_time " +
-            "FROM coupon WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT id, merchant_id, user_id, name, amount, threshold, stock, status, valid_from, valid_to, create_time, update_time "
+            + "FROM coupon WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     List<Coupon> batchSelectByIds(@Param("ids") List<Long> ids);
 
     @Select("SELECT * FROM coupon WHERE user_id = #{userId} AND status = 'ACTIVE' AND valid_from <= #{now} AND valid_to >= #{now}")

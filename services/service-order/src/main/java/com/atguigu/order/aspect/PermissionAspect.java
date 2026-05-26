@@ -40,10 +40,10 @@ public class PermissionAspect {
     /**
      * 拦截所有带有@RequirePermission注解的方法或类
      */
-    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) || " +
-            "@within(com.atguigu.common.annotation.RequirePermission)")
+    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) "
+            + "|| @within(com.atguigu.common.annotation.RequirePermission)")
     @NonNull
-    public Object checkPermission(@NonNull ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object checkPermission(final ProceedingJoinPoint joinPoint) throws Throwable {
         // 提前获取方法签名，避免重复调用
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         String className = AopUtils.getTargetClass(joinPoint.getTarget()).getSimpleName();
@@ -80,8 +80,8 @@ public class PermissionAspect {
      * @return 权限注解，可能为null
      */
     private RequirePermission getPermissionAnnotation(
-            @NonNull ProceedingJoinPoint joinPoint,
-            @NonNull MethodSignature signature
+            final ProceedingJoinPoint joinPoint,
+            final MethodSignature signature
     ) {
         Method method = signature.getMethod();
 

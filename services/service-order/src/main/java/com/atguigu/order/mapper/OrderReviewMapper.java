@@ -86,8 +86,8 @@ public interface OrderReviewMapper extends BaseMapper<OrderReview> {
      * @param review 评价信息
      * @return 影响行数
      */
-    @Insert("INSERT INTO order_review (order_id, user_id, merchant_id, product_id, rating, content, images, anonymous, status, create_time, update_time) " +
-            "VALUES (#{orderId}, #{userId}, #{merchantId}, #{productId}, #{rating}, #{content}, #{images}, #{anonymous}, #{status}, NOW(), NOW())")
+    @Insert("INSERT INTO order_review (order_id, user_id, merchant_id, product_id, rating, content, images, anonymous, status, create_time, update_time) "
+            + "VALUES (#{orderId}, #{userId}, #{merchantId}, #{productId}, #{rating}, #{content}, #{images}, #{anonymous}, #{status}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertReview(OrderReview review);
 

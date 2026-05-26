@@ -53,7 +53,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
             maxDelay = 5000
         )
     )
-    public Product getProductById(long id) {
+    public Product getProductById(final long id) {
         log.debug("调用商品服务获取商品详情, productId={}", id);
         return productFeign.getProductById(id);
     }
@@ -118,7 +118,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     }
     
     @Recover
-    public int increaseStockRecover(Exception e, Long productId, Integer quantity) {
+    public int increaseStockRecover(final Exception e, final Long productId, final Integer quantity) {
         log.error("ProductFeign重试失败 - 库存恢复失败, productId={}, quantity={}, error={}", 
                   productId, quantity, e.getMessage());
         // 库存操作必须抛出异常，避免数据不一致
@@ -140,7 +140,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     }
     
     @Recover
-    public int batchIncreaseStockRecover(Exception e, List<Map<String, Object>> stockItems) {
+    public int batchIncreaseStockRecover(final Exception e, final List<Map<String, Object>> stockItems) {
         log.error("ProductFeign重试失败 - 批量库存恢复失败, itemsCount={}, error={}", 
                   stockItems != null ? stockItems.size() : 0, e.getMessage());
         // 库存操作必须抛出异常，避免数据不一致
@@ -172,7 +172,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     /**
      * 创建默认商品信息
      */
-    private Product createDefaultProduct(Long id) {
+    private Product createDefaultProduct(final Long id) {
         Product product = new Product();
         product.setId(id);
         product.setName("商品信息加载中");

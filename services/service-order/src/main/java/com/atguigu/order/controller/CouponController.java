@@ -23,7 +23,7 @@ public class CouponController {
     private final CouponService couponService;
 
     @GetMapping("/{id}")
-    public R getCoupon(@PathVariable("id") Long couponId) {
+    public R getCoupon(@PathVariable("id") final Long couponId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -55,7 +55,7 @@ public class CouponController {
     }
 
     @PostMapping("/acquire")
-    public R acquireCoupon(@RequestParam("couponId") Long couponId) {
+    public R acquireCoupon(@RequestParam("couponId") final Long couponId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -69,7 +69,7 @@ public class CouponController {
     }
 
     @PostMapping("/use")
-    public R useCoupon(@RequestParam("couponId") Long couponId) {
+    public R useCoupon(@RequestParam("couponId") final Long couponId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -94,7 +94,7 @@ public class CouponController {
     }
 
     @PostMapping("/manage/create")
-    public R createCoupon(@RequestBody Coupon coupon) {
+    public R createCoupon(@RequestBody final Coupon coupon) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -106,7 +106,7 @@ public class CouponController {
     }
 
     @PutMapping("/manage/{id}")
-    public R updateCoupon(@PathVariable("id") Long couponId, @RequestBody Coupon coupon) {
+    public R updateCoupon(@PathVariable("id") final Long couponId, @RequestBody final Coupon coupon) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -119,7 +119,7 @@ public class CouponController {
     }
 
     @DeleteMapping("/manage/{id}")
-    public R deleteCoupon(@PathVariable("id") Long couponId) {
+    public R deleteCoupon(@PathVariable("id") final Long couponId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }

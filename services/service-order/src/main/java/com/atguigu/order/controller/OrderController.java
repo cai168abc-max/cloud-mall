@@ -35,7 +35,7 @@ public class OrderController {
     @Operation(summary = "获取订单详情", description = "根据订单ID获取订单详情")
     @RequirePermission("order:read")
     public R getOrder(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Order order = orderService.getOrderById(id);
         if (order == null) {
             return R.error(404, "订单不存在");
@@ -66,8 +66,8 @@ public class OrderController {
     @Operation(summary = "创建订单", description = "创建新订单")
     @RequirePermission("order:write")
     public R createOrder(
-            @Parameter(description = "商品ID") @RequestParam @NotNull Long productId,
-            @Parameter(description = "优惠券ID") @RequestParam(value = "couponId", required = false) Long couponId) {
+            @Parameter(description = "商品ID") @RequestParam @NotNull final Long productId,
+            @Parameter(description = "优惠券ID") @RequestParam(value = "couponId", required = false) final Long couponId) {
         Long userId = UserContext.get().getId();
         Order order;
         if (couponId != null) {
@@ -91,7 +91,7 @@ public class OrderController {
     @Operation(summary = "支付订单", description = "支付指定订单")
     @RequirePermission("order:write")
     public R payOrder(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long userId = UserContext.get().getId();
         Order order = orderService.payOrder(id, userId);
         return order != null ? R.ok("支付成功") : R.error("支付失败");
@@ -101,7 +101,7 @@ public class OrderController {
     @Operation(summary = "发货", description = "商家发货")
     @RequirePermission("order:ship")
     public R shipOrder(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long merchantId = UserContext.get().getId();
         Order order = orderService.shipOrder(id, merchantId);
         return order != null ? R.ok("发货成功") : R.error("发货失败");
@@ -111,7 +111,7 @@ public class OrderController {
     @Operation(summary = "确认收货", description = "用户确认收货")
     @RequirePermission("order:write")
     public R completeOrder(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long userId = UserContext.get().getId();
         Order order = orderService.completeOrder(id, userId);
         return order != null ? R.ok("确认收货成功") : R.error("确认收货失败");
@@ -121,7 +121,7 @@ public class OrderController {
     @Operation(summary = "取消订单", description = "取消指定订单")
     @RequirePermission("order:cancel")
     public R cancelOrder(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long userId = UserContext.get().getId();
         Order order = orderService.cancelOrder(id, userId);
         return order != null ? R.ok("取消订单成功") : R.error("取消订单失败");
@@ -131,7 +131,7 @@ public class OrderController {
     @Operation(summary = "申请退款", description = "用户申请退款")
     @RequirePermission("order:write")
     public R applyRefund(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long userId = UserContext.get().getId();
         Order order = orderService.applyRefund(id, userId);
         return order != null ? R.ok("退款申请已提交") : R.error("退款申请失败，订单状态不正确");
@@ -141,7 +141,7 @@ public class OrderController {
     @Operation(summary = "批准退款", description = "商家批准退款")
     @RequirePermission("order:ship")
     public R approveRefund(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long merchantId = UserContext.get().getId();
         boolean success = orderService.approveRefund(id, merchantId);
         return success ? R.ok("退款已批准") : R.error("退款批准失败");
@@ -151,7 +151,7 @@ public class OrderController {
     @Operation(summary = "拒绝退款", description = "商家拒绝退款")
     @RequirePermission("order:ship")
     public R rejectRefund(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id) {
         Long merchantId = UserContext.get().getId();
         boolean success = orderService.rejectRefund(id, merchantId);
         return success ? R.ok("退款已拒绝") : R.error("退款拒绝失败");
@@ -161,8 +161,8 @@ public class OrderController {
     @Operation(summary = "申请售后", description = "用户申请售后")
     @RequirePermission("order:write")
     public R applyAfterSale(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long id,
-            @Parameter(description = "售后原因") @RequestParam String reason) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long id,
+            @Parameter(description = "售后原因") @RequestParam final String reason) {
         Long userId = UserContext.get().getId();
         Order order = orderService.applyAfterSale(id, reason, userId);
         return order != null ? R.ok("售后申请已提交") : R.error("售后申请失败，订单状态不正确");
@@ -172,7 +172,7 @@ public class OrderController {
     @Operation(summary = "批量支付", description = "批量支付订单")
     @RequirePermission("order:write")
     public R batchPayOrders(
-            @Parameter(description = "订单ID列表") @RequestParam @NotNull List<Long> orderIds) {
+            @Parameter(description = "订单ID列表") @RequestParam @NotNull final List<Long> orderIds) {
         Long userId = UserContext.get().getId();
         Map<Long, Order> result = orderService.batchPayOrders(orderIds, userId);
         return R.ok("批量支付完成", result);
@@ -182,7 +182,7 @@ public class OrderController {
     @Operation(summary = "批量发货", description = "商家批量发货")
     @RequirePermission("order:ship")
     public R batchShipOrders(
-            @Parameter(description = "订单ID列表") @RequestParam @NotNull List<Long> orderIds) {
+            @Parameter(description = "订单ID列表") @RequestParam @NotNull final List<Long> orderIds) {
         Long merchantId = UserContext.get().getId();
         Map<Long, Order> result = orderService.batchShipOrders(orderIds, merchantId);
         return R.ok("批量发货完成", result);
@@ -192,7 +192,7 @@ public class OrderController {
     @Operation(summary = "批量确认收货", description = "批量确认收货")
     @RequirePermission("order:write")
     public R batchCompleteOrders(
-            @Parameter(description = "订单ID列表") @RequestParam @NotNull List<Long> orderIds) {
+            @Parameter(description = "订单ID列表") @RequestParam @NotNull final List<Long> orderIds) {
         Long userId = UserContext.get().getId();
         Map<Long, Order> result = orderService.batchCompleteOrders(orderIds, userId);
         return R.ok("批量确认收货完成", result);
@@ -202,7 +202,7 @@ public class OrderController {
     @Operation(summary = "批量取消订单", description = "批量取消订单")
     @RequirePermission("order:cancel")
     public R batchCancelOrders(
-            @Parameter(description = "订单ID列表") @RequestParam @NotNull List<Long> orderIds) {
+            @Parameter(description = "订单ID列表") @RequestParam @NotNull final List<Long> orderIds) {
         Long userId = UserContext.get().getId();
         Map<Long, Order> result = orderService.batchCancelOrders(orderIds, userId);
         return R.ok("批量取消订单完成", result);

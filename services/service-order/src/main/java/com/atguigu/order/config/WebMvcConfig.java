@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class WebMvcConfig extends BaseWebMvcConfig {
     
-    public WebMvcConfig(InternalRequestInterceptor internalRequestInterceptor) {
+    public WebMvcConfig(final InternalRequestInterceptor internalRequestInterceptor) {
         super(internalRequestInterceptor);
     }
 }

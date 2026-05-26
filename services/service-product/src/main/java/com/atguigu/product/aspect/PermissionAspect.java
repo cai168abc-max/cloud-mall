@@ -40,8 +40,8 @@ public class PermissionAspect {
     /**
      * 拦截所有带有@RequirePermission注解的方法
      */
-    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) || "
-            + "@within(com.atguigu.common.annotation.RequirePermission)")
+    @Around("@annotation(com.atguigu.common.annotation.RequirePermission) "
+            + "|| @within(com.atguigu.common.annotation.RequirePermission)")
     public Object checkPermission(final ProceedingJoinPoint joinPoint) throws Throwable {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();

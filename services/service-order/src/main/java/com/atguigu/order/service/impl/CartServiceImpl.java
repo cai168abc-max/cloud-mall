@@ -138,7 +138,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart updateItemQuantity(Long userId, Long productId, Integer quantity) {
+    public Cart updateItemQuantity(final Long userId, final Long productId, final Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new IllegalArgumentException("商品数量必须大于0");
         }
@@ -228,7 +228,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart clearCart(Long userId) {
+    public Cart clearCart(final Long userId) {
         String lockKey = CART_LOCK_PREFIX + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -267,7 +267,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Integer getCartItemCount(Long userId) {
+    public Integer getCartItemCount(final Long userId) {
         Cart cart = getCartInternal(userId);
 
         // 返回购物车中所有商品的总数量
@@ -331,7 +331,7 @@ public class CartServiceImpl implements CartService {
     /**
      * 将购物车保存到Redis，设置过期时间为7天
      */
-    private void saveCartToRedis(Cart cart) {
+    private void saveCartToRedis(final Cart cart) {
         String key = CART_KEY_PREFIX + cart.getUserId();
         // 设置购物车过期时间为7天（604800秒）
         redisTemplate.opsForValue().set(key, cart, 604800, java.util.concurrent.TimeUnit.SECONDS);

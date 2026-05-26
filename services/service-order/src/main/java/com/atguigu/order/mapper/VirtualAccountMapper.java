@@ -30,8 +30,8 @@ public interface VirtualAccountMapper extends BaseMapper<VirtualAccount> {
      * @param version 当前版本号
      * @return 更新行数
      */
-    @Update("UPDATE virtual_account SET balance = balance + #{amount}, version = version + 1, update_time = NOW() " +
-            "WHERE id = #{id} AND version = #{version}")
+    @Update("UPDATE virtual_account SET balance = balance + #{amount}, version = version + 1, update_time = NOW() "
+            + "WHERE id = #{id} AND version = #{version}")
     int updateBalanceWithVersion(@Param("id") Long id, @Param("amount") BigDecimal amount, @Param("version") Integer version);
 
     /**
@@ -42,8 +42,8 @@ public interface VirtualAccountMapper extends BaseMapper<VirtualAccount> {
      * @param version 当前版本号
      * @return 更新行数
      */
-    @Update("UPDATE virtual_account SET balance = balance - #{amount}, version = version + 1, update_time = NOW() " +
-            "WHERE id = #{id} AND version = #{version} AND balance >= #{amount}")
+    @Update("UPDATE virtual_account SET balance = balance - #{amount}, version = version + 1, update_time = NOW() "
+            + "WHERE id = #{id} AND version = #{version} AND balance >= #{amount}")
     int deductBalanceWithVersion(@Param("id") Long id, @Param("amount") BigDecimal amount, @Param("version") Integer version);
 
     /**
@@ -53,8 +53,8 @@ public interface VirtualAccountMapper extends BaseMapper<VirtualAccount> {
      * @param version 当前版本号
      * @return 更新行数
      */
-    @Update("UPDATE virtual_account SET balance = balance - #{amount}, frozen_amount = frozen_amount + #{amount}, " +
-            "version = version + 1, update_time = NOW() WHERE id = #{id} AND version = #{version} AND balance >= #{amount}")
+    @Update("UPDATE virtual_account SET balance = balance - #{amount}, frozen_amount = frozen_amount + #{amount}, "
+            + "version = version + 1, update_time = NOW() WHERE id = #{id} AND version = #{version} AND balance >= #{amount}")
     int freezeBalanceWithVersion(@Param("id") Long id, @Param("amount") BigDecimal amount, @Param("version") Integer version);
 
     /**
@@ -64,8 +64,8 @@ public interface VirtualAccountMapper extends BaseMapper<VirtualAccount> {
      * @param version 当前版本号
      * @return 更新行数
      */
-    @Update("UPDATE virtual_account SET balance = balance + #{amount}, frozen_amount = frozen_amount - #{amount}, " +
-            "version = version + 1, update_time = NOW() WHERE id = #{id} AND version = #{version} AND frozen_amount >= #{amount}")
+    @Update("UPDATE virtual_account SET balance = balance + #{amount}, frozen_amount = frozen_amount - #{amount}, "
+            + "version = version + 1, update_time = NOW() WHERE id = #{id} AND version = #{version} AND frozen_amount >= #{amount}")
     int unfreezeBalanceWithVersion(@Param("id") Long id, @Param("amount") BigDecimal amount, @Param("version") Integer version);
 
     /**

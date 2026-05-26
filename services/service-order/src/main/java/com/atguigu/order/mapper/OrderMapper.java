@@ -66,13 +66,13 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Delete("DELETE FROM `orders` WHERE id = #{id}")
     int deleteById(@Param("id") Long id);
 
-    @Select("<script>" +
-            "SELECT id, user_id, merchant_id, nick_name, address, total_price, discount_amount, pay_amount, status, coupon_id, create_time, update_time " +
-            "FROM `orders` WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT id, user_id, merchant_id, nick_name, address, total_price, discount_amount, pay_amount, status, coupon_id, create_time, update_time "
+            + "FROM `orders` WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     List<Order> batchSelectByIds(@Param("ids") List<Long> ids);
 
     @Select("SELECT COUNT(*) FROM `orders` WHERE user_id = #{userId}")
@@ -144,12 +144,12 @@ public interface OrderMapper extends BaseMapper<Order> {
      * @param status 目标状态
      * @return 更新记录数
      */
-    @Update("<script>" +
-            "UPDATE `orders` SET status = #{status}, complete_time = NOW(), update_time = NOW() WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Update("<script>"
+            + "UPDATE `orders` SET status = #{status}, complete_time = NOW(), update_time = NOW() WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     int batchUpdateStatusToCompleted(@Param("ids") List<Long> ids, @Param("status") String status);
 
     /**
@@ -175,12 +175,12 @@ public interface OrderMapper extends BaseMapper<Order> {
      * @param status 订单状态
      * @return 订单列表
      */
-    @Select("<script>" +
-            "SELECT * FROM `orders` WHERE status = #{status} AND id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT * FROM `orders` WHERE status = #{status} AND id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     List<Order> batchSelectByIdsAndStatus(@Param("ids") List<Long> ids, @Param("status") String status);
 
     // ==================== 评价相关方法 ====================

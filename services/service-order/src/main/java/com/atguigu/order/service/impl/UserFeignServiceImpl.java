@@ -50,13 +50,13 @@ public class UserFeignServiceImpl implements UserFeignService {
             maxDelay = 5000
         )
     )
-    public R getUserInfo(Long userId) {
+    public R getUserInfo(final Long userId) {
         log.debug("调用用户服务获取用户信息, userId={}", userId);
         return userFeign.getUserInfo(userId);
     }
     
     @Recover
-    public R getUserInfoRecover(Exception e, Long userId) {
+    public R getUserInfoRecover(final Exception e, final Long userId) {
         log.error("UserFeign重试失败 - 用户服务不可用, userId={}, error={}", userId, e.getMessage());
         
         // 1. 尝试从Redis缓存获取

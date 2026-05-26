@@ -25,8 +25,8 @@ public interface LogisticsTraceMapper extends BaseMapper<LogisticsTrace> {
      * @param trace 物流轨迹
      * @return 影响行数
      */
-    @Insert("INSERT INTO logistics_trace (logistics_id, trace_time, status, location, description, operator, create_time) " +
-            "VALUES (#{logisticsId}, #{traceTime}, #{status}, #{location}, #{description}, #{operator}, NOW())")
+    @Insert("INSERT INTO logistics_trace (logistics_id, trace_time, status, location, description, operator, create_time) "
+            + "VALUES (#{logisticsId}, #{traceTime}, #{status}, #{location}, #{description}, #{operator}, NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertLogisticsTrace(LogisticsTrace trace);
     
@@ -35,12 +35,12 @@ public interface LogisticsTraceMapper extends BaseMapper<LogisticsTrace> {
      * @param traces 轨迹列表
      * @return 影响行数
      */
-    @Insert("<script>" +
-            "INSERT INTO logistics_trace (logistics_id, trace_time, status, location, description, operator, create_time) VALUES " +
-            "<foreach item='trace' collection='traces' separator=','>" +
-            "(#{trace.logisticsId}, #{trace.traceTime}, #{trace.status}, #{trace.location}, #{trace.description}, #{trace.operator}, NOW())" +
-            "</foreach>" +
-            "</script>")
+    @Insert("<script>"
+            + "INSERT INTO logistics_trace (logistics_id, trace_time, status, location, description, operator, create_time) VALUES "
+            + "<foreach item='trace' collection='traces' separator=','>"
+            + "(#{trace.logisticsId}, #{trace.traceTime}, #{trace.status}, #{trace.location}, #{trace.description}, #{trace.operator}, NOW())"
+            + "</foreach>"
+            + "</script>")
     int batchInsertLogisticsTrace(@Param("traces") List<LogisticsTrace> traces);
     
     /**

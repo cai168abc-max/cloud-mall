@@ -58,7 +58,7 @@ public class UserFeignFallback implements com.atguigu.order.feign.UserFeign {
     /**
      * 创建默认用户信息
      */
-    private UserInfo createDefaultUserInfo(Long userId) {
+    private UserInfo createDefaultUserInfo(final Long userId) {
         UserInfo userInfo = new UserInfo();
         userInfo.setId(userId);
         userInfo.setNickName("用户信息加载中");

@@ -58,7 +58,7 @@ public class SeckillConsumer implements RocketMQListener<SeckillMessage> {
     }
 
     @Override
-    public void onMessage(SeckillMessage message) {
+    public void onMessage(final SeckillMessage message) {
         log.info("收到秒杀消息: productId={}, userId={}", message.getProductId(), message.getUserId());
         try {
             orderService.createOrder(message.getProductId(), message.getUserId());
@@ -77,7 +77,7 @@ public class SeckillConsumer implements RocketMQListener<SeckillMessage> {
      * @param productId 商品ID
      * @param quantity  回滚数量
      */
-    private void rollbackStockWithSoldOutFlag(Long productId, int quantity) {
+    private void rollbackStockWithSoldOutFlag(final Long productId, final int quantity) {
         try {
             String stockKey = SECKILL_STOCK_KEY_PREFIX + productId;
             String soldOutKey = SECKILL_STOCK_KEY_PREFIX + productId + ":soldout";

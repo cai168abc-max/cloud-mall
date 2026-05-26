@@ -125,7 +125,7 @@ public class SeckillServiceImpl implements SeckillService {
         }
     }
 
-    private void rollbackStock(String stockKey, String soldOutKey, int quantity) {
+    private void rollbackStock(final String stockKey, final String soldOutKey, final int quantity) {
         try {
             redisTemplate.execute(
                 rollbackScript,

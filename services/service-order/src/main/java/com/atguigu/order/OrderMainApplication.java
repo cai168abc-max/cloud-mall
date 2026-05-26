@@ -17,7 +17,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan(basePackages = {"com.atguigu.order", "com.atguigu.common"})
 @SpringBootApplication
 public class OrderMainApplication {
-    public static void main(String[] args) {
+    private OrderMainApplication() { }
+    public static void main(final String[] args) {
         SpringApplication.run(OrderMainApplication.class, args);
     }
 }

@@ -48,7 +48,7 @@ public class UserFeignFallbackFactory implements FallbackFactory<UserFeign> {
                 return R.ok("服务降级：返回默认数据", defaultUserInfo);
             }
 
-            private UserInfo createDefaultUserInfo(Long userId) {
+            private UserInfo createDefaultUserInfo(final Long userId) {
                 UserInfo userInfo = new UserInfo();
                 userInfo.setId(userId);
                 userInfo.setNickName("用户信息加载中");

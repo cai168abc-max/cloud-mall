@@ -26,7 +26,7 @@ public class ReviewConsumer implements RocketMQListener<ReviewMessage> {
     private final OrderReviewService orderReviewService;
 
     @Override
-    public void onMessage(ReviewMessage message) {
+    public void onMessage(final ReviewMessage message) {
         log.info("收到评价消息: reviewId={}, productId={}, action={}",
                 message.getReviewId(), message.getProductId(), message.getAction());
 

@@ -44,17 +44,17 @@ public interface CartItemMapper extends BaseMapper<CartItem> {
     @Delete("DELETE FROM cart_item WHERE cart_id = #{cartId} AND checked = 1")
     int clearCheckedByCartId(@Param("cartId") Long cartId);
 
-    @Insert("INSERT INTO cart_item (cart_id, product_id, product_name, price, quantity, checked, category_id, create_time, update_time) " +
-            "VALUES (#{cartId}, #{productId}, #{productName}, #{price}, #{quantity}, #{checked}, #{categoryId}, NOW(), NOW())")
+    @Insert("INSERT INTO cart_item (cart_id, product_id, product_name, price, quantity, checked, category_id, create_time, update_time) "
+            + "VALUES (#{cartId}, #{productId}, #{productName}, #{price}, #{quantity}, #{checked}, #{categoryId}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertCartItem(CartItem cartItem);
 
-    @Select("<script>" +
-            "SELECT * FROM cart_item WHERE cart_id IN " +
-            "<foreach item='cartId' collection='cartIds' open='(' separator=',' close=')'>" +
-            "#{cartId}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT * FROM cart_item WHERE cart_id IN "
+            + "<foreach item='cartId' collection='cartIds' open='(' separator=',' close=')'>"
+            + "#{cartId}"
+            + "</foreach>"
+            + "</script>")
     List<CartItem> batchSelectByCartIds(@Param("cartIds") List<Long> cartIds);
 
     @Select("SELECT * FROM cart_item WHERE cart_id = #{cartId} AND checked = 1")

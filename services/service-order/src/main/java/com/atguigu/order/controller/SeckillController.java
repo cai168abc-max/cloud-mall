@@ -34,7 +34,7 @@ public class SeckillController {
     private static final int SECKILL_RATE_LIMIT_WINDOW_SECONDS = 1;
 
     @PostMapping
-    public R doSeckill(@RequestParam @NotNull Long productId) {
+    public R doSeckill(@RequestParam @NotNull final Long productId) {
         if (UserContext.get() == null || UserContext.get().getRole() != UserRole.USER) {
             return R.error(403, "仅普通用户可以参与秒杀");
         }

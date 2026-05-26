@@ -51,16 +51,16 @@ public class PerformanceMonitorAspect {
      * 定义切点：拦截所有Controller的public方法
      * 只拦截@RequestMapping/@GetMapping/@PostMapping等注解标记的方法
      */
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping) " +
-            "|| @annotation(org.springframework.web.bind.annotation.GetMapping) " +
-            "|| @annotation(org.springframework.web.bind.annotation.PostMapping) " +
-            "|| @annotation(org.springframework.web.bind.annotation.PutMapping) " +
-            "|| @annotation(org.springframework.web.bind.annotation.DeleteMapping)")
-    public void controllerEndpointPointcut() {}
+    @Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping) "
+            + "|| @annotation(org.springframework.web.bind.annotation.GetMapping) "
+            + "|| @annotation(org.springframework.web.bind.annotation.PostMapping) "
+            + "|| @annotation(org.springframework.web.bind.annotation.PutMapping) "
+            + "|| @annotation(org.springframework.web.bind.annotation.DeleteMapping)")
+    public void controllerEndpointPointcut() { }
 
     @Around("controllerEndpointPointcut()")
     @NonNull
-    public Object monitorPerformance(@NonNull ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object monitorPerformance(final ProceedingJoinPoint joinPoint) throws Throwable {
         // 使用nanoTime计时，精度更高且不受系统时间调整影响
         long startTimeNanos = System.nanoTime();
         String methodSignature = getMethodSignature(joinPoint);
@@ -93,7 +93,7 @@ public class PerformanceMonitorAspect {
      * 包含类名和方法名，便于定位
      */
     @NonNull
-    private String getMethodSignature(@NonNull ProceedingJoinPoint joinPoint) {
+    private String getMethodSignature(final ProceedingJoinPoint joinPoint) {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
         return className + "." + methodName;
@@ -104,7 +104,7 @@ public class PerformanceMonitorAspect {
      * 限制长度，避免日志过大
      */
     @NonNull
-    private String getParametersString(@NonNull ProceedingJoinPoint joinPoint) {
+    private String getParametersString(final ProceedingJoinPoint joinPoint) {
         try {
             Object[] args = joinPoint.getArgs();
             if (args == null || args.length == 0) {

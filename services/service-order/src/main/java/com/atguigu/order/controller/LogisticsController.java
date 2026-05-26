@@ -43,12 +43,12 @@ public class LogisticsController {
     @PostMapping("/ship")
     @Operation(summary = "发货", description = "商家发货，创建物流信息")
     public R shipOrder(
-            @Parameter(description = "订单ID") @RequestParam @NotNull Long orderId,
-            @Parameter(description = "物流单号") @RequestParam @NotBlank String trackingNo,
-            @Parameter(description = "物流公司") @RequestParam @NotBlank String carrier,
-            @Parameter(description = "发件人姓名") @RequestParam(required = false) String senderName,
-            @Parameter(description = "发件人电话") @RequestParam(required = false) String senderPhone,
-            @Parameter(description = "发件人地址") @RequestParam(required = false) String senderAddress) {
+            @Parameter(description = "订单ID") @RequestParam @NotNull final Long orderId,
+            @Parameter(description = "物流单号") @RequestParam @NotBlank final String trackingNo,
+            @Parameter(description = "物流公司") @RequestParam @NotBlank final String carrier,
+            @Parameter(description = "发件人姓名") @RequestParam(required = false) final String senderName,
+            @Parameter(description = "发件人电话") @RequestParam(required = false) final String senderPhone,
+            @Parameter(description = "发件人地址") @RequestParam(required = false) final String senderAddress) {
         
         // 权限校验
         R authCheck = requireLogin();
@@ -80,7 +80,7 @@ public class LogisticsController {
     @GetMapping("/order/{orderId}")
     @Operation(summary = "根据订单ID查询物流", description = "查询指定订单的物流信息（含轨迹）")
     public R getLogisticsByOrderId(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -110,7 +110,7 @@ public class LogisticsController {
     @GetMapping("/tracking/{trackingNo}")
     @Operation(summary = "根据物流单号查询", description = "根据物流单号查询物流信息")
     public R getLogisticsByTrackingNo(
-            @Parameter(description = "物流单号") @PathVariable @NotBlank String trackingNo) {
+            @Parameter(description = "物流单号") @PathVariable @NotBlank final String trackingNo) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -176,7 +176,7 @@ public class LogisticsController {
     @PutMapping("/confirm/{orderId}")
     @Operation(summary = "确认签收", description = "用户确认收货")
     public R confirmDelivery(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -199,12 +199,12 @@ public class LogisticsController {
     @PostMapping("/trace")
     @Operation(summary = "添加物流轨迹", description = "物流公司回调接口，添加物流轨迹")
     public R addLogisticsTrace(
-            @Parameter(description = "物流ID") @RequestParam @NotNull Long logisticsId,
-            @Parameter(description = "轨迹时间") @RequestParam @NotBlank String traceTime,
-            @Parameter(description = "轨迹状态") @RequestParam @NotBlank String status,
-            @Parameter(description = "所在地点") @RequestParam(required = false) String location,
-            @Parameter(description = "轨迹描述") @RequestParam @NotBlank String description,
-            @Parameter(description = "操作人/网点") @RequestParam(required = false) String operator) {
+            @Parameter(description = "物流ID") @RequestParam @NotNull final Long logisticsId,
+            @Parameter(description = "轨迹时间") @RequestParam @NotBlank final String traceTime,
+            @Parameter(description = "轨迹状态") @RequestParam @NotBlank final String status,
+            @Parameter(description = "所在地点") @RequestParam(required = false) final String location,
+            @Parameter(description = "轨迹描述") @RequestParam @NotBlank final String description,
+            @Parameter(description = "操作人/网点") @RequestParam(required = false) final String operator) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -231,7 +231,7 @@ public class LogisticsController {
     @PostMapping("/refresh/{orderId}")
     @Operation(summary = "刷新物流缓存", description = "手动刷新物流缓存")
     public R refreshCache(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -265,7 +265,7 @@ public class LogisticsController {
      * @param allowedRoles 允许的角色列表
      * @return 无权限返回错误响应，有权限返回null
      */
-    private R requireRole(UserRole... allowedRoles) {
+    private R requireRole(final UserRole... allowedRoles) {
         UserRole currentRole = UserContext.get().getRole();
         for (UserRole role : allowedRoles) {
             if (currentRole == role) {

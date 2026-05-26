@@ -53,19 +53,19 @@ public class BusinessMetricsAspect {
 
     // 定义切点，避免代码冗余
     @Pointcut("execution(* com.atguigu.order.service.impl.OrderServiceImpl.createOrder*(..))")
-    public void orderCreatePointcut() {}
+    public void orderCreatePointcut() { }
 
     @Pointcut("execution(* com.atguigu.order.service.impl.OrderServiceImpl.payOrder(..))")
-    public void orderPayPointcut() {}
+    public void orderPayPointcut() { }
 
     @Pointcut("execution(* com.atguigu.order.service.impl.OrderServiceImpl.cancelOrder(..))")
-    public void orderCancelPointcut() {}
+    public void orderCancelPointcut() { }
 
     @Pointcut("execution(* com.atguigu.order.service.impl.SeckillServiceImpl.seckill(..))")
-    public void seckillPointcut() {}
+    public void seckillPointcut() { }
 
     @Around("orderCreatePointcut()")
-    public Object aroundOrderCreate(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object aroundOrderCreate(final ProceedingJoinPoint joinPoint) throws Throwable {
         return executeWithMetrics(
                 joinPoint,
                 "订单创建",
@@ -76,7 +76,7 @@ public class BusinessMetricsAspect {
     }
 
     @Around("orderPayPointcut()")
-    public Object aroundOrderPay(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object aroundOrderPay(final ProceedingJoinPoint joinPoint) throws Throwable {
         return executeWithMetrics(
                 joinPoint,
                 "订单支付",
@@ -87,7 +87,7 @@ public class BusinessMetricsAspect {
     }
 
     @Around("orderCancelPointcut()")
-    public Object aroundOrderCancel(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object aroundOrderCancel(final ProceedingJoinPoint joinPoint) throws Throwable {
         return executeWithMetrics(
                 joinPoint,
                 "订单取消",
@@ -98,7 +98,7 @@ public class BusinessMetricsAspect {
     }
 
     @Around("seckillPointcut()")
-    public Object aroundSeckill(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object aroundSeckill(final ProceedingJoinPoint joinPoint) throws Throwable {
         return executeWithMetrics(
                 joinPoint,
                 "秒杀下单",
@@ -114,11 +114,11 @@ public class BusinessMetricsAspect {
      * 异常隔离：切面内部异常不会影响原业务方法
      */
     private Object executeWithMetrics(
-            ProceedingJoinPoint joinPoint,
-            String operationName,
-            LongAdder successCounter,
-            LongAdder errorCounter,
-            LongAdder totalTimeCounter
+            final ProceedingJoinPoint joinPoint,
+            final String operationName,
+            final LongAdder successCounter,
+            final LongAdder errorCounter,
+            final LongAdder totalTimeCounter
     ) throws Throwable {
         long startTime = System.currentTimeMillis();
         Object result;
@@ -173,14 +173,14 @@ public class BusinessMetricsAspect {
         long seckillErrorCountValue = seckillErrorCount.sum();
 
         // 计算平均执行时间
-        double avgCreateTime = createCount > 0 ?
-                (double) orderCreateTotalTime.sum() / createCount : 0;
-        double avgPayTime = payCount > 0 ?
-                (double) orderPayTotalTime.sum() / payCount : 0;
-        double avgCancelTime = cancelCount > 0 ?
-                (double) orderCancelTotalTime.sum() / cancelCount : 0;
-        double avgSeckillTime = seckillCountValue > 0 ?
-                (double) seckillTotalTime.sum() / seckillCountValue : 0;
+        double avgCreateTime = createCount > 0
+                ? (double) orderCreateTotalTime.sum() / createCount : 0;
+        double avgPayTime = payCount > 0
+                ? (double) orderPayTotalTime.sum() / payCount : 0;
+        double avgCancelTime = cancelCount > 0
+                ? (double) orderCancelTotalTime.sum() / cancelCount : 0;
+        double avgSeckillTime = seckillCountValue > 0
+                ? (double) seckillTotalTime.sum() / seckillCountValue : 0;
 
         log.info("========== 业务指标统计 ==========");
         log.info("订单创建: 成功={}, 失败={}, 平均耗时={}ms",

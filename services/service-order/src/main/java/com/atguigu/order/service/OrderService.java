@@ -11,7 +11,7 @@ public interface OrderService {
     /**
      * 创建订单（使用商品服务 + 默认内存数据）
      */
-    Order createOrder(Long ProductId, Long userId);
+    Order createOrder(Long productId, Long userId);
 
     /**
      * 使用优惠券创建订单

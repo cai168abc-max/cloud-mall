@@ -76,12 +76,12 @@ public interface LogisticsInfoMapper extends BaseMapper<LogisticsInfo> {
      * @param logisticsInfo 物流信息
      * @return 影响行数
      */
-    @Insert("INSERT INTO logistics_info (order_id, user_id, merchant_id, tracking_no, carrier, status, " +
-            "sender_name, sender_phone, sender_address, receiver_name, receiver_phone, receiver_address, " +
-            "estimated_arrival_time, create_time, update_time) " +
-            "VALUES (#{orderId}, #{userId}, #{merchantId}, #{trackingNo}, #{carrier}, #{status}, " +
-            "#{senderName}, #{senderPhone}, #{senderAddress}, #{receiverName}, #{receiverPhone}, #{receiverAddress}, " +
-            "#{estimatedArrivalTime}, NOW(), NOW())")
+    @Insert("INSERT INTO logistics_info (order_id, user_id, merchant_id, tracking_no, carrier, status, "
+            + "sender_name, sender_phone, sender_address, receiver_name, receiver_phone, receiver_address, "
+            + "estimated_arrival_time, create_time, update_time) "
+            + "VALUES (#{orderId}, #{userId}, #{merchantId}, #{trackingNo}, #{carrier}, #{status}, "
+            + "#{senderName}, #{senderPhone}, #{senderAddress}, #{receiverName}, #{receiverPhone}, #{receiverAddress}, "
+            + "#{estimatedArrivalTime}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertLogisticsInfo(LogisticsInfo logisticsInfo);
     

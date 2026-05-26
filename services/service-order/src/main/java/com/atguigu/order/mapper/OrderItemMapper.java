@@ -18,8 +18,8 @@ public interface OrderItemMapper extends BaseMapper<OrderItem> {
     @Select("SELECT COUNT(*) FROM order_item WHERE product_id = #{productId}")
     long countByProductId(@Param("productId") Long productId);
 
-    @Insert("INSERT INTO order_item (order_id, product_id, product_name, price, quantity, create_time) " +
-            "VALUES (#{orderId}, #{productId}, #{productName}, #{price}, #{quantity}, NOW())")
+    @Insert("INSERT INTO order_item (order_id, product_id, product_name, price, quantity, create_time) "
+            + "VALUES (#{orderId}, #{productId}, #{productName}, #{price}, #{quantity}, NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertOrderItem(OrderItem orderItem);
 

@@ -27,13 +27,13 @@ public class WeatherFeignFallback implements WeatherFeign {
     private static final String DEFAULT_WEATHER_RESPONSE = "{\"code\":503,\"message\":\"天气服务暂时不可用\",\"data\":null,\"degraded\":true}";
 
     @Override
-    public String getWeatherByCityId(String cityId) {
+    public String getWeatherByCityId(final String cityId) {
         log.warn("WeatherFeign降级触发 - 天气服务不可用, cityId={}", cityId);
         return DEFAULT_WEATHER_RESPONSE;
     }
 
     @Override
-    public String getWeatherByCityName(String cityName) {
+    public String getWeatherByCityName(final String cityName) {
         log.warn("WeatherFeign降级触发 - 天气服务不可用, cityName={}", cityName);
         return DEFAULT_WEATHER_RESPONSE;
     }

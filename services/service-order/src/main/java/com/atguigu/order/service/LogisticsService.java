@@ -1,7 +1,6 @@
 package com.atguigu.order.service;
 
 import com.atguigu.order.bean.LogisticsInfo;
-import com.atguigu.order.bean.LogisticsTrace;
 
 import java.util.List;
 

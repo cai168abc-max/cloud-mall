@@ -105,8 +105,8 @@ public interface AfterSaleTicketMapper extends BaseMapper<AfterSaleTicket> {
      * @param ticket 售后工单
      * @return 插入记录数
      */
-    @Insert("INSERT INTO after_sale_ticket (order_id, user_id, merchant_id, type, reason, description, images, status, create_time, update_time) " +
-            "VALUES (#{orderId}, #{userId}, #{merchantId}, #{type}, #{reason}, #{description}, #{images}, #{status}, NOW(), NOW())")
+    @Insert("INSERT INTO after_sale_ticket (order_id, user_id, merchant_id, type, reason, description, images, status, create_time, update_time) "
+            + "VALUES (#{orderId}, #{userId}, #{merchantId}, #{type}, #{reason}, #{description}, #{images}, #{status}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertTicket(AfterSaleTicket ticket);
 }

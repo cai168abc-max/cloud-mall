@@ -72,7 +72,7 @@ public class PermissionAspect {
      * @param joinPoint 切点
      * @return 权限注解，可能为null
      */
-    private RequirePermission getPermissionAnnotation(ProceedingJoinPoint joinPoint) {
+    private RequirePermission getPermissionAnnotation(final ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         

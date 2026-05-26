@@ -32,11 +32,11 @@ public class AfterSaleController {
     @PostMapping("/apply")
     @Operation(summary = "申请售后", description = "用户申请售后")
     public R applyAfterSale(
-            @Parameter(description = "订单ID") @RequestParam @NotNull Long orderId,
-            @Parameter(description = "售后类型：REFUND-仅退款/RETURN-退货退款/EXCHANGE-换货") @RequestParam @NotNull String type,
-            @Parameter(description = "申请原因") @RequestParam @NotNull String reason,
-            @Parameter(description = "详细描述") @RequestParam(required = false) String description,
-            @Parameter(description = "凭证图片（逗号分隔）") @RequestParam(required = false) String images) {
+            @Parameter(description = "订单ID") @RequestParam @NotNull final Long orderId,
+            @Parameter(description = "售后类型：REFUND-仅退款/RETURN-退货退款/EXCHANGE-换货") @RequestParam @NotNull final String type,
+            @Parameter(description = "申请原因") @RequestParam @NotNull final String reason,
+            @Parameter(description = "详细描述") @RequestParam(required = false) final String description,
+            @Parameter(description = "凭证图片（逗号分隔）") @RequestParam(required = false) final String images) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -51,8 +51,8 @@ public class AfterSaleController {
     @PutMapping("/{id}/approve")
     @Operation(summary = "同意售后", description = "商家同意售后申请")
     public R approveAfterSale(
-            @Parameter(description = "工单ID") @PathVariable @NotNull Long id,
-            @Parameter(description = "退款金额（可选，为空则使用订单支付金额）") @RequestParam(required = false) BigDecimal refundAmount) {
+            @Parameter(description = "工单ID") @PathVariable @NotNull final Long id,
+            @Parameter(description = "退款金额（可选，为空则使用订单支付金额）") @RequestParam(required = false) final BigDecimal refundAmount) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -72,8 +72,8 @@ public class AfterSaleController {
     @PutMapping("/{id}/reject")
     @Operation(summary = "拒绝售后", description = "商家拒绝售后申请")
     public R rejectAfterSale(
-            @Parameter(description = "工单ID") @PathVariable @NotNull Long id,
-            @Parameter(description = "拒绝原因") @RequestParam @NotNull String rejectReason) {
+            @Parameter(description = "工单ID") @PathVariable @NotNull final Long id,
+            @Parameter(description = "拒绝原因") @RequestParam @NotNull final String rejectReason) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -93,7 +93,7 @@ public class AfterSaleController {
     @PutMapping("/{id}/manual-refund")
     @Operation(summary = "手动退款", description = "手动退款（兜底方案，用于自动退款失败的情况）")
     public R manualRefund(
-            @Parameter(description = "工单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "工单ID") @PathVariable @NotNull final Long id) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -113,7 +113,7 @@ public class AfterSaleController {
     @PutMapping("/{id}/cancel")
     @Operation(summary = "取消售后", description = "用户取消售后申请")
     public R cancelAfterSale(
-            @Parameter(description = "工单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "工单ID") @PathVariable @NotNull final Long id) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -128,7 +128,7 @@ public class AfterSaleController {
     @GetMapping("/{id}")
     @Operation(summary = "查询售后工单详情", description = "根据工单ID查询售后工单详情")
     public R getTicket(
-            @Parameter(description = "工单ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "工单ID") @PathVariable @NotNull final Long id) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -154,7 +154,7 @@ public class AfterSaleController {
     @GetMapping("/order/{orderId}")
     @Operation(summary = "根据订单ID查询售后工单", description = "根据订单ID查询最新的售后工单")
     public R getTicketByOrderId(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -193,8 +193,8 @@ public class AfterSaleController {
     @GetMapping("/my/page")
     @Operation(summary = "分页查询我的售后工单列表", description = "分页查询当前用户的售后工单列表")
     public R listMyTicketsPage(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") final int pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") final int pageSize) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -227,8 +227,8 @@ public class AfterSaleController {
     @GetMapping("/merchant/page")
     @Operation(summary = "分页查询商家售后工单列表", description = "分页查询当前商家的售后工单列表")
     public R listMerchantTicketsPage(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") final int pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") final int pageSize) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -249,7 +249,7 @@ public class AfterSaleController {
     @Operation(summary = "根据状态查询商家售后工单列表", description = "根据状态查询当前商家的售后工单列表")
     public R listMerchantTicketsByStatus(
             @Parameter(description = "状态：PENDING-待处理/APPROVED-已同意/REJECTED-已拒绝/PROCESSING-处理中/COMPLETED-已完成/CANCELLED-已取消") 
-            @PathVariable @NotNull String status) {
+            @PathVariable @NotNull final String status) {
         
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -284,7 +284,7 @@ public class AfterSaleController {
      * @param allowedRoles 允许的角色列表
      * @return 无权限返回错误响应，有权限返回null
      */
-    private R requireRole(UserRole... allowedRoles) {
+    private R requireRole(final UserRole... allowedRoles) {
         UserRole currentRole = UserContext.get().getRole();
         for (UserRole role : allowedRoles) {
             if (currentRole == role) {

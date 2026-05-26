@@ -31,12 +31,12 @@ public class ProductFeignFallback implements ProductFeign {
     
     private final RedisTemplate<String, Object> redisTemplate;
     
-    public ProductFeignFallback(RedisTemplate<String, Object> redisTemplate) {
+    public ProductFeignFallback(final RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
-    public Product getProductById(long id) {
+    public Product getProductById(final long id) {
         log.warn("ProductFeign降级触发 - 商品服务不可用, productId={}", id);
         
         // 1. 尝试从Redis缓存获取
@@ -59,7 +59,7 @@ public class ProductFeignFallback implements ProductFeign {
     }
 
     @Override
-    public List<Product> batchGetProducts(List<Long> ids) {
+    public List<Product> batchGetProducts(final List<Long> ids) {
         log.warn("ProductFeign降级触发 - 批量获取商品服务不可用, idsCount={}", ids != null ? ids.size() : 0);
         
         if (ids == null || ids.isEmpty()) {
@@ -80,7 +80,7 @@ public class ProductFeignFallback implements ProductFeign {
     }
 
     @Override
-    public int increaseStock(Long productId, Integer quantity) {
+    public int increaseStock(final Long productId, final Integer quantity) {
         log.error("ProductFeign降级触发 - 库存恢复失败, productId={}, quantity={}", productId, quantity);
         // 库存操作必须抛出异常，避免数据不一致
         throw new BusinessException(503, "商品服务暂时不可用，库存恢复失败");
@@ -94,7 +94,7 @@ public class ProductFeignFallback implements ProductFeign {
     }
 
     @Override
-    public int batchDecreaseStock(List<Map<String, Object>> stockItems) {
+    public int batchDecreaseStock(final List<Map<String, Object>> stockItems) {
         log.error("ProductFeign降级触发 - 批量库存扣减失败, itemsCount={}", stockItems != null ? stockItems.size() : 0);
         // 库存操作必须抛出异常，避免数据不一致
         throw new BusinessException(503, "商品服务暂时不可用，批量库存扣减失败");
@@ -103,7 +103,7 @@ public class ProductFeignFallback implements ProductFeign {
     /**
      * 创建默认商品信息
      */
-    private Product createDefaultProduct(Long id) {
+    private Product createDefaultProduct(final Long id) {
         Product product = new Product();
         product.setId(id);
         product.setName("商品信息加载中");

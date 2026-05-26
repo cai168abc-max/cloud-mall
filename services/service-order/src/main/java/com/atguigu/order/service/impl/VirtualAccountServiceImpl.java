@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * 虚拟账户服务实现类
  * 
@@ -68,7 +66,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     private static final Random RANDOM = new Random();
 
     @Override
-    public VirtualAccount getOrCreateAccount(Long userId) {
+    public VirtualAccount getOrCreateAccount(final Long userId) {
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
         }
@@ -171,7 +169,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 执行充值操作
      */
-    private VirtualAccountLog doRecharge(Long userId, BigDecimal amount, String transactionNo) {
+    private VirtualAccountLog doRecharge(final Long userId, final BigDecimal amount, final String transactionNo) {
         VirtualAccount account = getOrCreateAccount(userId);
         
         if (account.getStatus() != VirtualAccount.STATUS_NORMAL) {
@@ -275,7 +273,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     }
 
     @Override
-    public VirtualAccount getAccount(Long userId) {
+    public VirtualAccount getAccount(final Long userId) {
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
         }
@@ -435,7 +433,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog refund(Long userId, BigDecimal amount, Long orderId, String transactionNo) {
+    public VirtualAccountLog refund(final Long userId, final BigDecimal amount, final Long orderId, String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -503,7 +501,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 执行退款操作
      */
-    private VirtualAccountLog doRefund(Long userId, BigDecimal amount, Long orderId, String transactionNo) {
+    private VirtualAccountLog doRefund(final Long userId, final BigDecimal amount, final Long orderId, final String transactionNo) {
         VirtualAccount account = getOrCreateAccount(userId);
         
         if (account.getStatus() != VirtualAccount.STATUS_NORMAL) {
@@ -632,7 +630,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public boolean unfreeze(Long userId, BigDecimal amount) {
+    public boolean unfreeze(final Long userId, final BigDecimal amount) {
         if (userId == null || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("参数无效");
         }
@@ -700,7 +698,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     }
 
     @Override
-    public void refreshBalanceCache(Long userId) {
+    public void refreshBalanceCache(final Long userId) {
         if (userId == null) {
             return;
         }
@@ -753,7 +751,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 更新余额缓存
      */
-    private void updateBalanceCache(Long userId, BigDecimal balance) {
+    private void updateBalanceCache(final Long userId, final BigDecimal balance) {
         String cacheKey = BALANCE_CACHE_KEY_PREFIX + userId;
         try {
             redisTemplate.opsForValue().set(cacheKey, balance.toString(), 
@@ -778,7 +776,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 发送支付成功消息到MQ
      */
-    private void sendPaymentMessage(Long userId, Long orderId, BigDecimal amount, String transactionNo) {
+    private void sendPaymentMessage(final Long userId, final Long orderId, final BigDecimal amount, final String transactionNo) {
         try {
             java.util.Map<String, Object> message = new java.util.HashMap<>();
             message.put("userId", userId);
@@ -791,11 +789,11 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             rocketMQTemplate.asyncSend("virtual-account-topic", message, 
                     new org.apache.rocketmq.client.producer.SendCallback() {
                         @Override
-                        public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                        public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                             log.info("支付消息发送成功, orderId={}, transactionNo={}", orderId, transactionNo);
                         }
                         @Override
-                        public void onException(Throwable e) {
+                        public void onException(final Throwable e) {
                             log.error("支付消息发送失败, orderId={}, transactionNo={}", orderId, transactionNo, e);
                         }
                     });
@@ -807,7 +805,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 发送退款消息到MQ
      */
-    private void sendRefundMessage(Long userId, Long orderId, BigDecimal amount, String transactionNo) {
+    private void sendRefundMessage(final Long userId, final Long orderId, final BigDecimal amount, final String transactionNo) {
         try {
             java.util.Map<String, Object> message = new java.util.HashMap<>();
             message.put("userId", userId);
@@ -820,11 +818,11 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
             rocketMQTemplate.asyncSend("virtual-account-topic", message, 
                     new org.apache.rocketmq.client.producer.SendCallback() {
                         @Override
-                        public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                        public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                             log.info("退款消息发送成功, orderId={}, transactionNo={}", orderId, transactionNo);
                         }
                         @Override
-                        public void onException(Throwable e) {
+                        public void onException(final Throwable e) {
                             log.error("退款消息发送失败, orderId={}, transactionNo={}", orderId, transactionNo, e);
                         }
                     });

@@ -140,7 +140,7 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public Coupon getCouponById(Long couponId) {
+    public Coupon getCouponById(final Long couponId) {
         return couponMapper.selectById(couponId);
     }
 
@@ -173,7 +173,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteCoupon(Long couponId) {
+    public void deleteCoupon(final Long couponId) {
         couponMapper.deleteById(couponId);
         final Long couponIdRef = couponId;
         executeAfterCommit(() -> {

@@ -163,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
      * @param userId 用户ID
      * @return 订单实体
      */
-    private Order createOrderEntity(Product product, Long userId) {
+    private Order createOrderEntity(final Product product, final Long userId) {
         Order order = new Order();
         order.setTotalPrice(product.getPrice());
         order.setUserId(userId);
@@ -226,7 +226,7 @@ public class OrderServiceImpl implements OrderService {
         executeAfterCommit(() -> sendOrderNotification(orderRef));
     }
 
-    private void sendOrderNotification(Order order) {
+    private void sendOrderNotification(final Order order) {
         try {
             rocketMQTemplate.asyncSend("order-notify-topic",
                 OrderNotifyMessage.builder()
@@ -237,11 +237,11 @@ public class OrderServiceImpl implements OrderService {
                     .build(),
                 new org.apache.rocketmq.client.producer.SendCallback() {
                     @Override
-                    public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                    public void onSuccess(final org.apache.rocketmq.client.producer.SendResult sendResult) {
                         log.info("订单通知消息发送成功: {}", sendResult);
                     }
                     @Override
-                    public void onException(Throwable e) {
+                    public void onException(final Throwable e) {
                         log.error("订单通知消息发送失败", e);
                     }
                 });
@@ -260,7 +260,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Deprecated
-    public List<Order> listOrdersByUserId(Long userId) {
+    public List<Order> listOrdersByUserId(final Long userId) {
         // 兼容旧接口，默认返回第一页10条数据
         return listOrdersByUserId(userId, 1, 10).getRecords();
     }
@@ -325,7 +325,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Order shipOrder(Long orderId, Long merchantId) {
+    public Order shipOrder(final Long orderId, final Long merchantId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -454,7 +454,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Order applyRefund(Long orderId, Long userId) {
+    public Order applyRefund(final Long orderId, final Long userId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -493,7 +493,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @GlobalTransactional(name = "approve-refund", timeoutMills = 30000, rollbackFor = Exception.class)
-    public boolean approveRefund(Long orderId, Long merchantId) {
+    public boolean approveRefund(final Long orderId, final Long merchantId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -593,7 +593,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public Order applyAfterSale(Long orderId, String reason, Long userId) {
+    public Order applyAfterSale(final Long orderId, final String reason, final Long userId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -641,7 +641,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public IPage<Order> listOrdersByMerchantId(Long merchantId, int pageNum, int pageSize) {
+    public IPage<Order> listOrdersByMerchantId(final Long merchantId, final int pageNum, final int pageSize) {
         Page<Order> page = new Page<>(pageNum, pageSize);
         return orderMapper.selectByMerchantId(page, merchantId);
     }
@@ -721,7 +721,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class,
                    isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
-    public Map<Long, Order> batchShipOrders(List<Long> orderIds, Long merchantId) {
+    public Map<Long, Order> batchShipOrders(final List<Long> orderIds, final Long merchantId) {
         String lockKey = "batch-ship:" + merchantId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -782,7 +782,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(rollbackFor = Exception.class, timeout = 60,
                    propagation = org.springframework.transaction.annotation.Propagation.REQUIRED,
                    isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
-    public Map<Long, Order> batchCompleteOrders(List<Long> orderIds, Long userId) {
+    public Map<Long, Order> batchCompleteOrders(final List<Long> orderIds, final Long userId) {
         String lockKey = "batch-complete:" + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -915,7 +915,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> batchGetOrders(List<Long> orderIds) {
+    public List<Order> batchGetOrders(final List<Long> orderIds) {
         return orderMapper.batchSelectByIds(orderIds);
     }
 
@@ -930,7 +930,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @GlobalTransactional(name = "create-orders-from-cart", rollbackFor = Exception.class)
     @SuppressFBWarnings("UC_USELESS_OBJECT")
-    public Map<String, Object> createOrdersFromCart(Long userId) {
+    public Map<String, Object> createOrdersFromCart(final Long userId) {
         Map<String, Object> result = new HashMap<>();
         List<Order> successOrders = new ArrayList<>();
         List<Map<String, Object>> failedItems = new ArrayList<>();
@@ -942,85 +942,12 @@ public class OrderServiceImpl implements OrderService {
             return result;
         }
 
-        // 按商品分组，合并相同商品的购买数量
-        Map<Long, Integer> productQuantityMap = new HashMap<>();
-        Map<Long, CartItem> productItemMap = new HashMap<>();
-        for (CartItem item : checkedItems) {
-            productQuantityMap.merge(item.getProductId(), item.getQuantity(), Integer::sum);
-            productItemMap.putIfAbsent(item.getProductId(), item);
-        }
-
-        // 批量获取商品信息（性能优化：减少N+1调用）
-        List<Long> productIds = new ArrayList<>(productQuantityMap.keySet());
-        Map<Long, Product> productMap = new HashMap<>();
-        
-        try {
-            List<Product> products = productFeign.batchGetProducts(productIds);
-            if (products != null) {
-                for (Product product : products) {
-                    productMap.put(product.getId(), product);
-                }
-            }
-        } catch (Exception e) {
-            log.error("批量获取商品信息失败", e);
-            for (Long productId : productIds) {
-                CartItem item = productItemMap.get(productId);
-                Map<String, Object> failedItem = new HashMap<>();
-                failedItem.put("productId", productId);
-                failedItem.put("reason", "获取商品信息失败: " + e.getMessage());
-                failedItems.add(failedItem);
-            }
+        // 准备商品数据并扣减库存
+        Map<Long, Product> productMap = prepareProductsAndDeductStock(checkedItems, failedItems);
+        if (productMap == null) {
             result.put("successOrders", successOrders);
             result.put("failedItems", failedItems);
             return result;
-        }
-
-        // 校验库存并批量扣减
-        List<Map<String, Object>> stockDeductItems = new ArrayList<>();
-        for (Map.Entry<Long, Integer> entry : productQuantityMap.entrySet()) {
-            Long productId = entry.getKey();
-            Integer quantity = entry.getValue();
-            Product product = productMap.get(productId);
-            
-            if (product == null) {
-                CartItem item = productItemMap.get(productId);
-                Map<String, Object> failedItem = new HashMap<>();
-                failedItem.put("productId", productId);
-                failedItem.put("reason", "商品不存在");
-                failedItems.add(failedItem);
-                continue;
-            }
-            
-            if (product.getNum() == null || product.getNum() < quantity) {
-                Map<String, Object> failedItem = new HashMap<>();
-                failedItem.put("productId", productId);
-                failedItem.put("reason", "库存不足，当前库存: " + product.getNum() + "，需要: " + quantity);
-                failedItems.add(failedItem);
-                continue;
-            }
-            
-            Map<String, Object> stockItem = new HashMap<>();
-            stockItem.put("productId", productId);
-            stockItem.put("quantity", quantity);
-            stockDeductItems.add(stockItem);
-        }
-
-        // 批量扣减库存
-        if (!stockDeductItems.isEmpty()) {
-            try {
-                productFeign.batchDecreaseStock(stockDeductItems);
-            } catch (Exception e) {
-                // 库存扣减失败，记录所有商品失败
-                for (Map<String, Object> item : stockDeductItems) {
-                    Map<String, Object> failedItem = new HashMap<>();
-                    failedItem.put("productId", item.get("productId"));
-                    failedItem.put("reason", "库存扣减失败: " + e.getMessage());
-                    failedItems.add(failedItem);
-                }
-                result.put("successOrders", successOrders);
-                result.put("failedItems", failedItems);
-                return result;
-            }
         }
 
         // 按购物车项创建订单（每个商品一个订单）
@@ -1090,8 +1017,93 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public boolean hasOrdersForProduct(long productId) {
+    public boolean hasOrdersForProduct(final long productId) {
         long count = orderItemMapper.countByProductId(productId);
         return count > 0;
+    }
+
+    /**
+     * 准备商品数据并批量扣减库存。
+     * @param checkedItems 选中的购物车项
+     * @param failedItems 失败项列表（会被修改）
+     * @return 商品ID到商品的映射，如果处理失败返回null
+     */
+    private Map<Long, Product> prepareProductsAndDeductStock(final List<CartItem> checkedItems,
+                                                              final List<Map<String, Object>> failedItems) {
+        // 按商品分组，合并相同商品的购买数量
+        Map<Long, Integer> productQuantityMap = new HashMap<>();
+        Map<Long, CartItem> productItemMap = new HashMap<>();
+        for (CartItem item : checkedItems) {
+            productQuantityMap.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+            productItemMap.putIfAbsent(item.getProductId(), item);
+        }
+
+        // 批量获取商品信息（性能优化：减少N+1调用）
+        List<Long> productIds = new ArrayList<>(productQuantityMap.keySet());
+        Map<Long, Product> productMap = new HashMap<>();
+
+        try {
+            List<Product> products = productFeign.batchGetProducts(productIds);
+            if (products != null) {
+                for (Product product : products) {
+                    productMap.put(product.getId(), product);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量获取商品信息失败", e);
+            for (Long productId : productIds) {
+                Map<String, Object> failedItem = new HashMap<>();
+                failedItem.put("productId", productId);
+                failedItem.put("reason", "获取商品信息失败: " + e.getMessage());
+                failedItems.add(failedItem);
+            }
+            return null;
+        }
+
+        // 校验库存并批量扣减
+        List<Map<String, Object>> stockDeductItems = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : productQuantityMap.entrySet()) {
+            Long productId = entry.getKey();
+            Integer quantity = entry.getValue();
+            Product product = productMap.get(productId);
+
+            if (product == null) {
+                Map<String, Object> failedItem = new HashMap<>();
+                failedItem.put("productId", productId);
+                failedItem.put("reason", "商品不存在");
+                failedItems.add(failedItem);
+                continue;
+            }
+
+            if (product.getNum() == null || product.getNum() < quantity) {
+                Map<String, Object> failedItem = new HashMap<>();
+                failedItem.put("productId", productId);
+                failedItem.put("reason", "库存不足，当前库存: " + product.getNum() + "，需要: " + quantity);
+                failedItems.add(failedItem);
+                continue;
+            }
+
+            Map<String, Object> stockItem = new HashMap<>();
+            stockItem.put("productId", productId);
+            stockItem.put("quantity", quantity);
+            stockDeductItems.add(stockItem);
+        }
+
+        // 批量扣减库存
+        if (!stockDeductItems.isEmpty()) {
+            try {
+                productFeign.batchDecreaseStock(stockDeductItems);
+            } catch (Exception e) {
+                for (Map<String, Object> item : stockDeductItems) {
+                    Map<String, Object> failedItem = new HashMap<>();
+                    failedItem.put("productId", item.get("productId"));
+                    failedItem.put("reason", "库存扣减失败: " + e.getMessage());
+                    failedItems.add(failedItem);
+                }
+                return null;
+            }
+        }
+
+        return productMap;
     }
 }

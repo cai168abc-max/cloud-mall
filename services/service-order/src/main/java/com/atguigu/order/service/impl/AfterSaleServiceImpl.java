@@ -63,14 +63,15 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     private final RedissonClient redissonClient;
     private final TransactionTemplate requiresNewTemplate;
 
-    public AfterSaleServiceImpl(AfterSaleTicketMapper ticketMapper,
-                                OrderMapper orderMapper,
-                                OrderItemMapper orderItemMapper,
-                                VirtualAccountService virtualAccountService,
-                                ProductFeign productFeign,
-                                RocketMQTemplate rocketMQTemplate,
-                                RedissonClient redissonClient,
-                                PlatformTransactionManager transactionManager) {
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public AfterSaleServiceImpl(final AfterSaleTicketMapper ticketMapper,
+                                final OrderMapper orderMapper,
+                                final OrderItemMapper orderItemMapper,
+                                final VirtualAccountService virtualAccountService,
+                                final ProductFeign productFeign,
+                                final RocketMQTemplate rocketMQTemplate,
+                                final RedissonClient redissonClient,
+                                final PlatformTransactionManager transactionManager) {
         this.ticketMapper = ticketMapper;
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
@@ -113,9 +114,9 @@ public class AfterSaleServiceImpl implements AfterSaleService {
             throw new BusinessException("用户ID不能为空");
         }
 
-        if (!AfterSaleTicket.TYPE_REFUND.equals(type) && 
-            !AfterSaleTicket.TYPE_RETURN.equals(type) && 
-            !AfterSaleTicket.TYPE_EXCHANGE.equals(type)) {
+        if (!AfterSaleTicket.TYPE_REFUND.equals(type)
+            && !AfterSaleTicket.TYPE_RETURN.equals(type)
+            && !AfterSaleTicket.TYPE_EXCHANGE.equals(type)) {
             throw new BusinessException("无效的售后类型");
         }
 
@@ -154,7 +155,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     /**
      * 执行申请售后
      */
-    private AfterSaleTicket doApplyAfterSale(Long orderId, String type, String reason, String description, String images, Long userId) {
+    private AfterSaleTicket doApplyAfterSale(final Long orderId, final String type, final String reason, final String description, final String images, final Long userId) {
         // 1. 查询订单
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
@@ -219,7 +220,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean approveAfterSale(Long ticketId, Long merchantId, BigDecimal refundAmount) {
+    public boolean approveAfterSale(final Long ticketId, final Long merchantId, final BigDecimal refundAmount) {
         if (ticketId == null) {
             throw new BusinessException("工单ID不能为空");
         }
@@ -259,7 +260,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
     }
 
-    private boolean doApproveAfterSale(Long ticketId, Long merchantId, BigDecimal refundAmount) {
+    private boolean doApproveAfterSale(final Long ticketId, final Long merchantId, final BigDecimal refundAmount) {
         final BigDecimal[] refundAmountHolder = new BigDecimal[1];
         final AfterSaleTicket[] ticketHolder = new AfterSaleTicket[1];
         final Order[] orderHolder = new Order[1];
@@ -359,7 +360,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean rejectAfterSale(Long ticketId, Long merchantId, String rejectReason) {
+    public boolean rejectAfterSale(final Long ticketId, final Long merchantId, final String rejectReason) {
         if (ticketId == null) {
             throw new BusinessException("工单ID不能为空");
         }
@@ -447,7 +448,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean manualRefund(Long ticketId, Long merchantId) {
+    public boolean manualRefund(final Long ticketId, final Long merchantId) {
         if (ticketId == null) {
             throw new BusinessException("工单ID不能为空");
         }
@@ -490,7 +491,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     /**
      * 执行手动退款（兜底方案）
      */
-    private boolean doManualRefund(Long ticketId, Long merchantId) {
+    private boolean doManualRefund(final Long ticketId, final Long merchantId) {
         // 1. 查询工单
         AfterSaleTicket ticket = ticketMapper.selectById(ticketId);
         if (ticket == null) {
@@ -498,8 +499,8 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
 
         // 2. 校验工单状态（只有处理中状态的工单才能手动退款）
-        if (!AfterSaleTicket.STATUS_PROCESSING.equals(ticket.getStatus()) &&
-            !AfterSaleTicket.STATUS_APPROVED.equals(ticket.getStatus())) {
+        if (!AfterSaleTicket.STATUS_PROCESSING.equals(ticket.getStatus())
+            && !AfterSaleTicket.STATUS_APPROVED.equals(ticket.getStatus())) {
             throw new BusinessException("工单状态异常，无法手动退款");
         }
 
@@ -557,7 +558,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean cancelAfterSale(Long ticketId, Long userId) {
+    public boolean cancelAfterSale(final Long ticketId, final Long userId) {
         if (ticketId == null) {
             throw new BusinessException("工单ID不能为空");
         }
@@ -597,7 +598,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
         }
     }
 
-    private boolean doCancelAfterSale(Long ticketId, Long userId) {
+    private boolean doCancelAfterSale(final Long ticketId, final Long userId) {
         AfterSaleTicket ticket = ticketMapper.selectById(ticketId);
         if (ticket == null) {
             throw new BusinessException("工单不存在");
@@ -638,7 +639,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public AfterSaleTicket getTicketByOrderId(Long orderId) {
+    public AfterSaleTicket getTicketByOrderId(final Long orderId) {
         if (orderId == null) {
             return null;
         }
@@ -654,7 +655,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public IPage<AfterSaleTicket> listTicketsByUserId(Long userId, int pageNum, int pageSize) {
+    public IPage<AfterSaleTicket> listTicketsByUserId(final Long userId, final int pageNum, final int pageSize) {
         if (userId == null) {
             return new Page<>(pageNum, pageSize);
         }
@@ -686,7 +687,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public List<AfterSaleTicket> listTicketsByMerchantIdAndStatus(Long merchantId, String status) {
+    public List<AfterSaleTicket> listTicketsByMerchantIdAndStatus(final Long merchantId, final String status) {
         if (merchantId == null) {
             return List.of();
         }
@@ -708,12 +709,12 @@ public class AfterSaleServiceImpl implements AfterSaleService {
             rocketMQTemplate.asyncSend("after-sale-notify-topic", notifyMessage, 
                     new SendCallback() {
                         @Override
-                        public void onSuccess(SendResult sendResult) {
+                        public void onSuccess(final SendResult sendResult) {
                             log.info("售后通知消息发送成功, ticketId={}, action={}", ticket.getId(), action);
                         }
 
                         @Override
-                        public void onException(Throwable e) {
+                        public void onException(final Throwable e) {
                             log.error("售后通知消息发送失败, ticketId={}, action={}", ticket.getId(), action, e);
                         }
                     });

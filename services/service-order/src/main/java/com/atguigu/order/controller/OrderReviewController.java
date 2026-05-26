@@ -34,11 +34,11 @@ public class OrderReviewController {
     @PostMapping
     @Operation(summary = "创建评价", description = "用户对已完成订单进行评价")
     public R createReview(
-            @Parameter(description = "订单ID") @RequestParam @NotNull Long orderId,
-            @Parameter(description = "评分(1-5)") @RequestParam @NotNull @Min(1) @Max(5) Integer rating,
-            @Parameter(description = "评价内容") @RequestParam(required = false) String content,
-            @Parameter(description = "评价图片URL列表") @RequestParam(required = false) List<String> images,
-            @Parameter(description = "是否匿名") @RequestParam(required = false, defaultValue = "false") Boolean anonymous) {
+            @Parameter(description = "订单ID") @RequestParam @NotNull final Long orderId,
+            @Parameter(description = "评分(1-5)") @RequestParam @NotNull @Min(1) @Max(5) final Integer rating,
+            @Parameter(description = "评价内容") @RequestParam(required = false) final String content,
+            @Parameter(description = "评价图片URL列表") @RequestParam(required = false) final List<String> images,
+            @Parameter(description = "是否匿名") @RequestParam(required = false, defaultValue = "false") final Boolean anonymous) {
 
         // 登录校验
         R authCheck = requireLogin();
@@ -54,7 +54,7 @@ public class OrderReviewController {
     @GetMapping("/{id}")
     @Operation(summary = "获取评价详情", description = "根据评价ID获取评价详情")
     public R getReview(
-            @Parameter(description = "评价ID") @PathVariable @NotNull Long id) {
+            @Parameter(description = "评价ID") @PathVariable @NotNull final Long id) {
         OrderReview review = orderReviewService.getReviewById(id);
         if (review == null) {
             return R.notFound("评价不存在");
@@ -65,7 +65,7 @@ public class OrderReviewController {
     @GetMapping("/order/{orderId}")
     @Operation(summary = "根据订单ID获取评价", description = "根据订单ID获取评价信息")
     public R getReviewByOrderId(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
         OrderReview review = orderReviewService.getReviewByOrderId(orderId);
         if (review == null) {
             return R.notFound("该订单暂无评价");
@@ -76,8 +76,8 @@ public class OrderReviewController {
     @GetMapping("/my")
     @Operation(summary = "获取我的评价列表", description = "分页获取当前用户的评价列表")
     public R listMyReviews(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") final int pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") final int pageSize) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -92,9 +92,9 @@ public class OrderReviewController {
     @GetMapping("/product/{productId}")
     @Operation(summary = "获取商品评价列表", description = "分页获取商品的评价列表")
     public R listProductReviews(
-            @Parameter(description = "商品ID") @PathVariable @NotNull Long productId,
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "商品ID") @PathVariable @NotNull final Long productId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") final int pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") final int pageSize) {
 
         IPage<OrderReview> page = orderReviewService.listReviewsByProductId(productId, pageNum, pageSize);
         return R.ok("查询成功", page);
@@ -103,8 +103,8 @@ public class OrderReviewController {
     @GetMapping("/merchant")
     @Operation(summary = "获取商家评价列表", description = "分页获取商家的评价列表")
     public R listMerchantReviews(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") final int pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") final int pageSize) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -124,7 +124,7 @@ public class OrderReviewController {
     @GetMapping("/stats/{productId}")
     @Operation(summary = "获取商品评价统计", description = "获取商品的评价数量、平均分、各评分分布")
     public R getProductReviewStats(
-            @Parameter(description = "商品ID") @PathVariable @NotNull Long productId) {
+            @Parameter(description = "商品ID") @PathVariable @NotNull final Long productId) {
 
         Map<String, Object> stats = orderReviewService.getProductReviewStats(productId);
         return R.ok("查询成功", stats);
@@ -133,7 +133,7 @@ public class OrderReviewController {
     @GetMapping("/count/{productId}")
     @Operation(summary = "获取商品评价数量", description = "获取商品的评价数量（从缓存）")
     public R getProductReviewCount(
-            @Parameter(description = "商品ID") @PathVariable @NotNull Long productId) {
+            @Parameter(description = "商品ID") @PathVariable @NotNull final Long productId) {
 
         Long count = orderReviewService.getProductReviewCount(productId);
         return R.ok("查询成功", count);
@@ -142,7 +142,7 @@ public class OrderReviewController {
     @GetMapping("/avg/{productId}")
     @Operation(summary = "获取商品平均评分", description = "获取商品的平均评分（从缓存）")
     public R getProductAvgRating(
-            @Parameter(description = "商品ID") @PathVariable @NotNull Long productId) {
+            @Parameter(description = "商品ID") @PathVariable @NotNull final Long productId) {
 
         Double avgRating = orderReviewService.getProductAvgRating(productId);
         return R.ok("查询成功", avgRating);
@@ -151,7 +151,7 @@ public class OrderReviewController {
     @GetMapping("/check/{orderId}")
     @Operation(summary = "检查订单是否已评价", description = "检查指定订单是否已评价")
     public R checkReviewed(
-            @Parameter(description = "订单ID") @PathVariable @NotNull Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable @NotNull final Long orderId) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -165,8 +165,8 @@ public class OrderReviewController {
     @PutMapping("/{reviewId}/status")
     @Operation(summary = "更新评价状态", description = "管理员隐藏/显示评价")
     public R updateReviewStatus(
-            @Parameter(description = "评价ID") @PathVariable @NotNull Long reviewId,
-            @Parameter(description = "状态(1正常,0隐藏)") @RequestParam @NotNull Integer status) {
+            @Parameter(description = "评价ID") @PathVariable @NotNull final Long reviewId,
+            @Parameter(description = "状态(1正常,0隐藏)") @RequestParam @NotNull final Integer status) {
 
         R authCheck = requireLogin();
         if (authCheck != null) {
@@ -201,7 +201,7 @@ public class OrderReviewController {
      * @param allowedRoles 允许的角色列表
      * @return 无权限返回错误响应，有权限返回null
      */
-    private R requireRole(UserRole... allowedRoles) {
+    private R requireRole(final UserRole... allowedRoles) {
         UserRole currentRole = UserContext.get().getRole();
         for (UserRole role : allowedRoles) {
             if (currentRole == role) {

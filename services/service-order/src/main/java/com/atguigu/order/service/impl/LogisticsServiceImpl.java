@@ -63,8 +63,8 @@ public class LogisticsServiceImpl implements LogisticsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public LogisticsInfo shipOrder(Long orderId, Long merchantId, String trackingNo, String carrier,
-                                   String senderName, String senderPhone, String senderAddress) {
+    public LogisticsInfo shipOrder(final Long orderId, final Long merchantId, final String trackingNo, final String carrier,
+                                   final String senderName, final String senderPhone, final String senderAddress) {
         log.info("发货请求: orderId={}, merchantId={}, trackingNo={}, carrier={}", 
                 orderId, merchantId, trackingNo, carrier);
         
@@ -243,7 +243,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 创建初始物流轨迹
      */
-    private void createInitialTrace(Long logisticsId, String carrier) {
+    private void createInitialTrace(final Long logisticsId, final String carrier) {
         LogisticsTrace trace = LogisticsTrace.builder()
                 .logisticsId(logisticsId)
                 .traceTime(LocalDateTime.now())
@@ -269,12 +269,12 @@ public class LogisticsServiceImpl implements LogisticsService {
             
             rocketMQTemplate.asyncSend("order-ship-topic", message, new SendCallback() {
                 @Override
-                public void onSuccess(SendResult sendResult) {
+                public void onSuccess(final SendResult sendResult) {
                     log.info("发货通知消息发送成功: orderId={}, msgId={}", order.getId(), sendResult.getMsgId());
                 }
                 
                 @Override
-                public void onException(Throwable e) {
+                public void onException(final Throwable e) {
                     log.error("发货通知消息发送失败: orderId={}", order.getId(), e);
                 }
             });
@@ -364,7 +364,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     }
 
     @Override
-    public List<LogisticsInfo> listLogisticsByMerchantId(Long merchantId) {
+    public List<LogisticsInfo> listLogisticsByMerchantId(final Long merchantId) {
         List<LogisticsInfo> logisticsList = logisticsInfoMapper.selectByMerchantId(merchantId);
         // 为每个物流信息加载轨迹
         logisticsList.forEach(logistics -> {
@@ -465,7 +465,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     }
 
     @Override
-    public void refreshLogisticsCache(Long orderId) {
+    public void refreshLogisticsCache(final Long orderId) {
         String cacheKey = CacheKeyConstants.logisticsInfo(orderId);
         stringRedisTemplate.delete(cacheKey);
         

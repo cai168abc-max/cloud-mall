@@ -26,7 +26,7 @@ public class XTokenInterceptor implements RequestInterceptor {
     private static final Logger log = LoggerFactory.getLogger(XTokenInterceptor.class);
 
     @Override
-    public void apply(RequestTemplate requestTemplate) {
+    public void apply(final RequestTemplate requestTemplate) {
         // 1. 尝试从当前请求中获取原始Authorization头
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes != null) {

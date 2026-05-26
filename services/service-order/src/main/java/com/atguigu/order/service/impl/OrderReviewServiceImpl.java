@@ -162,7 +162,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public OrderReview getReviewByOrderId(Long orderId) {
+    public OrderReview getReviewByOrderId(final Long orderId) {
         return orderReviewMapper.selectByOrderId(orderId);
     }
 
@@ -185,7 +185,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public Map<String, Object> getProductReviewStats(Long productId) {
+    public Map<String, Object> getProductReviewStats(final Long productId) {
         Map<String, Object> stats = new HashMap<>();
 
         // 优先从缓存获取
@@ -260,7 +260,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public void updateReviewCache(Long productId) {
+    public void updateReviewCache(final Long productId) {
         // 更新评价数量缓存
         long count = orderReviewMapper.countByProductId(productId);
         String countKey = CacheKeyConstants.productReviewCount(productId);
@@ -357,7 +357,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     /**
      * 校验订单
      */
-    private Order validateOrder(Long orderId, Long userId) {
+    private Order validateOrder(final Long orderId, final Long userId) {
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
             throw new BusinessException("订单不存在");
@@ -416,7 +416,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     /**
      * 列表转JSON字符串
      */
-    private String toJsonString(List<String> list) {
+    private String toJsonString(final List<String> list) {
         try {
             return objectMapper.writeValueAsString(list);
         } catch (JsonProcessingException e) {

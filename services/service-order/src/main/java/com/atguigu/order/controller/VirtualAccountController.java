@@ -26,7 +26,7 @@ public class VirtualAccountController {
 
     @Operation(summary = "账户充值", description = "为虚拟账户充值")
     @PostMapping("/recharge")
-    public R recharge(@RequestBody RechargeRequest request) {
+    public R recharge(@RequestBody final RechargeRequest request) {
         com.atguigu.common.bean.UserInfo userInfo = UserContext.get();
         Long userId = userInfo != null ? userInfo.getId() : null;
         if (userId == null) {
@@ -107,7 +107,7 @@ public class VirtualAccountController {
     @Operation(summary = "查询订单流水", description = "根据订单ID查询交易流水")
     @GetMapping("/logs/order/{orderId}")
     public R getLogByOrderId(
-            @Parameter(description = "订单ID") @PathVariable Long orderId) {
+            @Parameter(description = "订单ID") @PathVariable final Long orderId) {
         com.atguigu.common.bean.UserInfo userInfo = UserContext.get();
         Long userId = userInfo != null ? userInfo.getId() : null;
         if (userId == null) {
@@ -143,7 +143,7 @@ public class VirtualAccountController {
 
     @Operation(summary = "支付（内部接口）", description = "从虚拟账户扣款支付订单")
     @PostMapping("/internal/pay")
-    public R internalPay(@RequestBody PayRequest request) {
+    public R internalPay(@RequestBody final PayRequest request) {
         try {
             VirtualAccountLog log = virtualAccountService.pay(
                     request.getUserId(), 
@@ -159,7 +159,7 @@ public class VirtualAccountController {
 
     @Operation(summary = "退款（内部接口）", description = "退款到虚拟账户")
     @PostMapping("/internal/refund")
-    public R internalRefund(@RequestBody RefundRequest request) {
+    public R internalRefund(@RequestBody final RefundRequest request) {
         try {
             VirtualAccountLog log = virtualAccountService.refund(
                     request.getUserId(), 
@@ -176,7 +176,7 @@ public class VirtualAccountController {
     @Operation(summary = "查询余额（内部接口）", description = "查询指定用户虚拟账户余额")
     @GetMapping("/internal/balance/{userId}")
     public R internalGetBalance(
-            @Parameter(description = "用户ID") @PathVariable Long userId) {
+            @Parameter(description = "用户ID") @PathVariable final Long userId) {
         try {
             BigDecimal balance = virtualAccountService.getBalance(userId);
             return R.ok(balance);
@@ -185,7 +185,7 @@ public class VirtualAccountController {
         }
     }
 
-    private Map<String, Object> toLogMap(VirtualAccountLog log) {
+    private Map<String, Object> toLogMap(final VirtualAccountLog log) {
         Map<String, Object> map = new HashMap<>();
         if (log == null) {
             return map;

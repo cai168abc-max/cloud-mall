@@ -49,7 +49,7 @@ public class SentinelBlockHandler implements BlockExceptionHandler {
      * @param e BlockException
      * @return 提示信息
      */
-    private String getBlockMessage(BlockException e) {
+    private String getBlockMessage(final BlockException e) {
         if (e instanceof FlowException) {
             return "系统繁忙，请稍后重试";
         } else if (e instanceof DegradeException) {

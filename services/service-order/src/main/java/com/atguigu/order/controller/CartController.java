@@ -55,8 +55,8 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    public R addCartItem(@RequestParam @NotNull Long productId,
-                         @RequestParam(value = "quantity", defaultValue = "1") @Min(1) Integer quantity) {
+    public R addCartItem(@RequestParam @NotNull final Long productId,
+                         @RequestParam(value = "quantity", defaultValue = "1") @Min(1) final Integer quantity) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -66,8 +66,8 @@ public class CartController {
     }
 
     @PutMapping("/quantity")
-    public R updateQuantity(@RequestParam @NotNull Long productId,
-                            @RequestParam @NotNull @Min(1) Integer quantity) {
+    public R updateQuantity(@RequestParam @NotNull final Long productId,
+                            @RequestParam @NotNull @Min(1) final Integer quantity) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -80,8 +80,8 @@ public class CartController {
     }
 
     @PutMapping("/check")
-    public R checkItem(@RequestParam("productId") Long productId,
-                      @RequestParam("checked") boolean checked) {
+    public R checkItem(@RequestParam("productId") final Long productId,
+                      @RequestParam("checked") final boolean checked) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -91,7 +91,7 @@ public class CartController {
     }
 
     @PutMapping("/checkAll")
-    public R checkAllItems(@RequestParam("checked") boolean checked) {
+    public R checkAllItems(@RequestParam("checked") final boolean checked) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -101,7 +101,7 @@ public class CartController {
     }
 
     @DeleteMapping("/item")
-    public R removeItem(@RequestParam @NotNull Long productId) {
+    public R removeItem(@RequestParam @NotNull final Long productId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
