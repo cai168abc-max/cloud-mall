@@ -226,18 +226,17 @@ jobs:
       - name: List build artifacts
         run: |
           echo "Build artifacts:"
-          find . -name "*.jar" -path "*/target/*" -type f
+          find . -name "app.jar" -path "*/target/*" -type f
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            services/service-order/target/*.jar
-            services/service-product/target/*.jar
-            services/service-user/target/*.jar
-            gateway/target/*.jar
-            !**/*-original.jar
+            services/service-order/target/app.jar
+            services/service-product/target/app.jar
+            services/service-user/target/app.jar
+            gateway/target/app.jar
           retention-days: 7
           if-no-files-found: error
 
@@ -259,10 +258,48 @@ jobs:
           name: build-artifacts
           path: .
 
-      - name: Verify downloaded artifacts
+      - name: Verify and place JAR files
         run: |
-          echo "Downloaded artifacts:"
+          echo "All downloaded files:"
           find . -name "*.jar" -type f
+          
+          echo ""
+          echo "Ensuring JAR files are in correct target directories..."
+          mkdir -p gateway/target \
+                   services/service-order/target \
+                   services/service-product/target \
+                   services/service-user/target
+          
+          # Move JARs to correct target directories if they're in wrong locations
+          for jar in $(find . -name "*.jar" -type f); do
+            jar_name=$(basename "$jar")
+            echo "Found JAR: $jar_name at $jar"
+            
+            # Gateway JAR
+            if [[ "$jar_name" == gateway* ]] && [[ "$jar" != */gateway/target/* ]]; then
+              echo "  -> Moving to gateway/target/"
+              cp "$jar" gateway/target/
+            fi
+            # Service-Order JAR  
+            if [[ "$jar_name" == service-order* ]] && [[ "$jar" != */services/service-order/target/* ]]; then
+              echo "  -> Moving to services/service-order/target/"
+              cp "$jar" services/service-order/target/
+            fi
+            # Service-Product JAR
+            if [[ "$jar_name" == service-product* ]] && [[ "$jar" != */services/service-product/target/* ]]; then
+              echo "  -> Moving to services/service-product/target/"
+              cp "$jar" services/service-product/target/
+            fi
+            # Service-User JAR
+            if [[ "$jar_name" == service-user* ]] && [[ "$jar" != */services/service-user/target/* ]]; then
+              echo "  -> Moving to services/service-user/target/"
+              cp "$jar" services/service-user/target/
+            fi
+          done
+          
+          echo ""
+          echo "Final JAR locations:"
+          find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar" 2>/dev/null || echo "WARNING: Some target directories are empty!"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -292,7 +329,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=gateway/target/*.jar
+            JAR_FILE=gateway/target/app.jar
 
       - name: Build and push service-order
         uses: docker/build-push-action@v5
@@ -306,7 +343,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-order/target/*.jar
+            JAR_FILE=services/service-order/target/app.jar
 
       - name: Build and push service-product
         uses: docker/build-push-action@v5
@@ -320,7 +357,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-product/target/*.jar
+            JAR_FILE=services/service-product/target/app.jar
 
       - name: Build and push service-user
         uses: docker/build-push-action@v5
@@ -334,7 +371,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-user/target/*.jar
+            JAR_FILE=services/service-user/target/app.jar
 
       - name: Docker images summary
         run: |
@@ -363,17 +400,45 @@ jobs:
 
       - name: Verify artifacts and place JARs
         run: |
-          echo "Downloaded artifacts:"
+          echo "All downloaded files:"
           find . -name "*.jar" -type f
-          echo "Creating target directories for Docker builds..."
-          mkdir -p gateway/target services/service-order/target services/service-product/target services/service-user/target
-          echo "Placing JAR files in correct locations..."
-          find . -name "gateway*.jar" -not -path "*/gateway/target/*" -exec cp {} gateway/target/ \;
-          find . -name "service-order*.jar" -not -path "*/services/service-order/target/*" -exec cp {} services/service-order/target/ \;
-          find . -name "service-product*.jar" -not -path "*/services/service-product/target/*" -exec cp {} services/service-product/target/ \;
-          find . -name "service-user*.jar" -not -path "*/services/service-user/target/*" -exec cp {} services/service-user/target/ \;
-          echo "Verifying JAR placement:"
-          find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar"
+          
+          echo ""
+          echo "Ensuring JAR files are in correct target directories..."
+          mkdir -p gateway/target \
+                   services/service-order/target \
+                   services/service-product/target \
+                   services/service-user/target
+          
+          # Move JARs to correct target directories if they're in wrong locations
+          for jar in $(find . -name "*.jar" -type f); do
+            jar_name=$(basename "$jar")
+            echo "Found JAR: $jar_name at $jar"
+            
+            if [[ "$jar_name" == gateway* ]] && [[ "$jar" != */gateway/target/* ]]; then
+              echo "  -> Copying to gateway/target/"
+              cp "$jar" gateway/target/
+            fi
+            if [[ "$jar_name" == service-order* ]] && [[ "$jar" != */services/service-order/target/* ]]; then
+              echo "  -> Copying to services/service-order/target/"
+              cp "$jar" services/service-order/target/
+            fi
+            if [[ "$jar_name" == service-product* ]] && [[ "$jar" != */services/service-product/target/* ]]; then
+              echo "  -> Copying to services/service-product/target/"
+              cp "$jar" services/service-product/target/
+            fi
+            if [[ "$jar_name" == service-user* ]] && [[ "$jar" != */services/service-user/target/* ]]; then
+              echo "  -> Copying to services/service-user/target/"
+              cp "$jar" services/service-user/target/
+            fi
+          done
+          
+          echo ""
+          echo "Final JAR locations (verify all modules have JARs):"
+          ls -la gateway/target/*.jar 2>/dev/null || echo "ERROR: gateway/target/ is empty!"
+          ls -la services/service-order/target/*.jar 2>/dev/null || echo "ERROR: services/service-order/target/ is empty!"
+          ls -la services/service-product/target/*.jar 2>/dev/null || echo "ERROR: services/service-product/target/ is empty!"
+          ls -la services/service-user/target/*.jar 2>/dev/null || echo "ERROR: services/service-user/target/ is empty!"
 
       - name: Set up Docker Compose
         run: |
@@ -470,17 +535,45 @@ jobs:
 
       - name: Verify artifacts and place JARs
         run: |
-          echo "Downloaded artifacts:"
+          echo "All downloaded files:"
           find . -name "*.jar" -type f
-          echo "Creating target directories for Docker builds..."
-          mkdir -p gateway/target services/service-order/target services/service-product/target services/service-user/target
-          echo "Placing JAR files in correct locations..."
-          find . -name "gateway*.jar" -not -path "*/gateway/target/*" -exec cp {} gateway/target/ \;
-          find . -name "service-order*.jar" -not -path "*/services/service-order/target/*" -exec cp {} services/service-order/target/ \;
-          find . -name "service-product*.jar" -not -path "*/services/service-product/target/*" -exec cp {} services/service-product/target/ \;
-          find . -name "service-user*.jar" -not -path "*/services/service-user/target/*" -exec cp {} services/service-user/target/ \;
-          echo "Verifying JAR placement:"
-          find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar"
+          
+          echo ""
+          echo "Ensuring JAR files are in correct target directories..."
+          mkdir -p gateway/target \
+                   services/service-order/target \
+                   services/service-product/target \
+                   services/service-user/target
+          
+          # Move JARs to correct target directories if they're in wrong locations
+          for jar in $(find . -name "*.jar" -type f); do
+            jar_name=$(basename "$jar")
+            echo "Found JAR: $jar_name at $jar"
+            
+            if [[ "$jar_name" == gateway* ]] && [[ "$jar" != */gateway/target/* ]]; then
+              echo "  -> Copying to gateway/target/"
+              cp "$jar" gateway/target/
+            fi
+            if [[ "$jar_name" == service-order* ]] && [[ "$jar" != */services/service-order/target/* ]]; then
+              echo "  -> Copying to services/service-order/target/"
+              cp "$jar" services/service-order/target/
+            fi
+            if [[ "$jar_name" == service-product* ]] && [[ "$jar" != */services/service-product/target/* ]]; then
+              echo "  -> Copying to services/service-product/target/"
+              cp "$jar" services/service-product/target/
+            fi
+            if [[ "$jar_name" == service-user* ]] && [[ "$jar" != */services/service-user/target/* ]]; then
+              echo "  -> Copying to services/service-user/target/"
+              cp "$jar" services/service-user/target/
+            fi
+          done
+          
+          echo ""
+          echo "Final JAR locations (verify all modules have JARs):"
+          ls -la gateway/target/*.jar 2>/dev/null || echo "ERROR: gateway/target/ is empty!"
+          ls -la services/service-order/target/*.jar 2>/dev/null || echo "ERROR: services/service-order/target/ is empty!"
+          ls -la services/service-product/target/*.jar 2>/dev/null || echo "ERROR: services/service-product/target/ is empty!"
+          ls -la services/service-user/target/*.jar 2>/dev/null || echo "ERROR: services/service-user/target/ is empty!"
 
       - name: Set up Docker Compose
         run: |
