@@ -7,6 +7,7 @@ import com.atguigu.common.context.UserContext;
 import com.atguigu.order.feign.ProductFeign;
 import com.atguigu.order.service.OrderService;
 import com.atguigu.order.service.SeckillService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class SeckillServiceImpl implements SeckillService {
 
     private static final Logger log = LoggerFactory.getLogger(SeckillServiceImpl.class);

@@ -6,6 +6,7 @@ import com.alibaba.otter.canal.protocol.CanalEntry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2. Redis发布订阅同步多实例缓存（多实例场景）
  */
 @Service
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class RedisCacheSyncService implements MessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCacheSyncService.class);

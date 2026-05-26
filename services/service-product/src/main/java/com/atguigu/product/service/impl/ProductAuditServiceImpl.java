@@ -9,6 +9,7 @@ import com.atguigu.product.service.ProductAuditService;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * 6. 异常处理和兜底方案
  */
 @Service
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class ProductAuditServiceImpl implements ProductAuditService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductAuditServiceImpl.class);
@@ -46,11 +48,11 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     private final RocketMQTemplate rocketMQTemplate;
     private final TransactionTemplate transactionTemplate;
 
-    public ProductAuditServiceImpl(ProductMapper productMapper,
-                                   ProductAuditLogMapper productAuditLogMapper,
-                                   RedissonClient redissonClient,
-                                   RocketMQTemplate rocketMQTemplate,
-                                   PlatformTransactionManager transactionManager) {
+    public ProductAuditServiceImpl(final ProductMapper productMapper,
+                                   final ProductAuditLogMapper productAuditLogMapper,
+                                   final RedissonClient redissonClient,
+                                   final RocketMQTemplate rocketMQTemplate,
+                                   final PlatformTransactionManager transactionManager) {
         this.productMapper = productMapper;
         this.productAuditLogMapper = productAuditLogMapper;
         this.redissonClient = redissonClient;
@@ -60,7 +62,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     }
 
     @Override
-    public AuditResult auditProduct(Long productId, Long auditorId, Boolean approved, String reason) {
+    public AuditResult auditProduct(final Long productId, final Long auditorId, final Boolean approved, final String reason) {
         if (productId == null || auditorId == null || approved == null) {
             return new AuditResult(false, "参数不完整", productId);
         }
@@ -100,7 +102,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
         }
     }
 
-    private AuditResult executeAuditWithDbLock(Long productId, Long auditorId, Boolean approved, String reason) {
+    private AuditResult executeAuditWithDbLock(final Long productId, final Long auditorId, final Boolean approved, final String reason) {
         log.info("使用数据库行锁进行审核，productId={}", productId);
         final Product[] productHolder = new Product[1];
         AuditResult result = transactionTemplate.execute(status -> {
@@ -132,7 +134,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
         return result;
     }
 
-    private AuditResult executeAuditInTransaction(Long productId, Long auditorId, Boolean approved, String reason) {
+    private AuditResult executeAuditInTransaction(final Long productId, final Long auditorId, final Boolean approved, final String reason) {
         final Product[] productHolder = new Product[1];
         AuditResult result = transactionTemplate.execute(status -> {
             try {
@@ -166,7 +168,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     /**
      * 在事务中执行审核操作
      */
-    private AuditResult doAuditInTransaction(Product product, Long auditorId, Boolean approved, String reason) {
+    private AuditResult doAuditInTransaction(final Product product, final Long auditorId, final Boolean approved, final String reason) {
         Long productId = product.getId();
         Integer beforeStatus = (product.getVerified() != null && product.getVerified()) ? 1 : 0;
         Integer afterStatus = approved ? 1 : 0;
@@ -198,7 +200,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     }
 
     @Override
-    public BatchAuditResult batchAuditProducts(List<Long> productIds, Long auditorId, Boolean approved, String reason) {
+    public BatchAuditResult batchAuditProducts(final List<Long> productIds, final Long auditorId, final Boolean approved, final String reason) {
         // 参数校验
         if (productIds == null || productIds.isEmpty()) {
             return new BatchAuditResult(0, 0, 0, Collections.emptyMap());
@@ -266,7 +268,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     /**
      * 发送审核结果消息到MQ
      */
-    private void sendAuditMessage(Product product, Long auditorId, Boolean approved, String reason, String type) {
+    private void sendAuditMessage(final Product product, final Long auditorId, final Boolean approved, final String reason, final String type) {
         if (product == null) {
             return;
         }
@@ -300,7 +302,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     }
 
     @Override
-    public List<ProductAuditLog> getAuditHistory(Long productId) {
+    public List<ProductAuditLog> getAuditHistory(final Long productId) {
         if (productId == null) {
             return Collections.emptyList();
         }
@@ -308,7 +310,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
     }
 
     @Override
-    public List<ProductAuditLog> getAuditHistoryByMerchant(Long merchantId) {
+    public List<ProductAuditLog> getAuditHistoryByMerchant(final Long merchantId) {
         if (merchantId == null) {
             return Collections.emptyList();
         }

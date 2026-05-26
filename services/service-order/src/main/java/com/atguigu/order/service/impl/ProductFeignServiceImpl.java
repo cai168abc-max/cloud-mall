@@ -5,6 +5,7 @@ import com.atguigu.common.exception.BusinessException;
 import com.atguigu.order.feign.ProductFeign;
 import com.atguigu.order.service.ProductFeignService;
 import com.atguigu.product.bean.Product;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,7 +13,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.Map;
  * </ul>
  */
 @Service
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class ProductFeignServiceImpl implements ProductFeignService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductFeignServiceImpl.class);

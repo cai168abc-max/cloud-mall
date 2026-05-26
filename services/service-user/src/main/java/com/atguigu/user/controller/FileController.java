@@ -7,6 +7,7 @@ import com.atguigu.user.service.FileStorageService;
 import com.atguigu.user.service.UserAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +33,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/file")
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class FileController {
 
     private static final Logger log = LoggerFactory.getLogger(FileController.class);

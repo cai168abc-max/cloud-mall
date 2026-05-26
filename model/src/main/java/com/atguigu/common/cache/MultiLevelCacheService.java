@@ -3,6 +3,7 @@ package com.atguigu.common.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.RequiredArgsConstructor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class MultiLevelCacheService {
 
     private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheService.class);

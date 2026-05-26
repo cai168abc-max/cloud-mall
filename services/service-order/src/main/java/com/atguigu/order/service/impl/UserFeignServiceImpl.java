@@ -6,6 +6,7 @@ import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
 import com.atguigu.order.feign.UserFeign;
 import com.atguigu.order.service.UserFeignService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
  * </ul>
  */
 @Service
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class UserFeignServiceImpl implements UserFeignService {
 
     private static final Logger log = LoggerFactory.getLogger(UserFeignServiceImpl.class);

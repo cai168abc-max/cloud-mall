@@ -5,6 +5,7 @@ import com.atguigu.order.bean.CartItem;
 import com.atguigu.order.feign.ProductFeign;
 import com.atguigu.order.service.CartService;
 import com.atguigu.product.bean.Product;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class CartServiceImpl implements CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);

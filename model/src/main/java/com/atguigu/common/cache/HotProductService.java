@@ -14,9 +14,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class HotProductService {
 
     private static final Logger log = LoggerFactory.getLogger(HotProductService.class);

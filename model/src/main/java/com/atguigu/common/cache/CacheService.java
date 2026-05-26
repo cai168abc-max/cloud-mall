@@ -1,6 +1,7 @@
 package com.atguigu.common.cache;
 
 import jakarta.annotation.PreDestroy;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -31,7 +32,7 @@ import java.util.function.Supplier;
  */
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class CacheService {
 
     private static final Logger log = LoggerFactory.getLogger(CacheService.class);

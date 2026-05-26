@@ -18,7 +18,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/{id}")
-    public R getCategory(@PathVariable("id") Long categoryId) {
+    public R getCategory(@PathVariable("id") final Long categoryId) {
         Category category = categoryService.getCategoryById(categoryId);
         if (category == null) {
             return R.notFound("分类不存在");
@@ -39,13 +39,13 @@ public class CategoryController {
     }
 
     @GetMapping("/parent/{parentId}")
-    public R listByParentId(@PathVariable("parentId") Long parentId) {
+    public R listByParentId(@PathVariable("parentId") final Long parentId) {
         List<Category> list = categoryService.listByParentId(parentId);
         return R.ok("查询子分类成功", list);
     }
 
     @PostMapping
-    public R saveOrUpdate(@RequestBody Category category) {
+    public R saveOrUpdate(@RequestBody final Category category) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -57,7 +57,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public R deleteCategory(@PathVariable("id") Long categoryId) {
+    public R deleteCategory(@PathVariable("id") final Long categoryId) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }
@@ -73,8 +73,8 @@ public class CategoryController {
     }
 
     @PostMapping("/{id}/enable")
-    public R enableCategory(@PathVariable("id") Long categoryId,
-                            @RequestParam("enabled") boolean enabled) {
+    public R enableCategory(@PathVariable("id") final Long categoryId,
+                            @RequestParam("enabled") final boolean enabled) {
         if (UserContext.get() == null) {
             return R.error(403, "请先登录");
         }

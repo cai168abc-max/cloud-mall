@@ -6,6 +6,7 @@ import com.atguigu.order.bean.VirtualAccountLog;
 import com.atguigu.order.mapper.VirtualAccountLogMapper;
 import com.atguigu.order.mapper.VirtualAccountMapper;
 import com.atguigu.order.service.VirtualAccountService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     private static final Logger log = LoggerFactory.getLogger(VirtualAccountServiceImpl.class);

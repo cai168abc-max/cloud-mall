@@ -38,7 +38,7 @@ public class ProductController {
 
     @GetMapping("/{id}")
     @RequirePermission("product:read")
-    public R getProduct(@PathVariable @NotNull Long id) {
+    public R getProduct(@PathVariable @NotNull final Long id) {
         Product product = productService.getProductById(id);
         if (product == null) {
             return R.error(404, "商品不存在");
@@ -49,8 +49,8 @@ public class ProductController {
     @GetMapping
     @RequirePermission("product:read")
     public R listProducts(
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
+            @RequestParam(value = "page", defaultValue = "1") final int page,
+            @RequestParam(value = "size", defaultValue = "10") final int size) {
         IPage<Product> pageResult = productService.listProductsByPage(page, size);
         return R.ok("查询商品列表成功", pageResult);
     }
@@ -58,9 +58,9 @@ public class ProductController {
     @GetMapping("/merchant/{merchantId}")
     @RequirePermission(value = {"product:read", "merchant:manage"}, mode = RequireMode.ANY)
     public R listByMerchant(
-            @PathVariable("merchantId") Long merchantId,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
+            @PathVariable("merchantId") final Long merchantId,
+            @RequestParam(value = "page", defaultValue = "1") final int page,
+            @RequestParam(value = "size", defaultValue = "10") final int size) {
         UserInfo user = UserContext.get();
         if (user.getRole() == UserRole.MERCHANT && !merchantId.equals(user.getId())) {
             return R.error(403, "商家只能查看自己的商品");
@@ -71,7 +71,7 @@ public class ProductController {
 
     @GetMapping("/category/{categoryId}")
     @RequirePermission("product:read")
-    public R listByCategory(@PathVariable("categoryId") Long categoryId) {
+    public R listByCategory(@PathVariable("categoryId") final Long categoryId) {
         List<Product> list = productService.listByCategory(categoryId);
         return R.ok("查询分类商品成功", list);
     }
@@ -85,7 +85,7 @@ public class ProductController {
 
     @GetMapping("/hot")
     @RequirePermission("product:read")
-    public R listHotProducts(@RequestParam(value = "limit", defaultValue = "100") int limit) {
+    public R listHotProducts(@RequestParam(value = "limit", defaultValue = "100") final int limit) {
         List<Product> list = productService.listHotProducts(limit);
         return R.ok("查询热点商品成功", list);
     }
@@ -93,17 +93,17 @@ public class ProductController {
     @GetMapping("/search")
     @RequirePermission("product:read")
     public R searchProducts(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category,
-            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(value = "ascending", defaultValue = "true") boolean ascending) {
+            @RequestParam(required = false) final String keyword,
+            @RequestParam(required = false) final String category,
+            @RequestParam(value = "sortBy", defaultValue = "id") final String sortBy,
+            @RequestParam(value = "ascending", defaultValue = "true") final boolean ascending) {
         List<Product> list = productService.searchProducts(keyword, category, sortBy, ascending);
         return R.ok("搜索成功", list);
     }
 
     @PostMapping("/manage/save")
     @RequirePermission(value = {"product:write", "merchant:manage"}, mode = RequireMode.ANY)
-    public R saveProduct(@RequestBody Product product) {
+    public R saveProduct(@RequestBody final Product product) {
         UserInfo user = UserContext.get();
         if (user.getRole() == UserRole.MERCHANT) {
             product.setMerchantId(user.getId());
@@ -114,7 +114,7 @@ public class ProductController {
 
     @DeleteMapping("/manage/{id}")
     @RequirePermission(value = {"product:delete", "merchant:manage"}, mode = RequireMode.ANY)
-    public R deleteProduct(@PathVariable("id") Long id) {
+    public R deleteProduct(@PathVariable("id") final Long id) {
         UserInfo user = UserContext.get();
         Product product = productService.getProductById(id);
         if (product == null) {
@@ -131,7 +131,7 @@ public class ProductController {
 
     @PutMapping("/manage/{id}/price")
     @RequirePermission(value = {"product:write", "merchant:manage"}, mode = RequireMode.ANY)
-    public R updatePrice(@PathVariable("id") Long id, @RequestParam BigDecimal price) {
+    public R updatePrice(@PathVariable("id") final Long id, @RequestParam final BigDecimal price) {
         UserInfo user = UserContext.get();
         Product product = productService.getProductById(id);
         if (product == null) {

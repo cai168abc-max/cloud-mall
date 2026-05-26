@@ -2,6 +2,7 @@ package com.atguigu.order.consumer;
 
 import com.atguigu.common.mq.SeckillMessage;
 import com.atguigu.order.service.OrderService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
@@ -20,6 +21,7 @@ import java.util.Arrays;
     consumerGroup = "seckill-consumer-group"
 )
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class SeckillConsumer implements RocketMQListener<SeckillMessage> {
 
     private static final Logger log = LoggerFactory.getLogger(SeckillConsumer.class);

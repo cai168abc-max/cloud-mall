@@ -15,6 +15,7 @@ import com.atguigu.order.service.AfterSaleService;
 import com.atguigu.order.service.VirtualAccountService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
  * 4. 退款兜底：退款失败时提供手动退款接口
  */
 @Service
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class AfterSaleServiceImpl implements AfterSaleService {
 
     private static final Logger log = LoggerFactory.getLogger(AfterSaleServiceImpl.class);

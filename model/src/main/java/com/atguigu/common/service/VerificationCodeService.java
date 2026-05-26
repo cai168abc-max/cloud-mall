@@ -1,6 +1,7 @@
 package com.atguigu.common.service;
 
 import lombok.RequiredArgsConstructor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class VerificationCodeService {
 
     private static final String CODE_KEY_PREFIX = "verification:code:";

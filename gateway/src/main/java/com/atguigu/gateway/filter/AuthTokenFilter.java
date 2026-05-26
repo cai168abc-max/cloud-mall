@@ -245,8 +245,9 @@ public class AuthTokenFilter implements GlobalFilter, Ordered {
                 .header("X-User-Id", userId)
                 .header("X-User-Role", role);
 
-        if (result.nickName() != null && !result.nickName().trim().isEmpty()) {
-            builder.header("X-User-Name", result.nickName());
+        String nickName = result.nickName();
+        if (nickName != null && !nickName.trim().isEmpty()) {
+            builder.header("X-User-Name", nickName);
         } else {
             builder.header("X-User-Name", "user-" + userId);
         }

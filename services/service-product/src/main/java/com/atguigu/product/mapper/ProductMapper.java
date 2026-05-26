@@ -41,12 +41,12 @@ public interface ProductMapper extends BaseMapper<Product> {
     @Select("SELECT * FROM product WHERE merchant_id = #{merchantId}")
     IPage<Product> selectPageByMerchantId(Page<Product> page, @Param("merchantId") Long merchantId);
 
-    @Update("UPDATE product SET num = num - #{quantity}, sales = sales + #{quantity}, update_time = NOW() " +
-            "WHERE id = #{productId} AND num >= #{quantity}")
+    @Update("UPDATE product SET num = num - #{quantity}, sales = sales + #{quantity}, update_time = NOW() "
+            + "WHERE id = #{productId} AND num >= #{quantity}")
     int decreaseStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 
-    @Update("UPDATE product SET num = num + #{quantity}, update_time = NOW() " +
-            "WHERE id = #{productId}")
+    @Update("UPDATE product SET num = num + #{quantity}, update_time = NOW() "
+            + "WHERE id = #{productId}")
     int increaseStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 
     @Update("UPDATE product SET price = #{price}, update_time = NOW() WHERE id = #{id}")
@@ -55,49 +55,49 @@ public interface ProductMapper extends BaseMapper<Product> {
     @Update("UPDATE product SET enabled = #{enabled}, update_time = NOW() WHERE id = #{id}")
     int updateEnabled(@Param("id") Long id, @Param("enabled") Boolean enabled);
 
-    @Insert("INSERT INTO product (merchant_id, category_id, name, price, num, sales, image_url, enabled, create_time, update_time) " +
-            "VALUES (#{merchantId}, #{categoryId}, #{name}, #{price}, #{num}, #{sales}, #{imageUrl}, #{enabled}, NOW(), NOW())")
+    @Insert("INSERT INTO product (merchant_id, category_id, name, price, num, sales, image_url, enabled, create_time, update_time) "
+            + "VALUES (#{merchantId}, #{categoryId}, #{name}, #{price}, #{num}, #{sales}, #{imageUrl}, #{enabled}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insertProduct(Product product);
 
-    @Update("UPDATE product SET name = #{name}, category_id = #{categoryId}, price = #{price}, num = #{num}, " +
-            "description = #{description}, image_url = #{imageUrl}, update_time = NOW() WHERE id = #{id}")
+    @Update("UPDATE product SET name = #{name}, category_id = #{categoryId}, price = #{price}, num = #{num}, "
+            + "description = #{description}, image_url = #{imageUrl}, update_time = NOW() WHERE id = #{id}")
     int updateProduct(Product product);
 
     @Delete("DELETE FROM product WHERE id = #{id}")
     int deleteById(@Param("id") Long id);
 
-    @Select("<script>" +
-            "SELECT id, merchant_id, category_id, name, price, num, sales, description, image_url, enabled, verified, create_time, update_time " +
-            "FROM product WHERE id IN " +
-            "<foreach item='id' collection='ids' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select("<script>"
+            + "SELECT id, merchant_id, category_id, name, price, num, sales, description, image_url, enabled, verified, create_time, update_time "
+            + "FROM product WHERE id IN "
+            + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
+            + "#{id}"
+            + "</foreach>"
+            + "</script>")
     List<Product> batchSelectByIds(@Param("ids") List<Long> ids);
 
     @UpdateProvider(type = ProductSqlProvider.class, method = "batchIncreaseStock")
     int batchIncreaseStock(@Param("items") List<StockItem> items);
 
-    @Update("<script>" +
-            "UPDATE product SET num = num - CASE id " +
-            "<foreach item='item' collection='items' separator=''>" +
-            " WHEN #{item.productId} THEN #{item.quantity}" +
-            "</foreach>" +
-            " END, sales = sales + CASE id " +
-            "<foreach item='item' collection='items' separator=''>" +
-            " WHEN #{item.productId} THEN #{item.quantity}" +
-            "</foreach>" +
-            " END, update_time = NOW() WHERE id IN (" +
-            "<foreach item='item' collection='items' separator=','>" +
-            "#{item.productId}" +
-            "</foreach>" +
-            ") AND num >= CASE id " +
-            "<foreach item='item' collection='items' separator=''>" +
-            " WHEN #{item.productId} THEN #{item.quantity}" +
-            "</foreach>" +
-            " END" +
-            "</script>")
+    @Update("<script>"
+            + "UPDATE product SET num = num - CASE id "
+            + "<foreach item='item' collection='items' separator=''>"
+            + " WHEN #{item.productId} THEN #{item.quantity}"
+            + "</foreach>"
+            + " END, sales = sales + CASE id "
+            + "<foreach item='item' collection='items' separator=''>"
+            + " WHEN #{item.productId} THEN #{item.quantity}"
+            + "</foreach>"
+            + " END, update_time = NOW() WHERE id IN ("
+            + "<foreach item='item' collection='items' separator=','>"
+            + "#{item.productId}"
+            + "</foreach>"
+            + ") AND num >= CASE id "
+            + "<foreach item='item' collection='items' separator=''>"
+            + " WHEN #{item.productId} THEN #{item.quantity}"
+            + "</foreach>"
+            + " END"
+            + "</script>")
     int batchDecreaseStock(@Param("items") List<StockItem> items);
 
     /**
@@ -112,13 +112,21 @@ public interface ProductMapper extends BaseMapper<Product> {
     @Select("SELECT * FROM product WHERE id = #{productId} FOR UPDATE")
     Product selectByIdForUpdate(@Param("productId") Long productId);
 
-    public static class StockItem {
+    class StockItem {
         private Long productId;
         private Integer quantity;
 
-        public Long getProductId() { return productId; }
-        public void setProductId(Long productId) { this.productId = productId; }
-        public Integer getQuantity() { return quantity; }
-        public void setQuantity(Integer quantity) { this.quantity = quantity; }
+        public Long getProductId() {
+            return productId;
+        }
+        public void setProductId(final Long productId) {
+            this.productId = productId;
+        }
+        public Integer getQuantity() {
+            return quantity;
+        }
+        public void setQuantity(final Integer quantity) {
+            this.quantity = quantity;
+        }
     }
 }

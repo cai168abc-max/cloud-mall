@@ -4,6 +4,7 @@ import com.atguigu.common.enums.CouponStatus;
 import com.atguigu.order.bean.Coupon;
 import com.atguigu.order.mapper.CouponMapper;
 import com.atguigu.order.service.CouponService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class CouponServiceImpl implements CouponService {
 
     private static final String COUPON_STOCK_KEY_PREFIX = "coupon:stock:";

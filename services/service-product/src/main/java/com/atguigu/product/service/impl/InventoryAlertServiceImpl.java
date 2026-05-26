@@ -15,6 +15,7 @@ import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class InventoryAlertServiceImpl implements InventoryAlertService {
 
     private static final Logger log = LoggerFactory.getLogger(InventoryAlertServiceImpl.class);
@@ -84,7 +86,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
         }
     }
 
-    private boolean checkAndAlert(InventoryAlertConfig config) {
+    private boolean checkAndAlert(final InventoryAlertConfig config) {
         if (config == null || config.getProductId() == null) {
             return false;
         }
@@ -147,7 +149,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public boolean canSendAlert(Long productId) {
+    public boolean canSendAlert(final Long productId) {
         if (productId == null) {
             return false;
         }
@@ -173,7 +175,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
         }
     }
 
-    private boolean checkAlertFromDb(Long productId, Integer alertInterval) {
+    private boolean checkAlertFromDb(final Long productId, final Integer alertInterval) {
         int interval = DEFAULT_ALERT_INTERVAL;
         if (alertInterval != null && alertInterval > 0) {
             interval = alertInterval;
@@ -249,7 +251,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
         }
     }
 
-    private void incrementAlertCount(Long productId, String date) {
+    private void incrementAlertCount(final Long productId, final String date) {
         String countKey = CacheKeyConstants.alertCount(productId, date);
         try {
             stringRedisTemplate.opsForValue().increment(countKey);
@@ -260,7 +262,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public boolean triggerAlertManually(Long productId) {
+    public boolean triggerAlertManually(final Long productId) {
         if (productId == null) {
             log.warn("商品ID不能为空");
             return false;
@@ -297,7 +299,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public boolean saveOrUpdateConfig(InventoryAlertConfig config) {
+    public boolean saveOrUpdateConfig(final InventoryAlertConfig config) {
         if (config == null || config.getProductId() == null) {
             log.warn("预警配置参数不完整");
             return false;
@@ -313,7 +315,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public InventoryAlertConfig getConfigByProductId(Long productId) {
+    public InventoryAlertConfig getConfigByProductId(final Long productId) {
         if (productId == null) {
             return null;
         }
@@ -341,7 +343,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public List<InventoryAlertLog> listAlertLogs(Long productId, int limit) {
+    public List<InventoryAlertLog> listAlertLogs(final Long productId, final int limit) {
         if (productId == null) {
             return Collections.emptyList();
         }
@@ -357,7 +359,7 @@ public class InventoryAlertServiceImpl implements InventoryAlertService {
     }
 
     @Override
-    public void processAlertNotification(Long alertLogId) {
+    public void processAlertNotification(final Long alertLogId) {
         if (alertLogId == null) {
             log.warn("预警记录ID不能为空");
             return;

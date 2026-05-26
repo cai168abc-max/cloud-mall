@@ -4,6 +4,7 @@ import com.atguigu.common.cache.CacheKeyConstants;
 import com.atguigu.common.exception.BusinessException;
 import com.atguigu.order.feign.ProductFeign;
 import com.atguigu.product.bean.Product;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class ProductFeignFallbackFactory implements FallbackFactory<ProductFeign> {
 
     private static final Logger log = LoggerFactory.getLogger(ProductFeignFallbackFactory.class);

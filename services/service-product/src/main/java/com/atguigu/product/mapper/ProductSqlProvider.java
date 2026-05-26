@@ -1,14 +1,12 @@
 package com.atguigu.product.mapper;
 
-import com.atguigu.product.bean.Product;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.jdbc.SQL;
 
 import java.util.List;
 
 public class ProductSqlProvider {
 
-    public String searchProducts(@Param("keyword") String keyword, @Param("categoryId") Long categoryId) {
+    public String searchProducts(@Param("keyword") final String keyword, @Param("categoryId") final Long categoryId) {
         StringBuilder sb = new StringBuilder("SELECT * FROM product WHERE 1=1");
 
         // 性能优化：使用后缀匹配替代前后通配符，可以利用索引
@@ -24,7 +22,7 @@ public class ProductSqlProvider {
         return sb.toString();
     }
 
-    public String batchIncreaseStock(@Param("items") List<ProductMapper.StockItem> items) {
+    public String batchIncreaseStock(@Param("items") final List<ProductMapper.StockItem> items) {
         if (items == null || items.isEmpty()) {
             return "UPDATE product SET num = num WHERE 1=0";
         }

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -38,9 +38,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class UserAuthServiceImpl implements UserAuthService {
 
     private static final Logger log = LoggerFactory.getLogger(UserAuthServiceImpl.class);

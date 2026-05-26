@@ -1,6 +1,7 @@
 package com.atguigu.common.service;
 
 import lombok.RequiredArgsConstructor;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("EI_EXPOSE_REP2")
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class RateLimitService {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitService.class);

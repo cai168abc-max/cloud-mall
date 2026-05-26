@@ -18,7 +18,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public Category getCategoryById(Long categoryId) {
+    public Category getCategoryById(final Long categoryId) {
         return categoryMapper.selectById(categoryId);
     }
 
@@ -33,13 +33,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<Category> listByParentId(Long parentId) {
+    public List<Category> listByParentId(final Long parentId) {
         return categoryMapper.selectByParentId(parentId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public Category saveOrUpdate(Category category) {
+    public Category saveOrUpdate(final Category category) {
         if (category.getId() == null) {
             if (category.getParentId() == null) {
                 category.setLevel(1);
@@ -62,7 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteCategory(Long categoryId) {
+    public void deleteCategory(final Long categoryId) {
         long count = categoryMapper.countByParentId(categoryId);
         if (count > 0) {
             throw new IllegalArgumentException("该分类存在子分类，无法删除");
@@ -72,7 +72,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void enableCategory(Long categoryId, Boolean enabled) {
+    public void enableCategory(final Long categoryId, final Boolean enabled) {
         categoryMapper.updateEnabled(categoryId, enabled);
     }
 
@@ -80,7 +80,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.selectByKeyword(keyword);
     }
 
-    public IPage<Category> listCategoriesByPage(int pageNum, int pageSize) {
+    public IPage<Category> listCategoriesByPage(final int pageNum, final int pageSize) {
         Page<Category> page = new Page<>(pageNum, pageSize);
         return categoryMapper.selectPageAll(page);
     }

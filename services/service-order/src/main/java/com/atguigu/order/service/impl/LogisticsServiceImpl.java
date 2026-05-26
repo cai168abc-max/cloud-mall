@@ -14,6 +14,7 @@ import com.atguigu.order.mapper.OrderMapper;
 import com.atguigu.order.service.LogisticsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class LogisticsServiceImpl implements LogisticsService {
 
     private static final Logger log = LoggerFactory.getLogger(LogisticsServiceImpl.class);

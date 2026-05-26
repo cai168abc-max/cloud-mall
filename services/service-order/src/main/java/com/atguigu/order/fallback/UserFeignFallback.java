@@ -4,6 +4,7 @@ import com.atguigu.common.bean.UserInfo;
 import com.atguigu.common.cache.CacheKeyConstants;
 import com.atguigu.common.enums.UserRole;
 import com.atguigu.common.result.R;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class UserFeignFallback implements com.atguigu.order.feign.UserFeign {
 
     private static final Logger log = LoggerFactory.getLogger(UserFeignFallback.class);
