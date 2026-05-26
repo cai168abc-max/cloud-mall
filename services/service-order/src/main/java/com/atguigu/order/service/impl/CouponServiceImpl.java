@@ -120,7 +120,7 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public Coupon getValidCouponForUse(Long couponId, Long userId) {
+    public Coupon getValidCouponForUse(final Long couponId, final Long userId) {
         Coupon coupon = couponMapper.selectById(couponId);
         if (coupon == null) {
             return null;
@@ -145,7 +145,7 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public List<Coupon> listCouponsByUserId(Long userId) {
+    public List<Coupon> listCouponsByUserId(final Long userId) {
         return couponMapper.selectByUserId(userId);
     }
 

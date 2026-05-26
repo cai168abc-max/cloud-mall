@@ -180,7 +180,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public IPage<OrderReview> listReviewsByMerchantId(Long merchantId, int pageNum, int pageSize) {
+    public IPage<OrderReview> listReviewsByMerchantId(final Long merchantId, final int pageNum, final int pageSize) {
         Page<OrderReview> page = new Page<>(pageNum, pageSize);
         return orderReviewMapper.selectByMerchantId(page, merchantId);
     }
@@ -279,7 +279,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public void syncReviewStatsToDb(Long productId) {
+    public void syncReviewStatsToDb(final Long productId) {
         // 从Redis获取缓存的统计数据
         Long cachedCount = getProductReviewCount(productId);
         Double cachedAvgRating = getProductAvgRating(productId);
@@ -338,7 +338,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     /**
      * 校验评价参数
      */
-    private void validateReviewParams(Integer rating, String content, List<String> images) {
+    private void validateReviewParams(final Integer rating, final String content, final List<String> images) {
         // 评分校验
         if (rating == null || rating < MIN_RATING || rating > MAX_RATING) {
             throw new BusinessException("评分无效，评分必须在" + MIN_RATING + "-" + MAX_RATING + "之间");

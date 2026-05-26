@@ -648,7 +648,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public List<AfterSaleTicket> listTicketsByUserId(Long userId) {
+    public List<AfterSaleTicket> listTicketsByUserId(final Long userId) {
         if (userId == null) {
             return List.of();
         }
@@ -668,7 +668,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public List<AfterSaleTicket> listTicketsByMerchantId(Long merchantId) {
+    public List<AfterSaleTicket> listTicketsByMerchantId(final Long merchantId) {
         if (merchantId == null) {
             return List.of();
         }

@@ -48,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
 
     private static final String ORDER_LOCK_PREFIX = "order:lock:";
 
-    private void executeAfterCommit(Runnable action) {
+    private void executeAfterCommit(final Runnable action) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -210,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
      * @param order 订单实体
      * @param product 商品信息
      */
-    private void saveOrderAndNotify(Order order, Product product) {
+    private void saveOrderAndNotify(final Order order, final Product product) {
         orderMapper.insertOrder(order);
         
         OrderItem orderItem = new OrderItem();
@@ -364,7 +364,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Order completeOrder(Long orderId, Long userId) {
+    public Order completeOrder(final Long orderId, final Long userId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -554,7 +554,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public boolean rejectRefund(Long orderId, Long merchantId) {
+    public boolean rejectRefund(final Long orderId, final Long merchantId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -647,7 +647,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Map<Long, Order> batchPayOrders(List<Long> orderIds, Long userId) {
+    public Map<Long, Order> batchPayOrders(final List<Long> orderIds, final Long userId) {
         String lockKey = "batch-pay:" + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -841,7 +841,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @GlobalTransactional(name = "batch-cancel-orders", rollbackFor = Exception.class)
-    public Map<Long, Order> batchCancelOrders(List<Long> orderIds, Long userId) {
+    public Map<Long, Order> batchCancelOrders(final List<Long> orderIds, final Long userId) {
         String lockKey = "batch-cancel:" + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {

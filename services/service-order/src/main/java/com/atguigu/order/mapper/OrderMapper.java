@@ -112,8 +112,8 @@ public interface OrderMapper extends BaseMapper<Order> {
      * @param status 目标状态
      * @return 更新记录数
      */
-    @Update("<script>" +
-            "UPDATE `orders` SET status = #{status}, pay_time = NOW(), update_time = NOW() WHERE id IN "
+    @Update("<script>"
+            + "UPDATE `orders` SET status = #{status}, pay_time = NOW(), update_time = NOW() WHERE id IN "
             + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>"
             + "#{id}"
             + "</foreach>"

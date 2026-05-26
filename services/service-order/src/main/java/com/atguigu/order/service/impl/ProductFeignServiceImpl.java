@@ -111,7 +111,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
             maxDelay = 5000
         )
     )
-    public int increaseStock(Long productId, Integer quantity) {
+    public int increaseStock(final Long productId, final Integer quantity) {
         log.debug("调用商品服务增加库存, productId={}, quantity={}", productId, quantity);
         return productFeign.increaseStock(productId, quantity);
     }

@@ -682,7 +682,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     }
 
     @Override
-    public List<VirtualAccountLog> getTransactionLogs(Long userId) {
+    public List<VirtualAccountLog> getTransactionLogs(final Long userId) {
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
         }
@@ -764,7 +764,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 清除余额缓存
      */
-    private void clearBalanceCache(Long userId) {
+    private void clearBalanceCache(final Long userId) {
         String cacheKey = BALANCE_CACHE_KEY_PREFIX + userId;
         try {
             redisTemplate.delete(cacheKey);

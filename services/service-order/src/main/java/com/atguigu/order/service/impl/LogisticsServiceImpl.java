@@ -286,7 +286,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 缓存物流信息
      */
-    private void cacheLogisticsInfo(LogisticsInfo logisticsInfo) {
+    private void cacheLogisticsInfo(final LogisticsInfo logisticsInfo) {
         try {
             String cacheKey = CacheKeyConstants.logisticsInfo(logisticsInfo.getOrderId());
             String json = objectMapper.writeValueAsString(logisticsInfo);

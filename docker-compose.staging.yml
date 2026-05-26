@@ -69,6 +69,8 @@ services:
   service-order:
     image: ${DOCKER_USERNAME}/cloudtry-service-order:latest
     container_name: cloudtry-service-order-staging
+    ports:
+      - "8000:8000"
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - JWT_SECRET=${JWT_SECRET}
@@ -78,7 +80,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -97,6 +99,8 @@ services:
   service-product:
     image: ${DOCKER_USERNAME}/cloudtry-service-product:latest
     container_name: cloudtry-service-product-staging
+    ports:
+      - "9000:9000"
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - JWT_SECRET=${JWT_SECRET}
@@ -106,7 +110,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -125,6 +129,8 @@ services:
   service-user:
     image: ${DOCKER_USERNAME}/cloudtry-service-user:latest
     container_name: cloudtry-service-user-staging
+    ports:
+      - "7000:7000"
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - JWT_SECRET=${JWT_SECRET}
@@ -134,7 +140,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 10
