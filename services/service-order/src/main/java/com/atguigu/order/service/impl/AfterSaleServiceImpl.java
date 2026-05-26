@@ -100,7 +100,8 @@ public class AfterSaleServiceImpl implements AfterSaleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AfterSaleTicket applyAfterSale(Long orderId, String type, String reason, String description, String images, Long userId) {
+    public AfterSaleTicket applyAfterSale(final Long orderId, final String type, final String reason, 
+                                           final String description, final String images, final Long userId) {
         if (orderId == null) {
             throw new BusinessException("订单ID不能为空");
         }
@@ -406,7 +407,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     /**
      * 执行拒绝售后
      */
-    private boolean doRejectAfterSale(Long ticketId, Long merchantId, String rejectReason) {
+    private boolean doRejectAfterSale(final Long ticketId, final Long merchantId, final String rejectReason) {
         // 1. 查询工单
         AfterSaleTicket ticket = ticketMapper.selectById(ticketId);
         if (ticket == null) {
@@ -631,7 +632,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     }
 
     @Override
-    public AfterSaleTicket getTicketById(Long ticketId) {
+    public AfterSaleTicket getTicketById(final Long ticketId) {
         if (ticketId == null) {
             return null;
         }
@@ -697,7 +698,7 @@ public class AfterSaleServiceImpl implements AfterSaleService {
     /**
      * 发送售后消息到MQ
      */
-    private void sendAfterSaleMessage(AfterSaleTicket ticket, String action, String message) {
+    private void sendAfterSaleMessage(final AfterSaleTicket ticket, final String action, final String message) {
         try {
             OrderNotifyMessage notifyMessage = OrderNotifyMessage.builder()
                     .orderId(ticket.getOrderId())

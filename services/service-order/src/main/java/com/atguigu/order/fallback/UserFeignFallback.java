@@ -28,12 +28,12 @@ public class UserFeignFallback implements com.atguigu.order.feign.UserFeign {
     
     private final RedisTemplate<String, Object> redisTemplate;
     
-    public UserFeignFallback(RedisTemplate<String, Object> redisTemplate) {
+    public UserFeignFallback(final RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
-    public R getUserInfo(Long userId) {
+    public R getUserInfo(final Long userId) {
         log.warn("UserFeign降级触发 - 用户服务不可用, userId={}", userId);
         
         // 1. 尝试从Redis缓存获取

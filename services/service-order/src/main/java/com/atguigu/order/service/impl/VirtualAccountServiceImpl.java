@@ -103,7 +103,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VirtualAccountLog recharge(Long userId, BigDecimal amount, String transactionNo) {
+    public VirtualAccountLog recharge(final Long userId, final BigDecimal amount, String transactionNo) {
         // 参数校验
         if (userId == null) {
             throw new BusinessException("用户ID不能为空");
@@ -350,7 +350,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     /**
      * 执行支付操作
      */
-    private VirtualAccountLog doPay(Long userId, BigDecimal amount, Long orderId, String transactionNo) {
+    private VirtualAccountLog doPay(final Long userId, final BigDecimal amount, final Long orderId, final String transactionNo) {
         VirtualAccount account = getOrCreateAccount(userId);
         
         if (account.getStatus() != VirtualAccount.STATUS_NORMAL) {
@@ -577,7 +577,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public boolean freeze(Long userId, BigDecimal amount) {
+    public boolean freeze(final Long userId, final BigDecimal amount) {
         if (userId == null || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("参数无效");
         }
@@ -690,7 +690,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
     }
 
     @Override
-    public VirtualAccountLog getLogByOrderId(Long orderId) {
+    public VirtualAccountLog getLogByOrderId(final Long orderId) {
         if (orderId == null) {
             return null;
         }
@@ -723,7 +723,7 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
      * @param transactionNo 交易流水号
      * @return true-首次请求，false-重复请求
      */
-    private boolean checkIdempotency(String transactionNo) {
+    private boolean checkIdempotency(final String transactionNo) {
         String key = IDEMPOTENCY_KEY_PREFIX + transactionNo;
         try {
             Boolean success = redisTemplate.opsForValue().setIfAbsent(

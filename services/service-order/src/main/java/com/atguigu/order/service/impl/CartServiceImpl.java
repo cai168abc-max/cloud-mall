@@ -111,7 +111,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Cart removeItemFromCart(Long userId, Long productId) {
+    public Cart removeItemFromCart(final Long userId, final Long productId) {
         String lockKey = CART_LOCK_PREFIX + userId;
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -257,7 +257,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<CartItem> getCheckedItems(Long userId) {
+    public List<CartItem> getCheckedItems(final Long userId) {
         Cart cart = getCartInternal(userId);
 
         // 返回选中的商品项
@@ -309,7 +309,7 @@ public class CartServiceImpl implements CartService {
     /**
      * 从热点商品缓存或商品服务获取商品信息
      */
-    private Product getProductFromCache(Long productId) {
+    private Product getProductFromCache(final Long productId) {
         // 先从热点商品缓存获取
         String cacheKey = HOT_PRODUCT_CACHE_PREFIX + productId;
         Product product = (Product) redisTemplate.opsForValue().get(cacheKey);

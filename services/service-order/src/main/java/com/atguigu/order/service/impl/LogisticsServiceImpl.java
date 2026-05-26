@@ -179,8 +179,8 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 使用数据库行锁兜底执行发货逻辑
      */
-    private LogisticsInfo doShipOrderWithDbLock(Order order, String trackingNo, String carrier,
-                                                String senderName, String senderPhone, String senderAddress) {
+    private LogisticsInfo doShipOrderWithDbLock(final Order order, final String trackingNo, final String carrier,
+                                                final String senderName, final String senderPhone, final String senderAddress) {
         // 使用SELECT FOR UPDATE获取行锁
         LogisticsInfo existingLogistics = logisticsInfoMapper.selectByOrderIdForUpdate(order.getId());
         if (existingLogistics != null) {
@@ -222,8 +222,8 @@ public class LogisticsServiceImpl implements LogisticsService {
     /**
      * 创建物流信息实体
      */
-    private LogisticsInfo createLogisticsInfo(Order order, String trackingNo, String carrier,
-                                              String senderName, String senderPhone, String senderAddress) {
+    private LogisticsInfo createLogisticsInfo(final Order order, final String trackingNo, final String carrier,
+                                              final String senderName, final String senderPhone, final String senderAddress) {
         return LogisticsInfo.builder()
                 .orderId(order.getId())
                 .userId(order.getUserId())
@@ -339,7 +339,7 @@ public class LogisticsServiceImpl implements LogisticsService {
     }
 
     @Override
-    public LogisticsInfo getLogisticsByTrackingNo(String trackingNo) {
+    public LogisticsInfo getLogisticsByTrackingNo(final String trackingNo) {
         LogisticsInfo logisticsInfo = logisticsInfoMapper.selectByTrackingNo(trackingNo);
         if (logisticsInfo == null) {
             return null;
@@ -376,8 +376,8 @@ public class LogisticsServiceImpl implements LogisticsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean addLogisticsTrace(Long logisticsId, String traceTime, String status, 
-                                     String location, String description, String operator) {
+    public boolean addLogisticsTrace(final Long logisticsId, final String traceTime, final String status, 
+                                     final String location, final String description, final String operator) {
         LogisticsInfo logisticsInfo = logisticsInfoMapper.selectById(logisticsId);
         if (logisticsInfo == null) {
             throw new BusinessException(404, "物流信息不存在");
@@ -423,7 +423,7 @@ public class LogisticsServiceImpl implements LogisticsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean confirmDelivery(Long orderId, Long userId) {
+    public boolean confirmDelivery(final Long orderId, final Long userId) {
         // 查询订单
         Order order = orderMapper.selectById(orderId);
         if (order == null) {

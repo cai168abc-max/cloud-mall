@@ -13,7 +13,6 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +58,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     }
     
     @Recover
-    public Product getProductByIdRecover(Exception e, long id) {
+    public Product getProductByIdRecover(final Exception e, final long id) {
         log.error("ProductFeign重试失败 - 商品服务不可用, productId={}, error={}", id, e.getMessage());
         
         // 1. 尝试从Redis缓存获取
@@ -96,7 +95,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     }
     
     @Recover
-    public int decreaseStockRecover(Exception e, Long productId, Integer quantity) {
+    public int decreaseStockRecover(final Exception e, final Long productId, final Integer quantity) {
         log.error("ProductFeign重试失败 - 库存扣减失败, productId={}, quantity={}, error={}", 
                   productId, quantity, e.getMessage());
         // 库存操作必须抛出异常，避免数据不一致
@@ -162,7 +161,7 @@ public class ProductFeignServiceImpl implements ProductFeignService {
     }
     
     @Recover
-    public int batchDecreaseStockRecover(Exception e, List<Map<String, Object>> stockItems) {
+    public int batchDecreaseStockRecover(final Exception e, final List<Map<String, Object>> stockItems) {
         log.error("ProductFeign重试失败 - 批量库存扣减失败, itemsCount={}, error={}", 
                   stockItems != null ? stockItems.size() : 0, e.getMessage());
         // 库存操作必须抛出异常，避免数据不一致

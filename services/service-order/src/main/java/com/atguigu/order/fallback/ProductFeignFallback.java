@@ -87,7 +87,7 @@ public class ProductFeignFallback implements ProductFeign {
     }
 
     @Override
-    public int batchIncreaseStock(List<Map<String, Object>> stockItems) {
+    public int batchIncreaseStock(final List<Map<String, Object>> stockItems) {
         log.error("ProductFeign降级触发 - 批量库存恢复失败, itemsCount={}", stockItems != null ? stockItems.size() : 0);
         // 库存操作必须抛出异常，避免数据不一致
         throw new BusinessException(503, "商品服务暂时不可用，批量库存恢复失败");

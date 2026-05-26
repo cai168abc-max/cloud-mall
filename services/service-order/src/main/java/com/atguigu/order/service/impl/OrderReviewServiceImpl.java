@@ -64,7 +64,8 @@ public class OrderReviewServiceImpl implements OrderReviewService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderReview createReview(Long orderId, Long userId, Integer rating, String content, List<String> images, Boolean anonymous) {
+    public OrderReview createReview(final Long orderId, final Long userId, final Integer rating, 
+                                      final String content, final List<String> images, final Boolean anonymous) {
         // 1. 参数校验
         validateReviewParams(rating, content, images);
 
@@ -157,7 +158,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public OrderReview getReviewById(Long reviewId) {
+    public OrderReview getReviewById(final Long reviewId) {
         return orderReviewMapper.selectById(reviewId);
     }
 
@@ -234,7 +235,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public Double getProductAvgRating(Long productId) {
+    public Double getProductAvgRating(final Long productId) {
         String cacheKey = CacheKeyConstants.productReviewAvg(productId);
 
         // 从缓存获取
@@ -307,7 +308,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
     }
 
     @Override
-    public boolean hasReviewed(Long orderId) {
+    public boolean hasReviewed(final Long orderId) {
         return orderReviewMapper.existsByOrderId(orderId);
     }
 
@@ -399,7 +400,7 @@ public class OrderReviewServiceImpl implements OrderReviewService {
 
             rocketMQTemplate.asyncSend("review-topic", message, new SendCallback() {
                 @Override
-                public void onSuccess(SendResult sendResult) {
+                public void onSuccess(final SendResult sendResult) {
                     log.info("评价消息发送成功: reviewId={}, action={}", review.getId(), action);
                 }
 

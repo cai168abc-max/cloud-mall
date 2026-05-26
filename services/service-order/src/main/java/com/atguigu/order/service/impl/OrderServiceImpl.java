@@ -139,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
      * @return 商品信息
      * @throws IllegalArgumentException 商品不存在或库存不足
      */
-    private Product validateProductAndDecreaseStock(Long productId) {
+    private Product validateProductAndDecreaseStock(final Long productId) {
         Product product = productFeign.getProductById(productId);
 
         if (product == null) {
@@ -182,7 +182,7 @@ public class OrderServiceImpl implements OrderService {
      * @param couponId 优惠券ID
      * @param userId 用户ID
      */
-    private void applyCoupon(Order order, Long couponId, Long userId) {
+    private void applyCoupon(final Order order, final Long couponId, final Long userId) {
         if (couponId == null) {
             order.setPayAmount(order.getTotalPrice().subtract(order.getDiscountAmount()));
             return;
@@ -273,7 +273,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 30)
-    public Order payOrder(Long orderId, Long userId) {
+    public Order payOrder(final Long orderId, final Long userId) {
         String lockKey = ORDER_LOCK_PREFIX + orderId;
         RLock lock = redissonClient.getLock(lockKey);
         try {

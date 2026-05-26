@@ -21,17 +21,17 @@ public class UserFeignFallbackFactory implements FallbackFactory<UserFeign> {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public UserFeignFallbackFactory(RedisTemplate<String, Object> redisTemplate) {
+    public UserFeignFallbackFactory(final RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
-    public UserFeign create(Throwable cause) {
+    public UserFeign create(final Throwable cause) {
         log.error("UserFeign调用失败, 原因: {}", cause.getMessage(), cause);
 
         return new UserFeign() {
             @Override
-            public R getUserInfo(Long userId) {
+            public R getUserInfo(final Long userId) {
                 log.warn("UserFeign降级触发 - 用户服务不可用, userId={}", userId);
                 try {
                     String cacheKey = CacheKeyConstants.userInfo(userId);

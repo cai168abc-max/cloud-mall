@@ -28,7 +28,8 @@ public class SentinelBlockHandler implements BlockExceptionHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String resourceName, BlockException e) throws Exception {
+    public void handle(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, 
+                         final String resourceName, final BlockException e) throws Exception {
         log.warn("Sentinel阻塞: resource={}, exception={}", resourceName, e.getClass().getSimpleName());
         
         httpServletResponse.setContentType("application/json;charset=utf-8");

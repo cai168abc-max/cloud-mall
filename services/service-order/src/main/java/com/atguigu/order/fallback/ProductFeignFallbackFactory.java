@@ -66,13 +66,13 @@ public class ProductFeignFallbackFactory implements FallbackFactory<ProductFeign
             }
 
             @Override
-            public int increaseStock(Long productId, Integer quantity) {
+            public int increaseStock(final Long productId, final Integer quantity) {
                 log.error("ProductFeign降级触发 - 库存恢复失败, productId={}, quantity={}, cause={}", productId, quantity, cause.getMessage());
                 throw new BusinessException(503, "商品服务暂时不可用，库存恢复失败");
             }
 
             @Override
-            public int batchIncreaseStock(List<Map<String, Object>> stockItems) {
+            public int batchIncreaseStock(final List<Map<String, Object>> stockItems) {
                 log.error("ProductFeign降级触发 - 批量库存恢复失败, itemsCount={}, cause={}", stockItems != null ? stockItems.size() : 0, cause.getMessage());
                 throw new BusinessException(503, "商品服务暂时不可用，批量库存恢复失败");
             }

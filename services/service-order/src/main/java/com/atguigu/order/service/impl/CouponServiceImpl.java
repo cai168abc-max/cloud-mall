@@ -57,7 +57,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Coupon createCoupon(Coupon coupon) {
+    public Coupon createCoupon(final Coupon coupon) {
         if (coupon.getValidFrom() == null) {
             coupon.setValidFrom(LocalDateTime.now());
         }
@@ -78,7 +78,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean acquireCoupon(Long couponId, Long userId) {
+    public boolean acquireCoupon(final Long couponId, final Long userId) {
         String userKey = USER_COUPON_KEY_PREFIX + userId + ":" + couponId;
         Boolean isAcquired = redisTemplate.opsForValue().setIfAbsent(userKey, "1", 7, java.util.concurrent.TimeUnit.DAYS);
         if (Boolean.FALSE.equals(isAcquired)) {
@@ -150,7 +150,7 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public List<Coupon> listValidCouponsForUser(Long userId) {
+    public List<Coupon> listValidCouponsForUser(final Long userId) {
         return couponMapper.selectValidCouponsForUser(userId, LocalDateTime.now());
     }
 

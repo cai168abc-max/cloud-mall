@@ -67,7 +67,7 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     @Override
-    public Order seckill(Long productId, Long userId) {
+    public Order seckill(final Long productId, final Long userId) {
         UserInfo user = UserContext.get();
         Long realUserId = userId != null ? userId : (user != null ? user.getId() : null);
         if (realUserId == null) {
@@ -105,11 +105,11 @@ public class SeckillServiceImpl implements SeckillService {
                     .build(),
                 new SendCallback() {
                     @Override
-                    public void onSuccess(SendResult sendResult) {
+                    public void onSuccess(final SendResult sendResult) {
                         log.info("秒杀消息发送成功: {}", sendResult);
                     }
                     @Override
-                    public void onException(Throwable e) {
+                    public void onException(final Throwable e) {
                         log.error("秒杀消息发送失败，回滚库存", e);
                         rollbackStock(stockKey, soldOutKey, 1);
                         redisTemplate.delete(userKey);
