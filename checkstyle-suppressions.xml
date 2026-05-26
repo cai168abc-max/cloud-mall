@@ -47,4 +47,6 @@
     <!-- Builder模式构造函数参数数量豁免 -->
     <suppress checks="ParameterNumber" files="Order.java"/>
     <suppress checks="ParameterNumber" files="LogisticsInfo.java"/>
+    <!-- 服务实现类构造函数依赖注入参数数量豁免 -->
+    <suppress checks="ParameterNumber" files="AfterSaleServiceImpl.java"/>
 </suppressions>

@@ -1,0 +1,66 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+        service: ${spring.application.name}
+        # 心跳间隔（毫秒）
+        heart-beat-interval: 5000
+        # 心跳超时时间（毫秒）
+        heart-beat-timeout: 15000
+        # 服务下线时间（毫秒）
+        ip-delete-timeout: 30000
+        # 启用服务注册的重试机制
+        register-enabled: true
+        # 服务注册失败时是否快速失败
+        fail-fast: false
+        # 注册失败重试次数
+        max-retry: 5
+        # 注册失败重试间隔（毫秒）
+        retry-delay: 2000
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        # 配置中心连接超时时间（毫秒）
+        timeout: 30000
+        # 配置获取失败重试次数
+        max-retry: 5
+        # 配置获取失败重试间隔（毫秒）
+        retry-delay: 1000
+    discovery:
+      enabled: true
+      fail-fast: false
+    sentinel:
+      eager: true
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:sentinel:8858}
+
+server:
+  port: 80
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    expire-seconds: ${JWT_EXPIRE_SECONDS:3600}
+  internal:
+    secret: ${INTERNAL_SECRET}
+
+logging:
+  level:
+    com.alibaba.cloud.nacos: INFO
+    com.alibaba.nacos: INFO

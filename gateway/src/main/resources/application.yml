@@ -8,7 +8,8 @@ spring:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:}
-        group: DEFAULT_GROUP
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        service: ${spring.application.name}
         # 心跳间隔（毫秒）
         heart-beat-interval: ${SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL:5000}
         # 心跳超时时间（毫秒）
@@ -17,16 +18,22 @@ spring:
         ip-delete-timeout: 30000
         # 启用服务注册的重试机制
         register-enabled: true
+        # 服务注册失败时是否快速失败
+        fail-fast: ${SPRING_CLOUD_NACOS_DISCOVERY_FAIL_FAST:false}
+        # 注册失败重试次数
+        max-retry: ${SPRING_CLOUD_NACOS_DISCOVERY_MAX_RETRY:5}
+        # 注册失败重试间隔（毫秒）
+        retry-delay: ${SPRING_CLOUD_NACOS_DISCOVERY_RETRY_DELAY:2000}
       config:
-        enabled: true
+        enabled: ${SPRING_CLOUD_NACOS_CONFIG_ENABLED:true}
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:}
-        group: DEFAULT_GROUP
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
         file-extension: yml
         # 配置中心连接超时时间（毫秒）
         timeout: ${SPRING_CLOUD_NACOS_CONFIG_TIMEOUT:30000}
         # 配置获取失败重试次数
-        max-retry: ${SPRING_CLOUD_NACOS_CONFIG_RETRY:3}
+        max-retry: ${SPRING_CLOUD_NACOS_CONFIG_RETRY:5}
         # 配置获取失败重试间隔（毫秒）
         retry-delay: ${SPRING_CLOUD_NACOS_CONFIG_RETRY_DELAY:1000}
     # 服务发现配置
@@ -34,6 +41,10 @@ spring:
       enabled: true
       # 启用失败快速失败机制（false表示重试）
       fail-fast: false
+    sentinel:
+      eager: ${SPRING_CLOUD_SENTINEL_EAGER:true}
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:}
 #localhost/api/order
 server:
   port: 80
