@@ -721,6 +721,12 @@ jobs:
           fi
           docker compose version
 
+      - name: Ensure Docker network exists
+        run: |
+          echo "Ensuring cloudtry-network exists..."
+          docker network create cloudtry-network --driver bridge 2>/dev/null && echo "Network created successfully" || echo "Network already exists"
+          docker network ls | grep cloudtry-network
+
       - name: Deploy canary services (10% traffic)
         id: canary_10
         env:

@@ -125,14 +125,3 @@ services:
 networks:
   cloudtry-network:
     external: true
-
-# ==========================================
-# 卷配置
-# ==========================================
-volumes:
-  mysql_data:
-    external: true
-  redis_data:
-    external: true
-  nacos_data:
-    external: true
