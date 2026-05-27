@@ -75,7 +75,7 @@ services:
   
   # Gateway 网关服务
   gateway:
-    image: ${DOCKER_USERNAME}/cloudtry-gateway:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-gateway:${CANARY_VERSION:-latest}
     container_name: cloudtry-gateway-staging
     environment:
       - NACOS_SERVER_ADDR=nacos:8848
@@ -129,7 +129,7 @@ services:
 
   # Service-Order 订单服务
   service-order:
-    image: ${DOCKER_USERNAME}/cloudtry-service-order:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-order:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-order-staging
     ports:
       - "8000:8000"
@@ -167,7 +167,7 @@ services:
 
   # Service-Product 商品服务
   service-product:
-    image: ${DOCKER_USERNAME}/cloudtry-service-product:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-product:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-product-staging
     ports:
       - "9000:9000"
@@ -205,7 +205,7 @@ services:
 
   # Service-User 用户服务
   service-user:
-    image: ${DOCKER_USERNAME}/cloudtry-service-user:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-user:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-user-staging
     ports:
       - "7000:7000"

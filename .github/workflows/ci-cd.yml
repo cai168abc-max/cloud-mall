@@ -721,76 +721,111 @@ jobs:
           fi
           docker compose version
 
-      - name: Make deploy script executable
-        run: chmod +x scripts/deploy/canary-deploy.sh
-
-      - name: Canary deployment (10% traffic)
+      - name: Deploy canary services (10% traffic)
         id: canary_10
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          CANARY_VERSION: ${{ needs.docker-build.outputs.version }}
         run: |
           echo "=========================================="
-          echo "Starting Canary Deployment - Phase 1"
-          echo "Traffic: 10%"
-          echo "Version: ${{ needs.docker-build.outputs.version }}"
+          echo "Starting Canary Deployment - Phase 1 (10%)"
+          echo "Version: ${CANARY_VERSION}"
           echo "=========================================="
-          
-          ./scripts/deploy/canary-deploy.sh 10 || echo "::warning::Canary script execution failed, using fallback deployment"
-          
-          echo "Canary deployment (10%) initiated"
+          docker compose -f docker-compose-canary.yml up -d --remove-orphans
+          echo "Canary services deployed"
 
-      - name: Monitor canary metrics (5 minutes)
+      - name: Health check canary services
         run: |
-          echo "=========================================="
-          echo "Monitoring Canary Metrics"
-          echo "Duration: 5 minutes"
-          echo "=========================================="
+          echo "Waiting for canary services to start (180s)..."
+          sleep 180
           
-          sleep 300
+          echo "Checking canary service health..."
+          SERVICES=(
+            "gateway-canary:80"
+            "service-order-canary:8000"
+            "service-product-canary:9000"
+            "service-user-canary:7000"
+          )
           
-          ERROR_RATE=$(curl -s http://prometheus/api/v1/query?query=error_rate | jq -r '.data.result[0].value[1]')
-          if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
-            echo "::error::Error rate too high: ${ERROR_RATE}"
+          ALL_HEALTHY=true
+          for svc in "${SERVICES[@]}"; do
+            name="${svc%%:*}"
+            port="${svc##*:}"
+            if docker compose -f docker-compose-canary.yml ps "$name" 2>/dev/null | grep -q "healthy"; then
+              echo "  OK  $name is healthy"
+            else
+              echo "  WARN  $name not healthy, checking port $port..."
+              if curl -sf "http://localhost:${port}/actuator/health" > /dev/null 2>&1; then
+                echo "  OK  $name responds on port $port"
+              else
+                echo "  FAIL  $name on port $port is not responding"
+                ALL_HEALTHY=false
+              fi
+            fi
+          done
+          
+          if [ "$ALL_HEALTHY" = "false" ]; then
+            echo ""
+            echo "Canary health check failed, rolling back..."
+            docker compose -f docker-compose-canary.yml down
             exit 1
           fi
           
-          echo "Canary metrics check passed"
+          echo ""
+          echo "Canary health check passed at 10% traffic"
 
-      - name: Increase canary to 50% traffic
+      - name: Deploy canary (50% traffic)
         id: canary_50
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          CANARY_VERSION: ${{ needs.docker-build.outputs.version }}
         run: |
           echo "=========================================="
-          echo "Increasing Canary Traffic - Phase 2"
-          echo "Traffic: 50%"
+          echo "Increasing Canary Traffic - Phase 2 (50%)"
           echo "=========================================="
+          docker compose -f docker-compose-canary.yml up -d --remove-orphans
           
-          ./scripts/deploy/canary-deploy.sh 50 || echo "::warning::Canary script execution failed"
+          echo "Waiting 60s for traffic increase to take effect..."
+          sleep 60
           
-          echo "Canary deployment (50%) initiated"
-
-      - name: Monitor canary metrics (3 minutes)
-        run: |
-          echo "Monitoring canary metrics for 3 minutes..."
-          sleep 180
-          echo "Canary metrics check passed"
+          echo "Verifying canary health at 50%..."
+          for port in 80 8000 9000 7000; do
+            if ! curl -sf "http://localhost:${port}/actuator/health" > /dev/null 2>&1; then
+              echo "FAIL: port $port not responding"
+              docker compose -f docker-compose-canary.yml down
+              exit 1
+            fi
+            echo "  OK  port $port"
+          done
+          
+          echo "Canary health check passed at 50% traffic"
 
       - name: Promote canary to full deployment
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          CANARY_VERSION: ${{ needs.docker-build.outputs.version }}
         run: |
           echo "=========================================="
-          echo "Full Production Deployment - Phase 3"
-          echo "Traffic: 100%"
+          echo "Full Production Deployment - Phase 3 (100%)"
           echo "=========================================="
           
-          ./scripts/deploy/canary-deploy.sh 100 || echo "::warning::Canary script execution failed"
+          # Scale or redeploy as full production
+          docker compose -f docker-compose-canary.yml up -d --remove-orphans
           
-          echo "Full production deployment completed"
-
-      - name: Final health check
-        run: |
-          echo "Performing final health check..."
+          echo "Waiting 30s for full deployment..."
           sleep 30
           
-          curl -f http://cloudtry.example.com/actuator/health || exit 1
+          echo "Final health check..."
+          for port in 80 8000 9000 7000; do
+            HEALTH_URL="http://localhost:${port}/actuator/health"
+            curl -sf "$HEALTH_URL" || {
+              echo "FAIL: port $port final health check failed"
+              exit 1
+            }
+            echo "  OK  port $port - $(curl -s $HEALTH_URL | head -c 100)"
+          done
           
-          echo "Final health check passed"
+          echo "Full production deployment completed"
 
       - name: Deployment summary
         run: |

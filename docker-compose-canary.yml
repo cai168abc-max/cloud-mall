@@ -8,7 +8,7 @@ services:
   
   # Gateway Canary
   gateway-canary:
-    image: ${DOCKER_USERNAME}/cloudtry-gateway:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-gateway:${CANARY_VERSION:-latest}
     container_name: cloudtry-gateway-canary
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
@@ -34,7 +34,7 @@ services:
 
   # Service-Order Canary
   service-order-canary:
-    image: ${DOCKER_USERNAME}/cloudtry-service-order:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-order:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-order-canary
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
@@ -63,7 +63,7 @@ services:
 
   # Service-Product Canary
   service-product-canary:
-    image: ${DOCKER_USERNAME}/cloudtry-service-product:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-product:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-product-canary
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
@@ -92,7 +92,7 @@ services:
 
   # Service-User Canary
   service-user-canary:
-    image: ${DOCKER_USERNAME}/cloudtry-service-user:latest
+    image: ${DOCKER_USERNAME:-cloudtry}/cloudtry-service-user:${CANARY_VERSION:-latest}
     container_name: cloudtry-service-user-canary
     environment:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
