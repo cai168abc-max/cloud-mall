@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -112,7 +112,7 @@ jobs:
           --health-retries 3
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
@@ -207,7 +207,7 @@ jobs:
     if: always() && (needs.code-check.result == 'success' && (needs.unit-test.result == 'success' || needs.unit-test.result == 'skipped'))
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
@@ -250,7 +250,7 @@ jobs:
       version: ${{ steps.version.outputs.VERSION }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -431,10 +431,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: 
       name: development
-      url: https://dev.cloudtry.example.com
+      url: https://github.com/${{ github.repository }}/pkgs/container
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -566,10 +566,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: 
       name: staging
-      url: https://staging.cloudtry.example.com
+      url: https://github.com/${{ github.repository }}/pkgs/container
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -701,10 +701,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: 
       name: production
-      url: https://cloudtry.example.com
+      url: https://github.com/${{ github.repository }}/pkgs/container
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Compose
         run: |
