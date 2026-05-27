@@ -159,8 +159,8 @@ services:
   # Gateway 网关服务
   gateway:
     build:
-      context: .
-      dockerfile: gateway/Dockerfile
+      context: ./gateway
+      dockerfile: Dockerfile
     container_name: cloudtry-gateway
     ports:
       - "80:80"
@@ -214,8 +214,8 @@ services:
   # User 用户服务
   service-user:
     build:
-      context: .
-      dockerfile: services/service-user/Dockerfile
+      context: ./services/service-user
+      dockerfile: Dockerfile
     container_name: cloudtry-service-user
     ports:
       - "7000:7000"
@@ -258,8 +258,8 @@ services:
   # Product 商品服务
   service-product:
     build:
-      context: .
-      dockerfile: services/service-product/Dockerfile
+      context: ./services/service-product
+      dockerfile: Dockerfile
     container_name: cloudtry-service-product
     ports:
       - "9000:9000"
@@ -300,8 +300,8 @@ services:
   # Order 订单服务
   service-order:
     build:
-      context: .
-      dockerfile: services/service-order/Dockerfile
+      context: ./services/service-order
+      dockerfile: Dockerfile
     container_name: cloudtry-service-order
     ports:
       - "8000:8000"

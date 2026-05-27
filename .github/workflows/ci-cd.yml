@@ -320,8 +320,8 @@ jobs:
       - name: Build and push Gateway
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: gateway/Dockerfile
+          context: ./gateway
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-gateway:latest
@@ -329,13 +329,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=gateway/target/app.jar
+            JAR_FILE=target/app.jar
 
       - name: Build and push service-order
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: services/service-order/Dockerfile
+          context: ./services/service-order
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-order:latest
@@ -343,13 +343,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-order/target/app.jar
+            JAR_FILE=target/app.jar
 
       - name: Build and push service-product
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: services/service-product/Dockerfile
+          context: ./services/service-product
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-product:latest
@@ -357,13 +357,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-product/target/app.jar
+            JAR_FILE=target/app.jar
 
       - name: Build and push service-user
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: services/service-user/Dockerfile
+          context: ./services/service-user
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-user:latest
@@ -371,7 +371,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            JAR_FILE=services/service-user/target/app.jar
+            JAR_FILE=target/app.jar
 
       - name: Docker images summary
         run: |
