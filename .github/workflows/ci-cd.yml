@@ -233,10 +233,10 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            services/service-order/target/app.jar
-            services/service-product/target/app.jar
-            services/service-user/target/app.jar
-            gateway/target/app.jar
+            gateway/target
+            services/service-order/target
+            services/service-product/target
+            services/service-user/target
           retention-days: 7
           if-no-files-found: error
 
@@ -271,35 +271,78 @@ jobs:
                    services/service-user/target
           
           # Move JARs to correct target directories if they're in wrong locations
-          for jar in $(find . -name "*.jar" -type f); do
-            jar_name=$(basename "$jar")
-            echo "Found JAR: $jar_name at $jar"
+          for jar in $(find . -name "app.jar" -type f); do
+            echo "Found JAR: $jar"
             
-            # Gateway JAR
-            if [[ "$jar_name" == gateway* ]] && [[ "$jar" != */gateway/target/* ]]; then
-              echo "  -> Moving to gateway/target/"
-              cp "$jar" gateway/target/
-            fi
-            # Service-Order JAR  
-            if [[ "$jar_name" == service-order* ]] && [[ "$jar" != */services/service-order/target/* ]]; then
-              echo "  -> Moving to services/service-order/target/"
-              cp "$jar" services/service-order/target/
-            fi
+            # Gateway JAR - identify by path
+            if echo "$jar" | grep -q "gateway" && ! echo "$jar" | grep -q "services"; then
+              if [[ "$jar" != */gateway/target/app.jar ]] && [[ "$jar" != gateway/target/app.jar ]]; then
+                echo "  -> Moving to gateway/target/"
+                cp "$jar" gateway/target/app.jar
+              else
+                echo "  -> Already in correct location"
+              fi
+            # Service-Order JAR
+            elif echo "$jar" | grep -q "service-order"; then
+              if [[ "$jar" != */services/service-order/target/app.jar ]] && [[ "$jar" != services/service-order/target/app.jar ]]; then
+                echo "  -> Moving to services/service-order/target/"
+                cp "$jar" services/service-order/target/app.jar
+              else
+                echo "  -> Already in correct location"
+              fi
             # Service-Product JAR
-            if [[ "$jar_name" == service-product* ]] && [[ "$jar" != */services/service-product/target/* ]]; then
-              echo "  -> Moving to services/service-product/target/"
-              cp "$jar" services/service-product/target/
-            fi
+            elif echo "$jar" | grep -q "service-product"; then
+              if [[ "$jar" != */services/service-product/target/app.jar ]] && [[ "$jar" != services/service-product/target/app.jar ]]; then
+                echo "  -> Moving to services/service-product/target/"
+                cp "$jar" services/service-product/target/app.jar
+              else
+                echo "  -> Already in correct location"
+              fi
             # Service-User JAR
-            if [[ "$jar_name" == service-user* ]] && [[ "$jar" != */services/service-user/target/* ]]; then
-              echo "  -> Moving to services/service-user/target/"
-              cp "$jar" services/service-user/target/
+            elif echo "$jar" | grep -q "service-user"; then
+              if [[ "$jar" != */services/service-user/target/app.jar ]] && [[ "$jar" != services/service-user/target/app.jar ]]; then
+                echo "  -> Moving to services/service-user/target/"
+                cp "$jar" services/service-user/target/app.jar
+              else
+                echo "  -> Already in correct location"
+              fi
             fi
           done
           
           echo ""
           echo "Final JAR locations:"
           find gateway/target services/service-order/target services/service-product/target services/service-user/target -name "*.jar" 2>/dev/null || echo "WARNING: Some target directories are empty!"
+
+      - name: Validate JAR files
+        run: |
+          echo "=== JAR file validation ==="
+          REQUIRED_JARS=(
+            "gateway/target/app.jar"
+            "services/service-order/target/app.jar"
+            "services/service-product/target/app.jar"
+            "services/service-user/target/app.jar"
+          )
+
+          ALL_OK=true
+          for jar_path in "${REQUIRED_JARS[@]}"; do
+            if [ -f "$jar_path" ]; then
+              echo "  OK  $jar_path ($(ls -lh "$jar_path" | awk '{print $5}'))"
+            else
+              echo "  FAIL  $jar_path NOT FOUND!"
+              ALL_OK=false
+            fi
+          done
+
+          if [ "$ALL_OK" = "false" ]; then
+            echo ""
+            echo "ERROR: One or more JAR files missing. Aborting Docker build."
+            echo "All JAR files found on disk:"
+            find . -name "app.jar" -type f
+            exit 1
+          fi
+
+          echo ""
+          echo "All JAR files validated successfully."
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
