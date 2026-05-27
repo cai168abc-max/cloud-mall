@@ -321,7 +321,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./gateway
-          file: ./Dockerfile
+          file: gateway/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-gateway:latest
@@ -335,7 +335,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./services/service-order
-          file: ./Dockerfile
+          file: services/service-order/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-order:latest
@@ -349,7 +349,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./services/service-product
-          file: ./Dockerfile
+          file: services/service-product/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-product:latest
@@ -363,7 +363,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./services/service-user
-          file: ./Dockerfile
+          file: services/service-user/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cloudtry-service-user:latest

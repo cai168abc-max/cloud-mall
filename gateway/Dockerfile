@@ -6,7 +6,7 @@ RUN apk add --no-cache curl
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-ARG JAR_FILE=target/app.jar
+ARG JAR_FILE=gateway/target/app.jar
 COPY ${JAR_FILE} app.jar
 
 RUN chown -R appuser:appgroup /app
